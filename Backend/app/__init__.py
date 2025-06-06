@@ -1,0 +1,3 @@
+"""
+Socratic Monolithic Backend Application
+""" 

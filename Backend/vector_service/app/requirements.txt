@@ -1,5 +1,0 @@
-fastapi==0.104.1
-uvicorn==0.24.0
-sentence-transformers==2.2.2
-numpy==1.24.3
-pymilvus==2.3.4 

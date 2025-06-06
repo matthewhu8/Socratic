@@ -1,3 +1,0 @@
-"""
-Database Service for Socratic
-""" 
