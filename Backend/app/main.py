@@ -40,7 +40,7 @@ app.add_middleware(
 )
 
 # Initialize services
-REDIS_URL = os.getenv("REDIS_URL", "redis://redis:6379")
+REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379")
 convo_service = ConversationService(redis_url=REDIS_URL)
 
 # Pydantic models for request/response
@@ -526,4 +526,73 @@ async def get_question_by_id(question_id: int, db: Session = Depends(get_db)):
     question = db.query(Question).filter(Question.id == question_id).first()
     if not question:
         raise HTTPException(status_code=404, detail="Question not found")
-    return question 
+    return question
+
+@app.post("/chat-video")
+async def chat_video(request: dict, current_user: dict = Depends(get_current_user)):
+    """
+    Handle chat requests about YouTube videos with context awareness
+    """
+    try:
+        query = request.get("query", "")
+        video_id = request.get("video_id", "")
+        video_url = request.get("video_url", "")
+        user_id = request.get("user_id", current_user.get("id", 1))
+        chat_history = request.get("chat_history", [])
+        
+        if not query or not video_id:
+            raise HTTPException(status_code=400, detail="Query and video_id are required")
+        
+        # Create context-aware prompt for video discussion
+        context_prompt = f"""You are an AI tutor helping a student understand a YouTube video. 
+        
+Video Information:
+- Video ID: {video_id}
+- Video URL: {video_url}
+
+The student is asking: "{query}"
+
+Previous conversation context:
+"""
+        
+        # Add chat history for context
+        for message in chat_history[-6:]:  # Last 6 messages for context
+            role = message.get("role", "")
+            content = message.get("content", "")
+            if role and content:
+                context_prompt += f"{role.capitalize()}: {content}\n"
+        
+        context_prompt += f"""
+Current question: {query}
+
+Please provide a helpful, educational response that:
+1. Addresses the student's specific question
+2. Relates to the video content when possible
+3. Provides clear explanations and examples
+4. Encourages further learning
+5. Maintains conversation context from previous messages
+
+If you cannot access the actual video content, acknowledge this and provide general educational guidance based on the question asked."""
+
+        # Get response from Gemini
+        response_text = await gemini_service.get_response(context_prompt)
+        
+        # Store conversation in Redis for session management
+        session_key = f"video_chat:{user_id}:{video_id}"
+        conversation_data = {
+            "video_id": video_id,
+            "video_url": video_url,
+            "messages": chat_history + [
+                {"role": "user", "content": query, "timestamp": datetime.now().isoformat()},
+                {"role": "assistant", "content": response_text, "timestamp": datetime.now().isoformat()}
+            ]
+        }
+        
+        # Store in Redis with 24 hour expiration
+        await conversation_service.store_conversation(session_key, conversation_data, expire_hours=24)
+        
+        return {"response": response_text, "video_id": video_id}
+        
+    except Exception as e:
+        logger.error(f"Error in video chat: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to process video chat request") 

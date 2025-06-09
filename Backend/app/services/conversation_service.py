@@ -6,7 +6,7 @@ import traceback
 from .gemini_service import GeminiService
 
 class ConversationService:
-    def __init__(self, redis_url: str = "redis://redis:6379"):
+    def __init__(self, redis_url: str = "redis://localhost:6379"):
         """Initialize the ConversationService with Redis connection and Gemini service."""
         self.redis = Redis.from_url(redis_url, decode_responses=True)
         self.gemini_service = GeminiService()

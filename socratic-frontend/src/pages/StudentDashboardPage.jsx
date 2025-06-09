@@ -97,7 +97,7 @@ function StudentDashboardPage() {
           </Link>
           <Link to="/student/learning-modules" className={`nav-item ${isActive('/student/learning-modules') ? 'active' : ''}`}>
             <span className="nav-icon">📚</span>
-            <span className="nav-label">Learning Modules</span>
+            <span className="nav-label">Learning</span>
           </Link>
           <Link to="/student/assessment" className={`nav-item ${isActive('/student/assessment') || isActive('/student/practice') ? 'active' : ''}`}>
             <span className="nav-icon">📝</span>

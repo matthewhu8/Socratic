@@ -12,6 +12,7 @@ import TestPage from './pages/TestPage';
 import TopicProgressPage from './pages/TopicProgressPage';
 import StudentAuthPage from './pages/StudentAuthPage';
 import TeacherAuthPage from './pages/TeacherAuthPage';
+import LearningModulesPage from './pages/LearningModulesPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import { AuthProvider } from './contexts/AuthContext';
 
@@ -75,112 +76,61 @@ function App() {
   return (
     <AuthProvider>
       <Router>
-        <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/problem" element={<PhysicsProblemPage />} />
-          
-          {/* Authentication routes */}
-          <Route path="/student/auth" element={<StudentAuthPage />} />
-          <Route path="/teachers/auth" element={<TeacherAuthPage />} />
-          
-          {/* Dashboard routes - these will be accessed after authentication */}
-          <Route 
-            path="/student/dashboard" 
-            element={
-              <ProtectedRoute requiredRole="student">
+        <div className="App">
+          <Routes>
+            {/* Public Routes */}
+            <Route path="/" element={<HomePage />} />
+            <Route path="/student/auth" element={<StudentAuthPage />} />
+            <Route path="/teachers/auth" element={<TeacherAuthPage />} />
+            
+            {/* Student Protected Routes */}
+            <Route path="/student/dashboard" element={
+              <ProtectedRoute userType="student">
                 <StudentDashboardPage />
               </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/teachers/dashboard" 
-            element={
-              <ProtectedRoute requiredRole="teacher">
-                <TeacherDashboardPage />
+            } />
+            <Route path="/student/learning-modules" element={
+              <ProtectedRoute userType="student">
+                <LearningModulesPage />
               </ProtectedRoute>
-            } 
-          />
-          
-          {/* Keep existing routes as fallbacks */}
-          <Route path="/student" element={<StudentAuthPage />} />
-          <Route path="/teachers" element={<TeacherAuthPage />} />
-          
-          {/* Protected Teacher routes */}
-          <Route 
-            path="/teachers/create-test" 
-            element={
-              <ProtectedRoute requiredRole="teacher">
-                <CreateTestPage />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/teachers/create-practice-exam" 
-            element={
-              <ProtectedRoute requiredRole="teacher">
-                <CreatePracticeExamPage />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/teachers/create-learning-module" 
-            element={
-              <ProtectedRoute requiredRole="teacher">
-                <CreateLearningModulePlaceholder />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/teachers/topic/:topicId" 
-            element={
-              <ProtectedRoute requiredRole="teacher">
-                <TopicProgressPage />
-              </ProtectedRoute>
-            } 
-          />
-          
-          {/* Protected Student routes */}
-          <Route 
-            path="/student/learning-modules" 
-            element={
-              <ProtectedRoute requiredRole="student">
-                <LearningModulesPlaceholder />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/student/practice" 
-            element={
-              <ProtectedRoute requiredRole="student">
-                <PhysicsProblemPage />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/student/assessment" 
-            element={
-              <ProtectedRoute requiredRole="student">
-                <AssessmentPage />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/student/assessment/test/:testCode" 
-            element={
-              <ProtectedRoute requiredRole="student">
+            } />
+            <Route path="/test/:testCode" element={
+              <ProtectedRoute userType="student">
                 <TestPage />
               </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/student/assessment/review/:assessmentId" 
-            element={
-              <ProtectedRoute requiredRole="student">
-                <PhysicsProblemPage />
+            } />
+            <Route path="/assessment/:testCode" element={
+              <ProtectedRoute userType="student">
+                <AssessmentPage />
               </ProtectedRoute>
-            } 
-          />
-        </Routes>
+            } />
+            
+            {/* Teacher Protected Routes */}
+            <Route path="/teacher/dashboard" element={
+              <ProtectedRoute userType="teacher">
+                <TeacherDashboardPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/teacher/create-test" element={
+              <ProtectedRoute userType="teacher">
+                <CreateTestPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/teacher/create-practice-exam" element={
+              <ProtectedRoute userType="teacher">
+                <CreatePracticeExamPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/teacher/topic-progress/:topicName" element={
+              <ProtectedRoute userType="teacher">
+                <TopicProgressPage />
+              </ProtectedRoute>
+            } />
+            
+            {/* Legacy/Other Routes */}
+            <Route path="/physics-problem" element={<PhysicsProblemPage />} />
+          </Routes>
+        </div>
       </Router>
     </AuthProvider>
   );
