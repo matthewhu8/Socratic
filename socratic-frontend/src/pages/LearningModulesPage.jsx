@@ -14,6 +14,7 @@ function LearningModulesPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [player, setPlayer] = useState(null);
+  const [isChatFocused, setIsChatFocused] = useState(false);
 
   // Load YouTube Player API
   useEffect(() => {
@@ -75,8 +76,37 @@ function LearningModulesPage() {
       }]);
       // eventually get the video title from the YouTube API
       setVideoTitle('Interactive YouTube Video');
+      
+      // Load and cache the transcript
+      loadVideoTranscript(extractedId, youtubeUrl);
     } else {
       setError('Please enter a valid YouTube URL');
+    }
+  };
+
+  // Function to load and cache video transcript
+  const loadVideoTranscript = async (videoId, videoUrl) => {
+    try {
+      const response = await fetch(`${API_URL}/api/video/load-transcript`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+        },
+        body: JSON.stringify({
+          video_id: videoId,
+          video_url: videoUrl
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Transcript loaded successfully:', data.message);
+      } else {
+        console.error('Failed to load transcript');
+      }
+    } catch (error) {
+      console.error('Error loading video transcript:', error);
     }
   };
 
@@ -167,6 +197,43 @@ function LearningModulesPage() {
     setPlayer(null);
   };
 
+  // Function to format AI response text
+  const formatResponse = (text) => {
+    if (!text) return text;
+    
+    // Split by line breaks and process each line
+    return text.split('\n').map((line, index) => {
+      // Handle bullet points
+      if (line.trim().startsWith('•') || line.trim().startsWith('-') || line.trim().startsWith('*')) {
+        return (
+          <div key={index} className="bullet-point">
+            {line.trim()}
+          </div>
+        );
+      }
+      // Handle numbered lists
+      else if (/^\d+\./.test(line.trim())) {
+        return (
+          <div key={index} className="numbered-point">
+            {line.trim()}
+          </div>
+        );
+      }
+      // Handle empty lines (add spacing)
+      else if (line.trim() === '') {
+        return <br key={index} />;
+      }
+      // Regular text
+      else {
+        return (
+          <div key={index} className="text-line">
+            {line}
+          </div>
+        );
+      }
+    });
+  };
+
   return (
     <div className="learning-modules-container">
       {/* Header */}
@@ -204,7 +271,7 @@ function LearningModulesPage() {
       {videoId ? (
         <div className="main-content">
           {/* Video Section */}
-          <div className="video-section">
+          <div className={`video-section ${isChatFocused ? 'shrunk' : ''}`}>
             <div className="video-header">
               <h2>{videoTitle}</h2>
               <button onClick={clearVideo} className="clear-button">
@@ -217,7 +284,7 @@ function LearningModulesPage() {
           </div>
 
           {/* Chat Section */}
-          <div className="chat-section">
+          <div className={`chat-section ${isChatFocused ? 'expanded' : ''}`}>
             <div className="chat-header">
               <h3>Ask Questions About This Video</h3>
               <p>I can help explain concepts, provide additional context, or answer questions about the video content.</p>
@@ -227,7 +294,7 @@ function LearningModulesPage() {
               {chatMessages.map((message, index) => (
                 <div key={index} className={`message ${message.role}`}>
                   <div className="message-content">
-                    {message.content}
+                    {formatResponse(message.content)}
                   </div>
                   <div className="message-time">
                     {new Date(message.timestamp).toLocaleTimeString()}
@@ -253,6 +320,8 @@ function LearningModulesPage() {
                   type="text"
                   value={currentMessage}
                   onChange={(e) => setCurrentMessage(e.target.value)}
+                  onFocus={() => setIsChatFocused(true)}
+                  onBlur={() => setIsChatFocused(false)}
                   placeholder="Ask a question about the video..."
                   className="chat-input"
                   disabled={isLoading}

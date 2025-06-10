@@ -13,7 +13,8 @@ class GeminiService:
             raise ValueError("GEMINI_API_KEY environment variable is required")
         
         genai.configure(api_key=self.api_key)
-        self.model = genai.GenerativeModel('gemini-1.5-flash')
+        self.model = genai.GenerativeModel('gemini-2.0-flash')
+        print(f"GEMINI MODEL: {self.model}")
     
     def format_chat_history(self, chat_history: List[Dict]) -> List[Dict]:
         """Convert chat history to Gemini format."""
@@ -48,14 +49,16 @@ class GeminiService:
             video_author = context.get("author")
             video_description = context.get("description")
             print(f"VIDEO TITLE: {context}")
-            system_instructions = f"""You are a helpful AI assistant to answer students' questions about this YouTube video. The video title is: {video_title}, by {video_author}. The video description is: {video_description}
+            system_instructions = f"""You are a helpful AI assistant to answer students' questions about this YouTube video. The video title is: {video_title}, by {video_author}. The student may also be referencing this specific part from the video transcript.
 """ 
-            
+            video_transcript = video_context.get("transcript")
+            print(f"VIDEO TRANSCRIPT: {video_transcript}")
             # Extract chat history from session_data
             chat_history = session_data.get("messages", []) if session_data else []
 
             # Build the enhanced prompt with video context
             prompt_parts = [system_instructions]
+            prompt_parts.append(f"\n--- VIDEO TRANSCRIPT CONTEXT ---\n{video_transcript}")
             
             # Add video context if available
             # if video_context and video_context.get("video_context"):

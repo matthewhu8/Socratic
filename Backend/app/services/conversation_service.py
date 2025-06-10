@@ -6,11 +6,23 @@ import traceback
 from .gemini_service import GeminiService
 from .youtube_service import YouTubeTranscriptService
 import yt_dlp
+import redis
+import os
+from supadata import Supadata
 
 class ConversationService:
     def __init__(self, redis_url: str = "redis://localhost:6379"):
-        """Initialize the ConversationService with Redis connection and Gemini service."""
-        self.redis = Redis.from_url(redis_url, decode_responses=True)
+        # Existing Redis connection
+        self.redis_client = redis.from_url(redis_url, decode_responses=True)
+        
+        # Supadata API for transcripts
+        api_key = os.getenv("SUPADATA_API_KEY")
+        self.supadata_api = Supadata(api_key=api_key)
+        
+        # Cache settings
+        self.transcript_cache_ttl = 24 * 60 * 60  # 24 hours
+        self.transcript_prefix = "transcript:"
+        
         self.gemini_service = GeminiService()
         self.youtube_service = YouTubeTranscriptService()
     
@@ -77,7 +89,7 @@ class ConversationService:
         # Initialize session data for each question
         for question_id in str_question_ids:
             session_key_q = self._get_session_key(user_id_str, test_id_str, question_id)
-            if not self.redis.exists(session_key_q):
+            if not self.redis_client.exists(session_key_q):
                 session_data = {
                     "chat_history": [],
                     "start_time": start_timestamp,
@@ -89,10 +101,10 @@ class ConversationService:
                     "test_id": test_id_str,
                     "time_spent": 0
                 }
-                self.redis.setex(session_key_q, 2 * 60 * 60, json.dumps(session_data))
+                self.redis_client.setex(session_key_q, 2 * 60 * 60, json.dumps(session_data))
         
         # Store test data with 2 hour expiry
-        self.redis.setex(session_key, 2 * 60 * 60, json.dumps(test_data))
+        self.redis_client.setex(session_key, 2 * 60 * 60, json.dumps(test_data))
         return test_data
     
     async def process_query(
@@ -110,8 +122,8 @@ class ConversationService:
         test_key = self._get_test_key(str(user_id), str(test_id))
         
         # Get session data
-        session_data = self.redis.get(session_key)
-        test_data = self.redis.get(test_key)
+        session_data = self.redis_client.get(session_key)
+        test_data = self.redis_client.get(test_key)
 
         # If no session data exists, try to initialize from overall test data
         if not session_data:
@@ -132,7 +144,7 @@ class ConversationService:
                 test_data_obj = json.loads(test_data)
                 if str(question_id) not in test_data_obj.get("list_question_ids", []):
                     test_data_obj["list_question_ids"].append(str(question_id))
-                    self.redis.setex(test_key, 2 * 60 * 60, json.dumps(test_data_obj))
+                    self.redis_client.setex(test_key, 2 * 60 * 60, json.dumps(test_data_obj))
                 
                 # Create new session for this question
                 session_data = json.dumps({
@@ -197,7 +209,7 @@ class ConversationService:
         })
         
         # Update session data in Redis
-        self.redis.setex(session_key, 2 * 60 * 60, json.dumps(session_data))
+        self.redis_client.setex(session_key, 2 * 60 * 60, json.dumps(session_data))
         
         return llm_response
     
@@ -213,7 +225,7 @@ class ConversationService:
         session_key = self._get_session_key(str(user_id), str(test_code), str(question_id))
         
         # Get session data
-        session_data = self.redis.get(session_key)
+        session_data = self.redis_client.get(session_key)
         if session_data:
             session_data = json.loads(session_data)
             session_data["student_answer"] = answer
@@ -226,7 +238,7 @@ class ConversationService:
             session_data["time_spent"] = time_spent
             
             # Update session data in Redis
-            self.redis.setex(session_key, 2 * 60 * 60, json.dumps(session_data))
+            self.redis_client.setex(session_key, 2 * 60 * 60, json.dumps(session_data))
         
         return {"status": "success", "message": "Answer submitted successfully"}
     
@@ -235,14 +247,14 @@ class ConversationService:
         test_key = self._get_test_key(user_id, test_id)
         
         # Get test data
-        test_data = self.redis.get(test_key)
+        test_data = self.redis_client.get(test_key)
         if test_data:
             test_data = json.loads(test_data)
             test_data["status"] = "completed"
             test_data["end_time"] = self._ensure_timestamp(datetime.now(UTC).isoformat())
             
             # Update test data in Redis
-            self.redis.setex(test_key, 2 * 60 * 60, json.dumps(test_data))
+            self.redis_client.setex(test_key, 2 * 60 * 60, json.dumps(test_data))
         
         return {"status": "success", "message": "Test finished successfully"}
     
@@ -255,7 +267,7 @@ class ConversationService:
         """Get conversation history for a specific question."""
         session_key = self._get_session_key(str(user_id), str(test_code), str(question_id))
         
-        session_data = self.redis.get(session_key)
+        session_data = self.redis_client.get(session_key)
         if session_data:
             session_data = json.loads(session_data)
             return session_data.get("chat_history", [])
@@ -266,7 +278,7 @@ class ConversationService:
         """Get or create a video chat session."""
         try:
             session_key = f"video_chat:{user_id}:{video_id}"
-            session_data = self.redis.get(session_key)
+            session_data = self.redis_client.get(session_key)
             if session_data:
                 return json.loads(session_data)
             
@@ -280,7 +292,7 @@ class ConversationService:
             print("attempting to create new session")
             
             # Store with 24 hour expiration
-            self.redis.setex(session_key, 24 * 60 * 60, json.dumps(new_session))
+            self.redis_client.setex(session_key, 24 * 60 * 60, json.dumps(new_session))
             return new_session
         except Exception as e:
             print(f"Error in get_video_session: {e}")
@@ -296,6 +308,7 @@ class ConversationService:
             "author": info.get("uploader", ""),
             "description": info.get("description", "")
         }
+            
 
     async def process_video_chat(self, user_id: int, video_id: str, video_url: str, query: str, session_data: Dict, timestamp: float = None) -> str:
         """Process a video chat query with session persistence and video context."""
@@ -304,23 +317,18 @@ class ConversationService:
             "role": "user",
             "content": query,
             "timestamp": datetime.now(UTC).isoformat(),
-            "video_timestamp": timestamp
+            "video_timestamp": timestamp 
         })
-        
-        # youtube transcript api package is not working, so we are not using it for now
-        video_context = ""
-        if timestamp is not None:
-            video_context = self.youtube_service.get_transcript_around_timestamp(
-                video_id, timestamp, context_seconds=30
-            )
 
         video_info = self.extract_video_info(video_url)
+        transcript = self.get_transcript_context(video_id, timestamp, context_seconds=30)
         
         # Enhanced context for the LLM
         enhanced_context = {
             "video_url": video_url,
             "video_timestamp": timestamp,
             "video_context": video_info,
+            "transcript": transcript,
             "message_history": session_data["messages"][-5:] if len(session_data["messages"]) > 5 else session_data["messages"]
         }
         
@@ -340,6 +348,91 @@ class ConversationService:
         
         # Update session in Redis
         session_key = f"video_chat:{user_id}:{video_id}"
-        self.redis.setex(session_key, 24 * 60 * 60, json.dumps(session_data))
+        self.redis_client.setex(session_key, 24 * 60 * 60, json.dumps(session_data))
         
         return response_text 
+
+    async def load_and_cache_transcript(self, video_id: str, video_url: str) -> bool:
+        """Load transcript from API and cache it in Redis."""
+        try:
+            cache_key = f"{self.transcript_prefix}{video_id}"
+            
+            # Check if already cached
+            if self.redis_client.exists(cache_key):
+                print(f"Transcript for {video_id} already cached")
+                return True
+            
+            # Fetch from API
+            print(f"Fetching transcript for video with id dfdf (video_id): {video_url}")
+            transcript = self.supadata_api.youtube.transcript(video_id=video_id, lang="en")
+            
+            if not transcript.content:
+                return False
+            
+            # Serialize transcript chunks
+            transcript_data = [
+                {
+                    "text": chunk.text,
+                    "offset": chunk.offset,
+                    "duration": chunk.duration,
+                    "lang": chunk.lang
+                }
+                for chunk in transcript.content
+            ]
+            print(f"transcript_data RECEIVED: {transcript_data}")
+            
+            # Cache it
+            self.redis_client.setex(
+                cache_key,
+                self.transcript_cache_ttl,
+                json.dumps(transcript_data)
+            )
+            
+            print(f"Cached transcript for {video_id} ({len(transcript_data)} chunks)")
+            return True
+            
+        except Exception as e:
+            print(f"Error loading transcript for {video_id}: {e}")
+            return False
+    
+    def get_transcript_context(self, video_id: str, timestamp: float, context_seconds: int = 30) -> str:
+        """Get transcript context around timestamp from cache."""
+        try:
+            cache_key = f"{self.transcript_prefix}{video_id}"
+            cached_data = self.redis_client.get(cache_key)
+            
+            if not cached_data:
+                return "Transcript not available. Please load the video first."
+            
+            transcript_chunks = json.loads(cached_data)
+            
+            # Find relevant segments (convert timestamp to milliseconds)
+            timestamp_ms = timestamp * 1000
+            context_ms = context_seconds * 1000
+            
+            start_time = max(0, timestamp_ms - context_ms)
+            end_time = timestamp_ms + context_ms
+            
+            relevant_segments = []
+            for chunk in transcript_chunks:
+                chunk_start = chunk['offset']
+                chunk_end = chunk['offset'] + chunk['duration']
+                
+                if chunk_start <= end_time and chunk_end >= start_time:
+                    relevant_segments.append({
+                        'start': chunk_start / 1000,  # Convert to seconds
+                        'text': chunk['text']
+                    })
+            
+            # Format context
+            if relevant_segments:
+                context_text = f"Video content around {timestamp:.1f}s:\n\n"
+                for segment in relevant_segments:
+                    context_text += f"[{segment['start']:.1f}s] {segment['text']}\n"
+                return context_text
+            else:
+                return f"No transcript around timestamp {timestamp:.1f}s"
+                
+        except Exception as e:
+            print(f"Error getting transcript context: {e}")
+            return "Error retrieving transcript." 
