@@ -77,56 +77,48 @@ function StudentAuthPage() {
   
   const loginUser = async (email, password) => {
     try {
-      console.log("Attempting login with:", email);
       const loginResponse = await fetch(`${API_URL}/api/auth/login`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
       });
       
-      console.log("Login response status:", loginResponse.status);
       if (!loginResponse.ok) {
         const errorData = await loginResponse.json();
-        console.error("Login error:", errorData);
         throw new Error(errorData.detail || 'Login failed');
       }
       
       const loginData = await loginResponse.json();
-      console.log("Login successful, received tokens:", !!loginData.access_token);
       
-      // Store tokens in localStorage
+      // Store tokens
       localStorage.setItem('accessToken', loginData.access_token);
       localStorage.setItem('refreshToken', loginData.refresh_token);
       localStorage.setItem('userType', 'student');
       
-      // If signing up, store the name from the form
-      if (isSignUp) {
-        localStorage.setItem('userName', formData.name);
-      } else {
-        // For existing users, we could fetch the profile, but for now we'll use a default or stored name
-        // We'll get the actual name once we implement fetching profiles
-        const storedName = localStorage.getItem('userName');
-        if (!storedName) {
-          // We don't have the name for existing users, so use email as fallback
-          const username = email.split('@')[0];
-          localStorage.setItem('userName', username);
+      // Fetch user profile to get real database ID
+      const profileResponse = await fetch(`${API_URL}/api/auth/student/me`, {
+        headers: {
+          'Authorization': `Bearer ${loginData.access_token}`
         }
-      }
-      
-      // Set a simplified user object in the AuthContext
-      setCurrentUser({
-        userType: 'student',
-        name: isSignUp ? formData.name : (localStorage.getItem('userName') || email.split('@')[0]),
-        isAuthenticated: true
       });
       
-      console.log("Redirecting to dashboard");
-      // Redirect to dashboard
-      navigate('/student/dashboard');
+      if (profileResponse.ok) {
+        const userData = await profileResponse.json();
+        setCurrentUser({
+          id: userData.id,              // Real database ID
+          name: userData.name,
+          email: userData.email,
+          grade: userData.grade,
+          userType: 'student',
+          isAuthenticated: true
+        });
+        
+        navigate('/student/dashboard');
+      } else {
+        throw new Error('Failed to fetch user profile');
+      }
     } catch (error) {
-      console.error("Login function error:", error);
+      console.error("Login error:", error);
       throw error;
     }
   };

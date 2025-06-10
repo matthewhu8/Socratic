@@ -32,7 +32,6 @@ app.add_middleware(
         "http://localhost",       # Frontend in containerized environment (default port 80)
         "http://frontend:80",     # Frontend service name in Docker network
         "http://frontend",
-        "http://frontend-production-3661.up.railway.app",
     ],
     allow_credentials=True,
     allow_methods=["*"],
@@ -529,70 +528,38 @@ async def get_question_by_id(question_id: int, db: Session = Depends(get_db)):
     return question
 
 @app.post("/chat-video")
-async def chat_video(request: dict, current_user: dict = Depends(get_current_user)):
-    """
-    Handle chat requests about YouTube videos with context awareness
-    """
+async def chat_video(request: dict, current_user = Depends(get_current_user)):
+    """Handle chat requests about YouTube videos with context awareness"""
     try:
+        print(f"REQUEST RECEIVED: {request}")
         query = request.get("query", "")
         video_id = request.get("video_id", "")
         video_url = request.get("video_url", "")
-        user_id = request.get("user_id", current_user.get("id", 1))
-        chat_history = request.get("chat_history", [])
+        timestamp = request.get("timestamp")
+        user_id = current_user.id
         
         if not query or not video_id:
             raise HTTPException(status_code=400, detail="Query and video_id are required")
         
-        # Create context-aware prompt for video discussion
-        context_prompt = f"""You are an AI tutor helping a student understand a YouTube video. 
+        # Get or create session history from Redis
+        session_data = await convo_service.get_video_session(user_id, video_id)
+        print(f"SESSION DATA RECEIVED: {session_data}")
+        print(f"ATTEMPTING TO ANSWER: {query}")
+        if timestamp:
+            print(f"VIDEO TIMESTAMP: {timestamp}")
         
-Video Information:
-- Video ID: {video_id}
-- Video URL: {video_url}
+        # Process the query and update session with timestamp context
+        response_text = await convo_service.process_video_chat(
+            user_id=user_id,
+            video_id=video_id,
+            video_url=video_url,
+            query=query,
+            session_data=session_data,
+            timestamp=timestamp
+        )
 
-The student is asking: "{query}"
-
-Previous conversation context:
-"""
-        
-        # Add chat history for context
-        for message in chat_history[-6:]:  # Last 6 messages for context
-            role = message.get("role", "")
-            content = message.get("content", "")
-            if role and content:
-                context_prompt += f"{role.capitalize()}: {content}\n"
-        
-        context_prompt += f"""
-Current question: {query}
-
-Please provide a helpful, educational response that:
-1. Addresses the student's specific question
-2. Relates to the video content when possible
-3. Provides clear explanations and examples
-4. Encourages further learning
-5. Maintains conversation context from previous messages
-
-If you cannot access the actual video content, acknowledge this and provide general educational guidance based on the question asked."""
-
-        # Get response from Gemini
-        response_text = await gemini_service.get_response(context_prompt)
-        
-        # Store conversation in Redis for session management
-        session_key = f"video_chat:{user_id}:{video_id}"
-        conversation_data = {
-            "video_id": video_id,
-            "video_url": video_url,
-            "messages": chat_history + [
-                {"role": "user", "content": query, "timestamp": datetime.now().isoformat()},
-                {"role": "assistant", "content": response_text, "timestamp": datetime.now().isoformat()}
-            ]
-        }
-        
-        # Store in Redis with 24 hour expiration
-        await conversation_service.store_conversation(session_key, conversation_data, expire_hours=24)
         
         return {"response": response_text, "video_id": video_id}
         
     except Exception as e:
-        logger.error(f"Error in video chat: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to process video chat request") 

@@ -4,12 +4,15 @@ import json
 from redis import Redis
 import traceback
 from .gemini_service import GeminiService
+from .youtube_service import YouTubeTranscriptService
+import yt_dlp
 
 class ConversationService:
     def __init__(self, redis_url: str = "redis://localhost:6379"):
         """Initialize the ConversationService with Redis connection and Gemini service."""
         self.redis = Redis.from_url(redis_url, decode_responses=True)
         self.gemini_service = GeminiService()
+        self.youtube_service = YouTubeTranscriptService()
     
     def _get_session_key(self, user_id: str, test_id: str, question_id: str) -> str:
         """Generate Redis key for a specific test session."""
@@ -40,6 +43,7 @@ class ConversationService:
         # If it's not a string, datetime, or None, return current time
         print(f"Warning: Invalid timestamp type: {type(timestamp_value)}")
         return datetime.now(UTC).isoformat()
+        
     
     async def start_test(self, user_id: int, test_id: int, test_code: str, list_question_ids: List[int], total_questions: int) -> Dict:
         """Initialize a new test session."""
@@ -256,4 +260,86 @@ class ConversationService:
             session_data = json.loads(session_data)
             return session_data.get("chat_history", [])
         
-        return [] 
+        return []
+
+    async def get_video_session(self, user_id: int, video_id: str) -> Dict:
+        """Get or create a video chat session."""
+        try:
+            session_key = f"video_chat:{user_id}:{video_id}"
+            session_data = self.redis.get(session_key)
+            if session_data:
+                return json.loads(session_data)
+            
+            # Create new session
+            new_session = {
+                "user_id": user_id,
+                "video_id": video_id,
+                "messages": [],
+                "created_at": datetime.now(UTC).isoformat()
+            }
+            print("attempting to create new session")
+            
+            # Store with 24 hour expiration
+            self.redis.setex(session_key, 24 * 60 * 60, json.dumps(new_session))
+            return new_session
+        except Exception as e:
+            print(f"Error in get_video_session: {e}")
+            traceback.print_exc()
+            return None
+    
+    def extract_video_info(self, video_url: str) -> Dict:
+        print(f"EXTRACTING VIDEO INFO FOR: {video_url}")
+        ydl = yt_dlp.YoutubeDL()
+        info = ydl.extract_info(video_url, download=False)
+        return {
+            "title": info.get("title", ""),
+            "author": info.get("uploader", ""),
+            "description": info.get("description", "")
+        }
+
+    async def process_video_chat(self, user_id: int, video_id: str, video_url: str, query: str, session_data: Dict, timestamp: float = None) -> str:
+        """Process a video chat query with session persistence and video context."""
+        # Add user message to session
+        session_data["messages"].append({
+            "role": "user",
+            "content": query,
+            "timestamp": datetime.now(UTC).isoformat(),
+            "video_timestamp": timestamp
+        })
+        
+        # youtube transcript api package is not working, so we are not using it for now
+        video_context = ""
+        if timestamp is not None:
+            video_context = self.youtube_service.get_transcript_around_timestamp(
+                video_id, timestamp, context_seconds=30
+            )
+
+        video_info = self.extract_video_info(video_url)
+        
+        # Enhanced context for the LLM
+        enhanced_context = {
+            "video_url": video_url,
+            "video_timestamp": timestamp,
+            "video_context": video_info,
+            "message_history": session_data["messages"][-5:] if len(session_data["messages"]) > 5 else session_data["messages"]
+        }
+        
+        response_text = await self.gemini_service.answer_video_question(
+            query, 
+            session_data, 
+            video_context=enhanced_context
+        )
+        print(f"response_text: {response_text}")
+        
+        # Add assistant response to session
+        session_data["messages"].append({
+            "role": "assistant",
+            "content": response_text,
+            "timestamp": datetime.now(UTC).isoformat()
+        })
+        
+        # Update session in Redis
+        session_key = f"video_chat:{user_id}:{video_id}"
+        self.redis.setex(session_key, 24 * 60 * 60, json.dumps(session_data))
+        
+        return response_text 

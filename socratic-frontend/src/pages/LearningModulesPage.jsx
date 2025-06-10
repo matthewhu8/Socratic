@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { AuthContext } from '../contexts/AuthContext';
 import '../styles/LearningModulesPage.css';
@@ -13,10 +13,48 @@ function LearningModulesPage() {
   const [currentMessage, setCurrentMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [player, setPlayer] = useState(null);
+
+  // Load YouTube Player API
+  useEffect(() => {
+    const loadYouTubeAPI = () => {
+      if (window.YT && window.YT.Player) {
+        return;
+      }
+
+      const script = document.createElement('script');
+      script.src = 'https://www.youtube.com/iframe_api';
+      document.body.appendChild(script);
+
+      window.onYouTubeIframeAPIReady = () => {
+        console.log('YouTube API ready');
+      };
+    };
+
+    loadYouTubeAPI();
+  }, []);
+
+  // Initialize YouTube player when video ID changes
+  useEffect(() => {
+    if (videoId && window.YT && window.YT.Player) {
+      const playerInstance = new window.YT.Player('youtube-player', {
+        videoId: videoId,
+        events: {
+          onReady: (event) => {
+            console.log('Player ready');
+            setPlayer(event.target);
+          },
+          onStateChange: (event) => {
+            console.log('Player state changed:', event.data);
+          }
+        }
+      });
+    }
+  }, [videoId]);
 
   // Extract YouTube video ID from URL
   const extractVideoId = (url) => {
-    const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
+    const regex = /(?:youtube\.com\/(?:[^/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?/\s]{11})/;
     const match = url.match(regex);
     return match ? match[1] : null;
   };
@@ -35,17 +73,40 @@ function LearningModulesPage() {
         content: 'Hi! I can help you understand this video. Feel free to ask me questions about the content, concepts, or anything you\'d like to learn more about!',
         timestamp: new Date().toISOString()
       }]);
-      // Fetch video title (optional - you could use YouTube API for this)
-      setVideoTitle('YouTube Video');
+      // eventually get the video title from the YouTube API
+      setVideoTitle('Interactive YouTube Video');
     } else {
       setError('Please enter a valid YouTube URL');
     }
+  };
+
+  // Function to get current video timestamp
+  const getCurrentVideoTime = () => {
+    if (player && typeof player.getCurrentTime === 'function') {
+      try {
+        return player.getCurrentTime();
+      } catch (error) {
+        console.log('Error getting video time:', error);
+        return 0;
+      }
+    }
+    return 0;
   };
 
   // Handle chat message submission
   const handleChatSubmit = async (e) => {
     e.preventDefault();
     if (!currentMessage.trim() || !videoId) return;
+
+    // Get current video timestamp
+    const currentTimestamp = getCurrentVideoTime();
+    console.log('Current video timestamp:', currentTimestamp);
+
+    // Ensure user is authenticated and has an ID
+    if (!currentUser?.id) {
+      setError('Please log in to continue chatting.');
+      return;
+    }
 
     const userMessage = {
       role: 'user',
@@ -62,14 +123,13 @@ function LearningModulesPage() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
         },
         body: JSON.stringify({
           query: currentMessage,
           video_id: videoId,
           video_url: youtubeUrl,
-          user_id: currentUser?.id || 1,
-          chat_history: chatMessages.slice(-6) // Send last 6 messages for context
+          timestamp: currentTimestamp
         })
       });
 
@@ -104,6 +164,7 @@ function LearningModulesPage() {
     setVideoTitle('');
     setChatMessages([]);
     setError('');
+    setPlayer(null);
   };
 
   return (
@@ -151,15 +212,7 @@ function LearningModulesPage() {
               </button>
             </div>
             <div className="video-container">
-              <iframe
-                width="100%"
-                height="400"
-                src={`https://www.youtube.com/embed/${videoId}`}
-                title="YouTube video player"
-                frameBorder="0"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-              ></iframe>
+              <div id="youtube-player"></div>
             </div>
           </div>
 

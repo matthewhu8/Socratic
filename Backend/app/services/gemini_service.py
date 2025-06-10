@@ -13,7 +13,7 @@ class GeminiService:
             raise ValueError("GEMINI_API_KEY environment variable is required")
         
         genai.configure(api_key=self.api_key)
-        self.model = genai.GenerativeModel('gemini-pro')
+        self.model = genai.GenerativeModel('gemini-1.5-flash')
     
     def format_chat_history(self, chat_history: List[Dict]) -> List[Dict]:
         """Convert chat history to Gemini format."""
@@ -28,6 +28,62 @@ class GeminiService:
                 })
         return formatted_history
     
+    async def generate_chat_session(self):
+        '''
+        Answer a question about the YouTube video.
+        '''
+        try:    
+            return self.model.start_chat()
+        except: 
+            print("failed to return a chat session")
+    
+    async def answer_video_question(self, message, session_data, video_context=None):
+        '''
+        Answer a question about the YouTube video with system instructions, chat history, and video context.
+        '''
+        try:
+            # Enhanced system instructions with video context awareness
+            context = video_context.get("video_context")
+            video_title = context.get("title")
+            video_author = context.get("author")
+            video_description = context.get("description")
+            print(f"VIDEO TITLE: {context}")
+            system_instructions = f"""You are a helpful AI assistant to answer students' questions about this YouTube video. The video title is: {video_title}, by {video_author}. The video description is: {video_description}
+""" 
+            
+            # Extract chat history from session_data
+            chat_history = session_data.get("messages", []) if session_data else []
+
+            # Build the enhanced prompt with video context
+            prompt_parts = [system_instructions]
+            
+            # Add video context if available
+            # if video_context and video_context.get("video_context"):
+            #     prompt_parts.append(f"\n--- VIDEO TRANSCRIPT CONTEXT ---\n{video_context['video_context']}")
+            #     if video_context.get("video_timestamp"):
+            #         prompt_parts.append(f"\nStudent is currently at timestamp: {video_context['video_timestamp']:.1f} seconds")
+            
+            prompt_parts.append(f"\nStudent question: {message}")
+            
+            full_prompt = "\n".join(prompt_parts)
+            print(f"FULL PROMPT: {full_prompt}")
+            
+            # Use chat history if available
+            if chat_history:
+                # Format the last 10 messages for context
+                formatted_history = self.format_chat_history(chat_history[-10:])
+                chat = self.model.start_chat(history=formatted_history)
+                response = chat.send_message(full_prompt)
+            else:
+                # Generate without history for new sessions
+                response = self.model.generate_content(full_prompt)
+            
+            return response.text
+            
+        except Exception as e:
+            print(f"Failed to answer the video question: {e}")
+            return "I'm sorry, I encountered an error while processing your request. Please try again."
+     
     async def generate_response(
         self,
         query: str,
@@ -42,30 +98,14 @@ class GeminiService:
             question_id = context.get("question_id")
             test_id = context.get("test_id")
             
-            # Check if this is a request for hidden values
-            hidden_value = self._get_hidden_value(test_id, question_id, query)
-            
-            # Create system message based on context
-            if hidden_value:
-                system_message = """You are a helpful teaching assistant. The student is asking about a hidden value in the problem. 
-                Since they specifically asked for it, you can provide the hidden value from the context. Be clear and informative."""
-                is_hidden_value_response = True
-            elif is_practice_exam:
-                system_message = """You are a helpful teaching assistant using Socratic questioning. 
-                If the student appears to be stuck on this problem, ask them a question that will help guide their thinking. 
-                DO NOT provide direct answers. Review the chat history to avoid repeating questions."""
-                is_hidden_value_response = False
-            else:
-                # For regular tests, be more restrictive
-                return {
-                    "response": "I can only help with understanding hidden values for this test question. Please rephrase your question to ask about a specific hidden value.",
-                    "isHiddenValueResponse": False
-                }
+           
+            system_message = """You are a helpful teaching assistant using Socratic questioning. 
+            If the student appears to be stuck on this problem, ask them a question that will help guide their thinking. 
+            DO NOT provide direct answers."""
+            is_hidden_value_response = False
             
             # Create context message
             context_message = f"Problem: {public_question}\n\n"
-            if hidden_value:
-                context_message += f"Hidden value: {hidden_value}\n\n"
             
             # Prepare the prompt
             full_prompt = f"{system_message}\n\n{context_message}Student question: {query}"
@@ -73,8 +113,6 @@ class GeminiService:
             # Format chat history for Gemini
             if chat_history:
                 formatted_history = self.format_chat_history(chat_history[-4:])  # Last 4 messages
-                
-                # Create a chat session with history
                 chat = self.model.start_chat(history=formatted_history)
                 response = chat.send_message(full_prompt)
             else:
@@ -92,13 +130,3 @@ class GeminiService:
                 "response": "I'm sorry, I encountered an error while processing your request. Please try again.",
                 "isHiddenValueResponse": False
             }
-    
-    def _get_hidden_value(self, test_id: int, question_id: int, query: str) -> Optional[str]:
-        """
-        Check if the query is asking for a hidden value.
-        This is a simplified version - in the original code this was handled by the vector service.
-        For now, we'll return None and let the database handle hidden values directly.
-        """
-        # This would need to be implemented based on your specific hidden value logic
-        # For now, returning None to maintain the same behavior as when vector service fails
-        return None 
