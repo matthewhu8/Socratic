@@ -35,7 +35,8 @@ app.add_middleware(
         # Add your production domains here
         "https://*.up.railway.app",  # All Railway subdomains
         "https://*.netlify.app",  # In case you use Netlify for frontend
-        "https://*.vercel.app",   # In case you use Vercel for frontend       # Replace with your custom domain
+        "https://*.vercel.app",   # In case you use Vercel for frontend 
+        "https://frontend-production-81e0.up.railway.app"      # Replace with your custom domain
     ],
     allow_credentials=True,
     allow_methods=["*"],
