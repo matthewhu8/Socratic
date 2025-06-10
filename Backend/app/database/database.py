@@ -11,12 +11,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 DB_PATH = os.path.join(BASE_DIR, "socratic.db")
 DEFAULT_SQLITE_URL = f"sqlite:///{DB_PATH}"
 
-# PostgreSQL configuration
-# Use environment variable if set (will be set by Docker Compose)
-DEFAULT_POSTGRES_URL = os.getenv(
-    "DATABASE_URL", 
-    "postgresql://postgres:postgres@localhost:5432/postgres"
-)
+# PostgreSQL configuration - Fixed
+DEFAULT_POSTGRES_URL = "postgresql://postgres:postgres@localhost:5432/postgres"
 
 # Use DATABASE_URL from environment if provided, otherwise use default PostgreSQL
 DATABASE_URL = os.getenv("DATABASE_URL", DEFAULT_POSTGRES_URL)
