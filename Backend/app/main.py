@@ -166,6 +166,8 @@ class TestSessionStart(BaseModel):
     question_ids: List[int]
     total_questions: int
 
+@app.post("/api/auth")
+
 # Authentication endpoints
 @app.post("/api/auth/student/register", response_model=StudentResponse)
 async def register_student(student: StudentCreate, db: Session = Depends(get_db)):
@@ -531,6 +533,43 @@ async def get_question_by_id(question_id: int, db: Session = Depends(get_db)):
     if not question:
         raise HTTPException(status_code=404, detail="Question not found")
     return question
+
+@app.post("/api/video/load-transcript")
+async def load_video_transcript(
+    request: dict,
+    current_user = Depends(get_current_user)
+):
+    """Load and cache transcript when user loads video."""
+    video_id = request.get("video_id")
+    video_url = request.get("video_url")
+    print(f"loading transcript for video {video_id} and url {video_url}")
+    
+    if not video_id:
+        raise HTTPException(status_code=400, detail="video_id is required")
+    if not video_url:
+        raise HTTPException(status_code=400, detail="video_url is required")
+    
+    try:
+        success = await convo_service.load_and_cache_transcript(video_id, video_url)
+        
+        if success:
+            return {
+                "status": "success", 
+                "message": f"Transcript cached for video {video_id}",
+                "video_id": video_id
+            }
+        else:
+            raise HTTPException(
+                status_code=500, 
+                detail="Failed to load transcript"
+            )
+            
+    except Exception as e:
+        print(f"Error in load_video_transcript endpoint: {e}")
+        raise HTTPException(
+            status_code=500, 
+            detail=f"Error loading transcript: {str(e)}"
+        )
 
 @app.post("/chat-video")
 async def chat_video(request: dict, current_user = Depends(get_current_user)):

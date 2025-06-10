@@ -1,10 +1,13 @@
 import requests
 from youtube_transcript_api import YouTubeTranscriptApi
 from typing import List, Dict, Optional
+from supadata import Supadata, SupadataError
+import os
 
 class YouTubeTranscriptService:
     def __init__(self):
-        self.transcript_api = YouTubeTranscriptApi()
+        api_key = os.getenv("SUPADATA_API_KEY")
+        self.supadata_api = Supadata(api_key=api_key)
         pass
     
     def get_transcript_around_timestamp(self, video_id: str, timestamp: float, context_seconds: int = 30) -> str:
@@ -22,7 +25,7 @@ class YouTubeTranscriptService:
         try:
             # Get transcript
             print(f"GETTING TRANSCRIPT FOR ____ VIDEO: {video_id}")
-            transcript_list = self.transcript_api.get_transcript(video_id=video_id)
+            transcript_list = self.supadata_api.youtube.transcript(video_id=video_id, lang="en")
             print(f"TRANSCRIPT wallahi: {transcript_list}") 
 
             # Find relevant segments around the timestamp
@@ -54,10 +57,12 @@ class YouTubeTranscriptService:
             print(f"error getting transcript: {e}")
             return "Transcript not available for this video."
     
-    def get_full_transcript(self, video_id: str) -> Optional[List[Dict]]:
-        """Get the full transcript for a video."""
-        try:
-            return YouTubeTranscriptApi.get_transcript(video_id)
-        except Exception as e:
-            print(f"Error getting full transcript for video {video_id}: {e}")
-            return None 
+
+
+if __name__ == "__main__":
+    # for local testing
+    supadata_api = Supadata(api_key="sd_15c3aa72f9ecd785a95224fdf14b0993")
+    transcript = supadata_api.youtube.transcript(video_id="5iTOphGnCtg", lang="en")
+    print(type(transcript.content))
+
+    
