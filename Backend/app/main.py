@@ -23,7 +23,7 @@ Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Socratic Monolithic Backend")
 
-# CORS middleware
+# CORS middleware - Updated for production
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
@@ -32,6 +32,10 @@ app.add_middleware(
         "http://localhost",       # Frontend in containerized environment (default port 80)
         "http://frontend:80",     # Frontend service name in Docker network
         "http://frontend",
+        # Add your production domains here
+        "https://*.up.railway.app",  # All Railway subdomains
+        "https://*.netlify.app",  # In case you use Netlify for frontend
+        "https://*.vercel.app",   # In case you use Vercel for frontend       # Replace with your custom domain
     ],
     allow_credentials=True,
     allow_methods=["*"],

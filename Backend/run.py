@@ -12,7 +12,21 @@ from app.database.database import engine
 Base.metadata.create_all(bind=engine)
 
 if __name__ == "__main__":
-    # Get database URL from environment
+    # Get configuration from environment
     database_url = os.getenv("DATABASE_URL", "SQLite database")
-    print(f"Starting Socratic monolithic backend with {database_url}")
-    uvicorn.run("app.main:app", host="0.0.0.0", port=8000, reload=True) 
+    port = int(os.getenv("PORT", 8000))
+    host = os.getenv("HOST", "0.0.0.0")
+    
+    # Determine if we're in production
+    is_production = os.getenv("RAILWAY_ENVIRONMENT") or os.getenv("RENDER") or os.getenv("VERCEL")
+    
+    print(f"Starting Socratic backend on {host}:{port}")
+    print(f"Database: {database_url}")
+    print(f"Environment: {'Production' if is_production else 'Development'}")
+    
+    uvicorn.run(
+        "app.main:app", 
+        host=host, 
+        port=port, 
+        reload=not is_production  # Only reload in development
+    ) 
