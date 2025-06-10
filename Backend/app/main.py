@@ -32,7 +32,6 @@ app.add_middleware(
         "http://localhost",       # Frontend in containerized environment (default port 80)
         "http://frontend:80",     # Frontend service name in Docker network
         "http://frontend",
-        "http://frontend-production-3661.up.railway.app",
     ],
     allow_credentials=True,
     allow_methods=["*"],
@@ -40,7 +39,7 @@ app.add_middleware(
 )
 
 # Initialize services
-REDIS_URL = os.getenv("REDIS_URL", "redis://redis:6379")
+REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379")
 convo_service = ConversationService(redis_url=REDIS_URL)
 
 # Pydantic models for request/response
@@ -526,4 +525,41 @@ async def get_question_by_id(question_id: int, db: Session = Depends(get_db)):
     question = db.query(Question).filter(Question.id == question_id).first()
     if not question:
         raise HTTPException(status_code=404, detail="Question not found")
-    return question 
+    return question
+
+@app.post("/chat-video")
+async def chat_video(request: dict, current_user = Depends(get_current_user)):
+    """Handle chat requests about YouTube videos with context awareness"""
+    try:
+        print(f"REQUEST RECEIVED: {request}")
+        query = request.get("query", "")
+        video_id = request.get("video_id", "")
+        video_url = request.get("video_url", "")
+        timestamp = request.get("timestamp")
+        user_id = current_user.id
+        
+        if not query or not video_id:
+            raise HTTPException(status_code=400, detail="Query and video_id are required")
+        
+        # Get or create session history from Redis
+        session_data = await convo_service.get_video_session(user_id, video_id)
+        print(f"SESSION DATA RECEIVED: {session_data}")
+        print(f"ATTEMPTING TO ANSWER: {query}")
+        if timestamp:
+            print(f"VIDEO TIMESTAMP: {timestamp}")
+        
+        # Process the query and update session with timestamp context
+        response_text = await convo_service.process_video_chat(
+            user_id=user_id,
+            video_id=video_id,
+            video_url=video_url,
+            query=query,
+            session_data=session_data,
+            timestamp=timestamp
+        )
+
+        
+        return {"response": response_text, "video_id": video_id}
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="Failed to process video chat request") 
