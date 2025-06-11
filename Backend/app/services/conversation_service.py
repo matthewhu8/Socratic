@@ -319,8 +319,11 @@ class ConversationService:
             "timestamp": datetime.now(UTC).isoformat(),
             "video_timestamp": timestamp 
         })
-
-        video_info = self.extract_video_info(video_url)
+        try:
+            video_info = self.extract_video_info(video_url)
+        except Exception as e:
+            print(f"Skipping title and author extraction, Error extracting video info: {e}")
+            video_info = None
         transcript = self.get_transcript_context(video_id, timestamp, context_seconds=30)
         
         # Enhanced context for the LLM

@@ -44,13 +44,14 @@ class GeminiService:
         '''
         try:
             # Enhanced system instructions with video context awareness
-            context = video_context.get("video_context")
-            video_title = context.get("title")
-            video_author = context.get("author")
-            video_description = context.get("description")
-            print(f"VIDEO TITLE: {context}")
-            system_instructions = f"""You are a helpful AI assistant to answer students' questions about this YouTube video. The video title is: {video_title}, by {video_author}. The student may also be referencing this specific part from the video transcript.
-""" 
+            if video_context.get("video_context") is not None:
+                context = video_context.get("video_context")
+                video_title = context.get("title")
+                video_author = context.get("author")
+                system_instructions = f"""You are a helpful AI assistant to answer students' questions about this YouTube video. The video title is: {video_title}, by {video_author}. The student may also be referencing this specific part from the video transcript.""" 
+            else:
+                system_instructions = f"""You are a helpful AI assistant to answer students' questions about this YouTube video. The student may also be referencing this specific part from the video transcript.""" 
+                
             video_transcript = video_context.get("transcript")
             print(f"VIDEO TRANSCRIPT: {video_transcript}")
             # Extract chat history from session_data
