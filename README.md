@@ -1,5 +1,5 @@
-# SocraticMonoRepo
-Codebase for the socratic web app
+# Socratic Application Repository
+Codebase for the socratic web app. This is the Mono-repo right now for all our code. 
 
 Make sure you have the requirements downloaded. 
 
