@@ -9,4 +9,5 @@ then go to backend, and start it with the run.py file as the entry point.
 environment variables are set manually in production environment,
 we use to the default values (hard coded in) such as local host for local testing
 
-
+# Below is the private repo we are using to train our LLM API endpoints that we call for text/image generation. 
+https://github.com/matthewhu8/SocraticTrainer
