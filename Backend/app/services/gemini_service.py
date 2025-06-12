@@ -13,7 +13,7 @@ class GeminiService:
             raise ValueError("GEMINI_API_KEY environment variable is required")
         
         genai.configure(api_key=self.api_key)
-        self.model = genai.GenerativeModel('gemini-2.0-flash')
+        self.model = genai.GenerativeModel('gemini-2.5-flash-preview-05-20')
         print(f"GEMINI MODEL: {self.model}")
     
     def format_chat_history(self, chat_history: List[Dict]) -> List[Dict]:
