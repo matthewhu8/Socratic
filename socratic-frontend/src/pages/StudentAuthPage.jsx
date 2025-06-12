@@ -113,7 +113,7 @@ function StudentAuthPage() {
           isAuthenticated: true
         });
         
-        navigate('/student/dashboard');
+        navigate('/student/home');
       } else {
         throw new Error('Failed to fetch user profile');
       }

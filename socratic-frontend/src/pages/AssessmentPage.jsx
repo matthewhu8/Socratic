@@ -95,11 +95,11 @@ function AssessmentPage() {
     <div className="assessment-page-container">
       <div className="sticky-nav">
         <div className="nav-container">
-          <Link to="/" className="nav-item">
-            <span className="nav-label">Socratic</span>
+          <Link to="/student/home" className="nav-item">
+            <span className="nav-label">Home</span>
           </Link>
           <Link to="/student/dashboard" className="nav-item">
-            <span className="nav-label">Student Dashboard</span>
+            <span className="nav-label">Dashboard</span>
           </Link>
         </div>
       </div>
@@ -212,7 +212,7 @@ function AssessmentPage() {
       </div>
 
       <div className="assessment-footer">
-        <Link to="/student" className="back-link">Back to Dashboard</Link>
+        <Link to="/student/home" className="back-link">Back to Home</Link>
       </div>
     </div>
   );
