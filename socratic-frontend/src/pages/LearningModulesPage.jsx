@@ -236,39 +236,47 @@ function LearningModulesPage() {
 
   return (
     <div className="learning-modules-container">
-      {/* Header */}
-      <div className="learning-modules-header">
-        <div className="header-content">
-          <Link to="/student/dashboard" className="back-link">
-            ← Back to Dashboard
-          </Link>
-          <h1>Learning Modules</h1>
-          <p>Watch YouTube videos and get AI-powered assistance to enhance your learning</p>
-        </div>
-      </div>
-
-      {/* YouTube URL Input */}
-      <div className="url-input-section">
-        <form onSubmit={handleUrlSubmit} className="url-form">
-          <div className="input-group">
-            <input
-              type="url"
-              value={youtubeUrl}
-              onChange={(e) => setYoutubeUrl(e.target.value)}
-              placeholder="Paste YouTube URL here (e.g., https://www.youtube.com/watch?v=...)"
-              className="url-input"
-              required
-            />
-            <button type="submit" className="load-button">
-              Load Video
-            </button>
+      {/* Header - only show when video is loaded */}
+      {videoId && (
+        <div className="learning-modules-header">
+          <div className="header-content">
+            <Link to="/student/dashboard" className="back-link">
+              ← Back to Dashboard
+            </Link>
+            <h1>Learning Modules</h1>
+            <p>Watch YouTube videos and get AI-powered assistance to enhance your learning</p>
           </div>
-          {error && <div className="error-message">{error}</div>}
-        </form>
-      </div>
+        </div>
+      )}
 
-      {/* Main Content Area */}
-      {videoId ? (
+      {/* YouTube URL Input - only show when no video is loaded */}
+      {!videoId && (
+        <div className={`url-input-section ${!videoId ? 'centered' : ''}`}>
+          <div className="url-input-header">
+            <h1>Learning Modules</h1>
+            <p>Paste a YouTube URL below to get started with AI-powered video learning</p>
+          </div>
+          <form onSubmit={handleUrlSubmit} className="url-form">
+            <div className="input-group">
+              <input
+                type="url"
+                value={youtubeUrl}
+                onChange={(e) => setYoutubeUrl(e.target.value)}
+                placeholder="Paste YouTube URL here (e.g., https://www.youtube.com/watch?v=...)"
+                className="url-input"
+                required
+              />
+              <button type="submit" className="load-button">
+                Load Video
+              </button>
+            </div>
+            {error && <div className="error-message">{error}</div>}
+          </form>
+        </div>
+      )}
+
+      {/* Main Content Area - only show when video is loaded */}
+      {videoId && (
         <div className="main-content">
           {/* Video Section */}
           <div className={`video-section ${isChatFocused ? 'shrunk' : ''}`}>
@@ -335,23 +343,6 @@ function LearningModulesPage() {
                 </button>
               </div>
             </form>
-          </div>
-        </div>
-      ) : (
-        <div className="empty-state">
-          <div className="empty-state-content">
-            <div className="empty-state-icon">📺</div>
-            <h2>Ready to Learn?</h2>
-            <p>Paste a YouTube URL above to get started. Once loaded, you can watch the video and ask me questions about the content!</p>
-            <div className="example-urls">
-              <h4>Try these example videos:</h4>
-              <button 
-                onClick={() => setYoutubeUrl('https://www.youtube.com/watch?v=dQw4w9WgXcQ')}
-                className="example-button"
-              >
-                Sample Educational Video
-              </button>
-            </div>
           </div>
         </div>
       )}

@@ -91,7 +91,7 @@ function StudentDashboardPage() {
     <div className="student-dashboard-container">
       <div className="sticky-nav">
         <div className="nav-container">
-          <Link to="/" className="nav-item">
+          <Link to="/student/home" className="nav-item">
             <span className="nav-icon">🏠</span>
             <span className="nav-label">Home</span>
           </Link>

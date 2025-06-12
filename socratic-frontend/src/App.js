@@ -7,6 +7,7 @@ import TeacherDashboardPage from './pages/TeacherDashboardPage';
 import CreateTestPage from './pages/CreateTestPage';
 import CreatePracticeExamPage from './pages/CreatePracticeExamPage';
 import StudentDashboardPage from './pages/StudentDashboardPage';
+import StudentHomePage from './pages/StudentHomePage';
 import AssessmentPage from './pages/AssessmentPage';
 import TestPage from './pages/TestPage';
 import TopicProgressPage from './pages/TopicProgressPage';
@@ -84,6 +85,11 @@ function App() {
             <Route path="/teachers/auth" element={<TeacherAuthPage />} />
             
             {/* Student Protected Routes */}
+            <Route path="/student/home" element={
+              <ProtectedRoute userType="student">
+                <StudentHomePage />
+              </ProtectedRoute>
+            } />
             <Route path="/student/dashboard" element={
               <ProtectedRoute userType="student">
                 <StudentDashboardPage />
@@ -92,6 +98,11 @@ function App() {
             <Route path="/student/learning-modules" element={
               <ProtectedRoute userType="student">
                 <LearningModulesPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/student/assessment" element={
+              <ProtectedRoute userType="student">
+                <AssessmentPage />
               </ProtectedRoute>
             } />
             <Route path="/test/:testCode" element={

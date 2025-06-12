@@ -4,7 +4,8 @@
   align-items: center;
   min-height: 100vh;
   padding: 2rem;
-  background-color: #f9f9f9;
+  background-color: #1a1a1a;
+  color: #e0e0e0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
 }
 
@@ -15,13 +16,13 @@
 
 .home-header h1 {
   font-size: 2.5rem;
-  color: #2c3e50;
+  color: #e0e0e0;
   margin-bottom: 0.5rem;
 }
 
 .home-header p {
   font-size: 1.2rem;
-  color: #7f8c8d;
+  color: #a0a0a0;
 }
 
 .dashboard-options {
@@ -34,20 +35,21 @@
 
 .dashboard-card {
   flex: 1;
-  background-color: white;
+  background-color: #2d2d2d;
+  border: 1px solid #404040;
   border-radius: 12px;
   padding: 2rem;
   text-align: center;
   text-decoration: none;
-  color: #2c3e50;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+  color: #e0e0e0;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
   max-width: 400px;
 }
 
 .dashboard-card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
 }
 
 .card-icon {
@@ -58,18 +60,18 @@
 .dashboard-card h2 {
   font-size: 1.5rem;
   margin-bottom: 1rem;
-  color: #3498db;
+  color: #667eea;
 }
 
 .dashboard-card p {
-  color: #7f8c8d;
+  color: #a0a0a0;
   line-height: 1.5;
 }
 
 .home-footer {
   margin-top: 4rem;
   text-align: center;
-  color: #95a5a6;
+  color: #666;
   font-size: 0.9rem;
 }
 
