@@ -33,8 +33,14 @@ function StudentHomePage() {
 
         <Link to="/student/learning-modules" className="nav-option">
           <div className="nav-option-icon">🎓</div>
-          <h2>Learning</h2>
+          <h2>YouTube Assisted Learning</h2>
           <p>Watch YouTube videos with AI-powered assistance and interactive learning</p>
+        </Link>
+
+        <Link to="/student/dynamic-learning" className="nav-option">
+          <div className="nav-option-icon">🚀</div>
+          <h2>Dynamic Learning</h2>
+          <p>Adaptive AI-powered learning experiences tailored to your progress</p>
         </Link>
       </div>
     </div>
