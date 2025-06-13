@@ -1,11 +1,12 @@
 import React, { useState, useContext, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../contexts/AuthContext';
 import '../styles/LearningModulesPage.css';
 import API_URL from '../config/api';
 
 function LearningModulesPage() {
   const { currentUser } = useContext(AuthContext);
+  const navigate = useNavigate();
   const [youtubeUrl, setYoutubeUrl] = useState('');
   const [videoId, setVideoId] = useState('');
   const [videoTitle, setVideoTitle] = useState('');
@@ -236,13 +237,18 @@ function LearningModulesPage() {
 
   return (
     <div className="learning-modules-container">
+      {/* Back Button */}
+      <button 
+        onClick={() => navigate(-1)} 
+        style={{ position: 'absolute', top: 24, left: 24, padding: '8px 16px', fontSize: '16px', cursor: 'pointer', borderRadius: '6px', border: '1px solid #ccc', background: '#fff' }}
+      >
+        ← Back
+      </button>
+
       {/* Header - only show when video is loaded */}
       {videoId && (
         <div className="learning-modules-header">
           <div className="header-content">
-            <Link to="/student/dashboard" className="back-link">
-              ← Back to Dashboard
-            </Link>
             <h1>Learning Modules</h1>
             <p>Watch YouTube videos and get AI-powered assistance to enhance your learning</p>
           </div>

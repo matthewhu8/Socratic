@@ -7,10 +7,11 @@
 
 /* Header Styles */
 .learning-modules-header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  color: #1a202c;
   padding: 1rem 0;
   margin-bottom: 1.5rem;
+  border-bottom: 1px solid #e2e8f0;
 }
 
 .header-content {
@@ -20,7 +21,7 @@
 }
 
 .back-link {
-  color: rgba(255, 255, 255, 0.9);
+  color: #4a5568;
   text-decoration: none;
   font-size: 0.9rem;
   margin-bottom: 0.5rem;
@@ -29,13 +30,20 @@
 }
 
 .back-link:hover {
-  color: white;
+  color: #1a202c;
 }
 
 .learning-modules-header h1 {
   font-size: 1.8rem;
   margin: 0.25rem 0;
-  font-weight: 700;
+  font-weight: 800;
+  background: linear-gradient(90deg, #1a202c 0%, #4a5568 50%, #667eea 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-fill-color: transparent;
+  letter-spacing: 1px;
+  text-shadow: 0 2px 12px rgba(60, 60, 120, 0.10);
 }
 
 .learning-modules-header p {
@@ -68,7 +76,14 @@
   font-size: 2.5rem;
   color: #2c3e50;
   margin-bottom: 1rem;
-  font-weight: 700;
+  font-weight: 800;
+  background: linear-gradient(90deg, #1a202c 0%, #4a5568 50%, #667eea 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-fill-color: transparent;
+  letter-spacing: 1.5px;
+  text-shadow: 0 2px 12px rgba(60, 60, 120, 0.10);
 }
 
 .url-input-header p {
