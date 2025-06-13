@@ -1,5 +1,7 @@
 //// filepath: /Users/matthewhu/Code/SocraticMonoRepo/socratic-frontend/src/pages/HomePage.jsx
 import React from 'react';
+import { PiStudentFill } from "react-icons/pi";
+import { LiaChalkboardTeacherSolid } from "react-icons/lia";
 import { Link } from 'react-router-dom';
 import '../styles/HomePage.css';
 
@@ -13,13 +15,13 @@ function HomePage() {
       
       <div className="dashboard-options">
         <Link to="/student/auth" className="dashboard-card">
-          <div className="card-icon">👨‍🎓</div>
+          <div className="card-icon"><PiStudentFill /></div>
           <h2>Student Access</h2>
           <p>Sign in or create an account to access your tests, practice problems, and learning modules</p>
         </Link>
         
         <Link to="/teachers/auth" className="dashboard-card">
-          <div className="card-icon">👩‍🏫</div>
+          <div className="card-icon"><LiaChalkboardTeacherSolid /></div>
           <h2>Teacher Access</h2>
           <p>Sign in or create an account to manage tests, learning modules, and practice exams</p>
         </Link>
