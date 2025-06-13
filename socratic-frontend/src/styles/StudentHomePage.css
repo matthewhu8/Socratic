@@ -7,11 +7,12 @@
 
 /* Header */
 .student-home-header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  color: #1a202c;
   padding: 3rem 0;
   text-align: center;
   position: relative;
+  border-bottom: 1px solid #e2e8f0;
 }
 
 .header-content {
@@ -21,9 +22,17 @@
 }
 
 .header-content h1 {
-  font-size: 2.5rem;
-  font-weight: 700;
+  font-size: 3rem;
+  font-weight: 800;
   margin-bottom: 0.5rem;
+  background: linear-gradient(90deg, #1a202c 0%, #4a5568 50%, #667eea 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-fill-color: transparent;
+  letter-spacing: 1.5px;
+  text-shadow: 0 2px 12px rgba(60, 60, 120, 0.10);
+  transition: font-size 0.2s;
 }
 
 .header-content p {
@@ -37,9 +46,9 @@
   top: 2rem;
   right: 2rem;
   padding: 0.5rem 1rem;
-  background: rgba(255, 255, 255, 0.2);
-  color: white;
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: rgba(26, 32, 44, 0.1);
+  color: #4a5568;
+  border: 1px solid rgba(26, 32, 44, 0.2);
   border-radius: 6px;
   font-size: 0.9rem;
   cursor: pointer;
@@ -47,8 +56,9 @@
 }
 
 .logout-button:hover {
-  background: rgba(255, 255, 255, 0.3);
-  border-color: rgba(255, 255, 255, 0.5);
+  background: rgba(26, 32, 44, 0.15);
+  border-color: rgba(26, 32, 44, 0.3);
+  color: #1a202c;
 }
 
 /* Navigation Options */

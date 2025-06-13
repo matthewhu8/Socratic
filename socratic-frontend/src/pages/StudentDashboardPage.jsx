@@ -1,6 +1,6 @@
 //// filepath: /Users/matthewhu/Code/SocraticMonoRepo/socratic-frontend/src/pages/StudentDashboardPage.jsx
 import React, { useState, useContext } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import '../styles/StudentDashboardPage.css';
 import { AuthContext } from '../contexts/AuthContext';
 
@@ -69,6 +69,7 @@ function StudentDashboardPage() {
 
   const [loading, setLoading] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
 
   const refreshRecommendations = () => {
     setLoading(true);
@@ -89,23 +90,34 @@ function StudentDashboardPage() {
 
   return (
     <div className="student-dashboard-container">
-      <div className="sticky-nav">
-        <div className="nav-container">
-          <Link to="/student/home" className="nav-item">
-            <span className="nav-icon">🏠</span>
-            <span className="nav-label">Home</span>
-          </Link>
-          <Link to="/student/learning-modules" className={`nav-item ${isActive('/student/learning-modules') ? 'active' : ''}`}>
-            <span className="nav-icon">📚</span>
-            <span className="nav-label">Learning</span>
-          </Link>
-          <Link to="/student/assessment" className={`nav-item ${isActive('/student/assessment') || isActive('/student/practice') ? 'active' : ''}`}>
-            <span className="nav-icon">📝</span>
-            <span className="nav-label">Practice/Assessment</span>
-          </Link>
-        </div>
-      </div>
-
+      {/* Back Button */}
+      <button 
+        onClick={() => navigate('/student/home')} 
+        style={{ 
+          position: 'absolute', 
+          top: 24, 
+          left: 24, 
+          padding: '8px 16px', 
+          fontSize: '16px', 
+          cursor: 'pointer', 
+          borderRadius: '6px', 
+          border: '1px solid #ccc', 
+          background: '#fff',
+          color: '#2c3e50',
+          transition: 'all 0.2s ease'
+        }}
+        onMouseEnter={(e) => {
+          e.target.style.background = '#f8f9fa';
+          e.target.style.borderColor = '#3498db';
+        }}
+        onMouseLeave={(e) => {
+          e.target.style.background = '#fff';
+          e.target.style.borderColor = '#ccc';
+        }}
+      >
+        ← Back to Home
+      </button>
+      
       <div className="dashboard-header">
         <h1>{userName}'s Student Dashboard</h1>
         <p>Track your progress in IBDP Business Management</p>

@@ -36,12 +36,6 @@ function StudentHomePage() {
           <h2>Learning</h2>
           <p>Watch YouTube videos with AI-powered assistance and interactive learning</p>
         </Link>
-
-        <Link to="/student/assessment" className="nav-option">
-          <div className="nav-option-icon">📝</div>
-          <h2>Practice & Assessments</h2>
-          <p>Take practice tests, quizzes, and track your assessment results</p>
-        </Link>
       </div>
     </div>
   );
