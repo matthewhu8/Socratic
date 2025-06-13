@@ -14,6 +14,7 @@ import TopicProgressPage from './pages/TopicProgressPage';
 import StudentAuthPage from './pages/StudentAuthPage';
 import TeacherAuthPage from './pages/TeacherAuthPage';
 import LearningModulesPage from './pages/LearningModulesPage';
+import DynamicLearningPage from './pages/DynamicLearningPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import { AuthProvider } from './contexts/AuthContext';
 
@@ -98,6 +99,11 @@ function App() {
             <Route path="/student/learning-modules" element={
               <ProtectedRoute userType="student">
                 <LearningModulesPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/student/dynamic-learning" element={
+              <ProtectedRoute userType="student">
+                <DynamicLearningPage />
               </ProtectedRoute>
             } />
             <Route path="/student/assessment" element={
