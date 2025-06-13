@@ -29,7 +29,6 @@
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  text-fill-color: transparent;
   letter-spacing: 1.5px;
   text-shadow: 0 2px 12px rgba(60, 60, 120, 0.10);
   transition: font-size 0.2s;
@@ -65,18 +64,19 @@
 .navigation-options {
   max-width: 1000px;
   margin: 0 auto;
-  padding: 4rem 2rem;
+  padding: 2rem 2rem;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 2rem;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 5rem;
+  min-height: 60vh;
 }
 
 .nav-option {
   background: white;
   border-radius: 12px;
-  padding: 2.5rem 2rem;
+  padding: 4vh 4vw;
   text-decoration: none;
-  color: #2c3e50;
+  color: #0a1d31;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
   border: 1px solid #e2e6ea;
   transition: all 0.3s ease;
@@ -85,7 +85,9 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 200px;
+  aspect-ratio: 1.2 / 1;
+  min-height: 20vh;
+  max-height: 25vh;
 }
 
 .nav-option:hover {
@@ -95,7 +97,7 @@
 }
 
 .nav-option-icon {
-  font-size: 3rem;
+  font-size: 4rem;
   margin-bottom: 1rem;
   line-height: 1;
 }
@@ -132,17 +134,20 @@
   
   .navigation-options {
     grid-template-columns: 1fr;
-    padding: 2rem 1rem;
-    gap: 1.5rem;
+    padding: 3vh 4vw;
+    gap: 4vh;
+    min-height: 70vh;
   }
   
   .nav-option {
-    padding: 2rem 1.5rem;
-    min-height: 160px;
+    padding: 4vh 6vw;
+    min-height: 18vh;
+    max-height: 22vh;
+    aspect-ratio: 1.5 / 1;
   }
   
   .nav-option-icon {
-    font-size: 2.5rem;
+    font-size: 3.5rem;
   }
   
   .nav-option h2 {
@@ -151,5 +156,27 @@
   
   .nav-option p {
     font-size: 0.9rem;
+  }
+}
+
+/* For very small screens (iPhone SE, etc.) */
+@media (max-width: 375px) {
+  .nav-option {
+    padding: 3.5vh 6vw;
+    min-height: 16vh;
+    max-height: 20vh;
+  }
+}
+
+/* For larger screens/tablets */
+@media (min-width: 1024px) {
+  .navigation-options {
+    padding: 5vh 2rem;
+  }
+  
+  .nav-option {
+    padding: 5vh 3vw;
+    min-height: 22vh;
+    max-height: 28vh;
   }
 } 
