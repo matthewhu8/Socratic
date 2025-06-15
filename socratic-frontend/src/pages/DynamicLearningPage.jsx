@@ -1,59 +1,103 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useContext } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { AuthContext } from '../contexts/AuthContext';
 import '../styles/DynamicLearningPage.css';
 
+// Import icons (you may need to install react-icons if not already installed)
+import { TbMathFunction } from 'react-icons/tb';
+import { IoFlashOutline } from 'react-icons/io5';
+import { TbFlask } from 'react-icons/tb';
+import { FaHeart } from 'react-icons/fa';
+import { TbBook } from 'react-icons/tb';
+
 function DynamicLearningPage() {
+  const { currentUser } = useContext(AuthContext);
   const navigate = useNavigate();
+
+  const subjects = [
+    {
+      id: 'mathematics',
+      name: 'Mathematics',
+      description: 'Interactive practice and examples',
+      icon: <TbMathFunction />,
+      color: '#4285f4',
+      path: '/student/dynamic-learning/mathematics'
+    },
+    {
+      id: 'physics',
+      name: 'Physics',
+      description: 'Interactive practice and examples',
+      icon: <IoFlashOutline />,
+      color: '#9c27b0',
+      path: '/student/dynamic-learning/physics'
+    },
+    {
+      id: 'chemistry',
+      name: 'Chemistry',
+      description: 'Interactive practice and examples',
+      icon: <TbFlask />,
+      color: '#4caf50',
+      path: '/student/dynamic-learning/chemistry'
+    },
+    {
+      id: 'biology',
+      name: 'Biology',
+      description: 'Interactive practice and examples',
+      icon: <FaHeart />,
+      color: '#f44336',
+      path: '/student/dynamic-learning/biology'
+    },
+    {
+      id: 'english',
+      name: 'English',
+      description: 'Interactive practice and examples',
+      icon: <TbBook />,
+      color: '#673ab7',
+      path: '/student/dynamic-learning/english'
+    }
+  ];
 
   return (
     <div className="dynamic-learning-container">
       {/* Back Button */}
       <button 
-        onClick={() => navigate('/student/home')} 
-        style={{ 
-          position: 'absolute', 
-          top: 24, 
-          left: 24, 
-          padding: '8px 16px', 
-          fontSize: '16px', 
-          cursor: 'pointer', 
-          borderRadius: '6px', 
-          border: '1px solid #ccc', 
-          background: '#fff',
-          color: '#2c3e50',
-          transition: 'all 0.2s ease'
-        }}
-        onMouseEnter={(e) => {
-          e.target.style.background = '#f8f9fa';
-          e.target.style.borderColor = '#3498db';
-        }}
-        onMouseLeave={(e) => {
-          e.target.style.background = '#fff';
-          e.target.style.borderColor = '#ccc';
-        }}
+        onClick={() => navigate(-1)} 
+        className="back-button"
       >
-        ← Back to Home
+        ← Back
       </button>
 
-      {/* Main Content */}
-      <div className="dynamic-learning-content">
-        <div className="coming-soon-card">
-          <div className="coming-soon-icon">🚀</div>
-          <h1>Dynamic Learning</h1>
-          <div className="beta-badge">Pre-Beta</div>
-          <p className="coming-soon-message">
-            We are currently in Pre-Beta Testing. Stay tuned for updates about this feature's release.
-          </p>
-          <div className="feature-preview">
-            <h3>What to Expect:</h3>
-            <ul>
-              <li>Adaptive AI-powered learning experiences</li>
-              <li>Personalized content based on your progress</li>
-              <li>Interactive learning modules</li>
-              <li>Real-time performance adjustments</li>
-            </ul>
-          </div>
-        </div>
+      {/* Header */}
+      <div className="dynamic-learning-header">
+        <h1>Socratic Learning</h1>
+        <p>Master concepts through interactive practice and personalized learning</p>
+      </div>
+
+      {/* Subject Cards */}
+      <div className="subjects-grid">
+        {subjects.map((subject) => (
+          <Link 
+            key={subject.id}
+            to={subject.path}
+            className="subject-card"
+          >
+            <div 
+              className="subject-icon"
+              style={{ backgroundColor: subject.color }}
+            >
+              {subject.icon}
+            </div>
+            <div className="subject-content">
+              <h3>{subject.name}</h3>
+              <p>{subject.description}</p>
+            </div>
+            <div className="subject-arrow">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                <path d="M9 18L15 12L9 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </div>
+          </Link>
+        ))}
       </div>
     </div>
   );
