@@ -64,17 +64,17 @@
 .navigation-options {
   max-width: 1000px;
   margin: 0 auto;
-  padding: 2rem 2rem;
+  padding: 2rem;
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 5rem;
+  gap: 2rem;
   min-height: 60vh;
 }
 
 .nav-option {
   background: white;
   border-radius: 12px;
-  padding: 4vh 4vw;
+  padding: 2.5rem;
   text-decoration: none;
   color: #0a1d31;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
@@ -85,9 +85,6 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  aspect-ratio: 1.2 / 1;
-  min-height: 20vh;
-  max-height: 25vh;
 }
 
 .nav-option:hover {

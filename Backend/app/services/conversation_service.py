@@ -319,11 +319,7 @@ class ConversationService:
             "timestamp": datetime.now(UTC).isoformat(),
             "video_timestamp": timestamp 
         })
-        try:
-            video_info = self.extract_video_info(video_url)
-        except Exception as e:
-            print(f"Skipping title and author extraction, Error extracting video info: {e}")
-            video_info = None
+        # video_info = self.extract_video_info(video_url)
             
         transcript = self.get_transcript_context(video_id, timestamp, context_seconds=30)
         
@@ -331,7 +327,7 @@ class ConversationService:
         enhanced_context = {
             "video_url": video_url,
             "video_timestamp": timestamp,
-            "video_context": video_info,
+            "video_context": None,
             "transcript": transcript,
             "message_history": session_data["messages"][-5:] if len(session_data["messages"]) > 5 else session_data["messages"]
         }
@@ -399,7 +395,7 @@ class ConversationService:
             print(f"Error loading transcript for {video_id}: {e}")
             return False
     
-    def get_transcript_context(self, video_id: str, timestamp: float, context_seconds: int = 30) -> str:
+    def get_transcript_context(self, video_id: str, timestamp: float, context_seconds: int = 45) -> str:
         """Get transcript context around timestamp from cache."""
         try:
             cache_key = f"{self.transcript_prefix}{video_id}"
@@ -415,7 +411,7 @@ class ConversationService:
             context_ms = context_seconds * 1000
             
             start_time = max(0, timestamp_ms - context_ms)
-            end_time = timestamp_ms + context_ms
+            end_time = timestamp_ms + (context_ms // 3)
             
             relevant_segments = []
             for chunk in transcript_chunks:

@@ -13,7 +13,8 @@ class GeminiService:
             raise ValueError("GEMINI_API_KEY environment variable is required")
         
         genai.configure(api_key=self.api_key)
-        self.model = genai.GenerativeModel('gemini-2.5-flash-preview-05-20')
+        self.model = genai.GenerativeModel('gemini-2.5-flash-preview-05-20', system_instruction="You are a helpful English AI assistant to answer students' questions about this YouTube video. Please answer in English. The student may also be referencing this specific part from the video transcript.")
+        self.otherModel = None # for future implementation when there are other featurtes beesides youtube chats
         print(f"GEMINI MODEL: {self.model}")
     
     def format_chat_history(self, chat_history: List[Dict]) -> List[Dict]:
@@ -48,17 +49,17 @@ class GeminiService:
                 context = video_context.get("video_context")
                 video_title = context.get("title")
                 video_author = context.get("author")
-                system_instructions = f"""You are a helpful AI assistant to answer students' questions about this YouTube video. The video title is: {video_title}, by {video_author}. The student may also be referencing this specific part from the video transcript.""" 
-            else:
-                system_instructions = f"""You are a helpful AI assistant to answer students' questions about this YouTube video. The student may also be referencing this specific part from the video transcript.""" 
-                
+                title_and_author = f"""The video title is: {video_title}, by {video_author}."""
+            else: 
+                title_and_author = ""
+            
             video_transcript = video_context.get("transcript")
             print(f"VIDEO TRANSCRIPT: {video_transcript}")
             # Extract chat history from session_data
             chat_history = session_data.get("messages", []) if session_data else []
 
             # Build the enhanced prompt with video context
-            prompt_parts = [system_instructions]
+            prompt_parts = [title_and_author]
             prompt_parts.append(f"\n--- VIDEO TRANSCRIPT CONTEXT ---\n{video_transcript}")
             
             # Add video context if available
