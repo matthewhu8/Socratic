@@ -15,7 +15,6 @@ function LearningModulesPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [player, setPlayer] = useState(null);
-  const [isChatFocused, setIsChatFocused] = useState(false);
 
   // Load YouTube Player API
   useEffect(() => {
@@ -285,7 +284,7 @@ function LearningModulesPage() {
       {videoId && (
         <div className="main-content">
           {/* Video Section */}
-          <div className={`video-section ${isChatFocused ? 'shrunk' : ''}`}>
+          <div className={`video-section`}>
             <div className="video-header">
               <h2>{videoTitle}</h2>
               <button onClick={clearVideo} className="clear-button">
@@ -298,7 +297,7 @@ function LearningModulesPage() {
           </div>
 
           {/* Chat Section */}
-          <div className={`chat-section ${isChatFocused ? 'expanded' : ''}`}>
+          <div className={`chat-section`}>
             <div className="chat-header">
               <h3>Ask Questions About This Video</h3>
               <p>I can help explain concepts, provide additional context, or answer questions about the video content.</p>
@@ -334,8 +333,6 @@ function LearningModulesPage() {
                   type="text"
                   value={currentMessage}
                   onChange={(e) => setCurrentMessage(e.target.value)}
-                  onFocus={() => setIsChatFocused(true)}
-                  onBlur={() => setIsChatFocused(false)}
                   placeholder="Ask a question about the video..."
                   className="chat-input"
                   disabled={isLoading}
