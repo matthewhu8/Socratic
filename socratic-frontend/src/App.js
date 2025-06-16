@@ -15,6 +15,11 @@ import StudentAuthPage from './pages/StudentAuthPage';
 import TeacherAuthPage from './pages/TeacherAuthPage';
 import LearningModulesPage from './pages/LearningModulesPage';
 import DynamicLearningPage from './pages/DynamicLearningPage';
+import MathematicsPage from './pages/MathematicsPage';
+import PhysicsPage from './pages/PhysicsPage';
+import ChemistryPage from './pages/ChemistryPage';
+import BiologyPage from './pages/BiologyPage';
+import PracticeModePage from './pages/PracticeModePage';
 import ProtectedRoute from './components/ProtectedRoute';
 import { AuthProvider } from './contexts/AuthContext';
 
@@ -106,6 +111,11 @@ function App() {
                 <DynamicLearningPage />
               </ProtectedRoute>
             } />
+            <Route path="/student/dynamic-learning/mathematics" element={<ProtectedRoute userType="student"><MathematicsPage /></ProtectedRoute>} />
+            <Route path="/student/dynamic-learning/physics" element={<ProtectedRoute userType="student"><PhysicsPage /></ProtectedRoute>} />
+            <Route path="/student/dynamic-learning/chemistry" element={<ProtectedRoute userType="student"><ChemistryPage /></ProtectedRoute>} />
+            <Route path="/student/dynamic-learning/biology" element={<ProtectedRoute userType="student"><BiologyPage /></ProtectedRoute>} />
+            <Route path="/student/dynamic-learning/:subject/:subtopic" element={<ProtectedRoute userType="student"><PracticeModePage /></ProtectedRoute>} />
             <Route path="/student/assessment" element={
               <ProtectedRoute userType="student">
                 <AssessmentPage />
