@@ -1,4 +1,4 @@
-import React, { useState, useContext, useEffect } from 'react';
+import React, { useState, useContext, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../contexts/AuthContext';
 import '../styles/LearningModulesPage.css';
@@ -15,6 +15,46 @@ function LearningModulesPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [player, setPlayer] = useState(null);
+  const [videoPanelWidth, setVideoPanelWidth] = useState(55); // Initial width in percentage
+  const mainContentRef = useRef(null);
+  const isResizing = useRef(false);
+
+  const handleMouseDown = (e) => {
+    isResizing.current = true;
+    document.body.style.cursor = 'col-resize';
+  };
+
+  useEffect(() => {
+    const handleMouseMove = (e) => {
+      if (!isResizing.current || !mainContentRef.current) return;
+      
+      const mainContent = mainContentRef.current;
+      const rect = mainContent.getBoundingClientRect();
+      
+      // Calculate the new width as a percentage of the main content area
+      const newWidth = ((e.clientX - rect.left) / rect.width) * 100;
+      
+      // Add constraints to prevent panels from becoming too small
+      if (newWidth > 25 && newWidth < 75) {
+        setVideoPanelWidth(newWidth);
+      }
+    };
+
+    const handleMouseUp = () => {
+      if (isResizing.current) {
+        isResizing.current = false;
+        document.body.style.cursor = 'default';
+      }
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, []);
 
   // Load YouTube Player API
   useEffect(() => {
@@ -282,9 +322,13 @@ function LearningModulesPage() {
 
       {/* Main Content Area - only show when video is loaded */}
       {videoId && (
-        <div className="main-content">
+        <div 
+          className="main-content" 
+          ref={mainContentRef}
+          style={{ gridTemplateColumns: `${videoPanelWidth}% auto 1fr`, userSelect: isResizing.current ? 'none' : 'auto' }}
+        >
           {/* Video Section */}
-          <div className={`video-section`}>
+          <div className="video-section">
             <div className="video-header">
               <h2>{videoTitle}</h2>
               <button onClick={clearVideo} className="clear-button">
@@ -296,8 +340,10 @@ function LearningModulesPage() {
             </div>
           </div>
 
+          <div className="resizer" onMouseDown={handleMouseDown}></div>
+
           {/* Chat Section */}
-          <div className={`chat-section`}>
+          <div className="chat-section">
             <div className="chat-header">
               <h3>Ask Questions About This Video</h3>
               <p>I can help explain concepts, provide additional context, or answer questions about the video content.</p>
