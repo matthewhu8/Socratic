@@ -5,7 +5,7 @@ import { AuthContext } from '../contexts/AuthContext';
 import API_URL from '../config/api';
 import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
 
-const googleClientId = 154837134956-0fa9rg830fjqkm60kkh02o2rbq0r93rc.apps.googleusercontent.com;
+const googleClientId = "154837134956-0fa9rg830fjqkm60kkh02o2rbq0r93rc.apps.googleusercontent.com";
 console.log("here is the id that is supposedly loaded in", googleClientId)
 
 function StudentAuthPage() {
