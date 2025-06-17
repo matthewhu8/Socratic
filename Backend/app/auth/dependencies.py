@@ -12,7 +12,7 @@ async def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(security),
     db: Session = Depends(get_db)
 ):
-    """Get current authenticated user (student or teacher)."""
+    """Get current authenticated user (handles both Google and regular auth)."""
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
@@ -23,6 +23,7 @@ async def get_current_user(
         payload = jwt.decode(credentials.credentials, SECRET_KEY, algorithms=[ALGORITHM])
         user_id: str = payload.get("sub")
         user_type: str = payload.get("type")
+        db_id: str = payload.get("db_id")  # For Google users
         
         if user_id is None or user_type is None:
             raise credentials_exception
@@ -32,9 +33,17 @@ async def get_current_user(
     
     # Get user based on type
     if user_type == "student":
-        user = db.query(StudentUser).filter(StudentUser.id == int(user_id)).first()
+        if db_id:
+            # Google user - use database ID to find user
+            user = db.query(StudentUser).filter(StudentUser.id == int(db_id)).first()
+        else:
+            # Regular user - user_id is the database ID
+            user = db.query(StudentUser).filter(StudentUser.id == int(user_id)).first()
     elif user_type == "teacher":
-        user = db.query(TeacherUser).filter(TeacherUser.id == int(user_id)).first()
+        if db_id:
+            user = db.query(TeacherUser).filter(TeacherUser.id == int(db_id)).first()
+        else:
+            user = db.query(TeacherUser).filter(TeacherUser.id == int(user_id)).first()
     else:
         raise credentials_exception
         
@@ -58,6 +67,7 @@ async def get_current_student(
         payload = jwt.decode(credentials.credentials, SECRET_KEY, algorithms=[ALGORITHM])
         user_id: str = payload.get("sub")
         user_type: str = payload.get("type")
+        db_id: str = payload.get("db_id")  # For Google users
         
         if user_id is None or user_type != "student":
             raise credentials_exception
@@ -65,7 +75,13 @@ async def get_current_student(
     except JWTError:
         raise credentials_exception
     
-    user = db.query(StudentUser).filter(StudentUser.id == int(user_id)).first()
+    if db_id:
+        # Google user
+        user = db.query(StudentUser).filter(StudentUser.id == int(db_id)).first()
+    else:
+        # Regular user
+        user = db.query(StudentUser).filter(StudentUser.id == int(user_id)).first()
+        
     if user is None:
         raise credentials_exception
         
@@ -86,6 +102,7 @@ async def get_current_teacher(
         payload = jwt.decode(credentials.credentials, SECRET_KEY, algorithms=[ALGORITHM])
         user_id: str = payload.get("sub")
         user_type: str = payload.get("type")
+        db_id: str = payload.get("db_id")  # For Google users
         
         if user_id is None or user_type != "teacher":
             raise credentials_exception
@@ -93,7 +110,13 @@ async def get_current_teacher(
     except JWTError:
         raise credentials_exception
     
-    user = db.query(TeacherUser).filter(TeacherUser.id == int(user_id)).first()
+    if db_id:
+        # Google user
+        user = db.query(TeacherUser).filter(TeacherUser.id == int(db_id)).first()
+    else:
+        # Regular user
+        user = db.query(TeacherUser).filter(TeacherUser.id == int(user_id)).first()
+        
     if user is None:
         raise credentials_exception
         

@@ -16,6 +16,10 @@ from .auth.dependencies import get_current_user, get_current_student, get_curren
 from .services.conversation_service import ConversationService
 from jose import jwt, JWTError
 
+# Imports for Google Sign-In
+from google.oauth2 import id_token
+from google.auth.transport import requests as google_requests
+
 load_dotenv()
 
 # Create all tables in the database
@@ -167,9 +171,72 @@ class TestSessionStart(BaseModel):
     question_ids: List[int]
     total_questions: int
 
-@app.post("/api/auth")
+# Pydantic model for Google token
+class GoogleToken(BaseModel):
+    token: str
 
-# Authentication endpoints
+@app.post("/api/auth/google/login", response_model=TokenResponse)
+async def google_login(request: GoogleToken, db: Session = Depends(get_db)):
+    """Handle Google Sign-In using Google ID as primary identifier."""
+    try:
+        # Get the Google Client ID from environment variables
+        google_client_id = os.getenv("GOOGLE_CLIENT_ID")
+        if not google_client_id:
+            raise HTTPException(status_code=500, detail="Google Client ID not configured")
+            
+        # Verify the ID token with Google
+        id_info = id_token.verify_oauth2_token(
+            request.token, google_requests.Request(), google_client_id
+        )
+        
+        # Extract user information from Google token
+        user_email = id_info.get("email")
+        user_name = id_info.get("name")
+        google_user_id = id_info.get("sub")  # This is Google's unique ID for the user
+
+        if not user_email or not google_user_id:
+            raise HTTPException(status_code=400, detail="Invalid Google token")
+
+        # Try to find existing user by email
+        student = db.query(StudentUser).filter(StudentUser.email == user_email).first()
+        
+        if not student:
+            # Create new user with a placeholder password (they'll never use it)
+            student = StudentUser(
+                name=user_name,
+                email=user_email,
+                hashed_password="google_auth_user",  # Placeholder - they won't use password login
+                grade=None  # They can set this later in their profile
+            )
+            db.add(student)
+            db.commit()
+            db.refresh(student)
+
+        # Here's the key: Use Google ID in the JWT token, not database ID
+        token_data = {
+            "sub": google_user_id,      # Google's unique ID
+            "type": "student",
+            "db_id": str(student.id)    # Store database ID for internal use
+        }
+        
+        access_token = create_access_token(token_data)
+        refresh_token = create_refresh_token(token_data)
+        
+        return {"access_token": access_token, "refresh_token": refresh_token}
+
+    except ValueError as e:
+        print(f"Token verification failed: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid Google authentication token",
+        )
+    except Exception as e:
+        print(f"Error during Google login: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Login failed. Please try again.",
+        )
+
 @app.post("/api/auth/student/register", response_model=StudentResponse)
 async def register_student(student: StudentCreate, db: Session = Depends(get_db)):
     """Register a new student user."""
