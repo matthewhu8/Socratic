@@ -6,6 +6,7 @@ import API_URL from '../config/api';
 import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
 
 const googleClientId = process.env.REACT_APP_GOOGLE_CLIENT_ID;
+console.log("here is the id that is supposedly loaded in", googleClientId)
 
 function StudentAuthPage() {
   const [isSignUp, setIsSignUp] = useState(false);
