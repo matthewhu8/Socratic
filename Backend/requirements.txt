@@ -16,3 +16,5 @@ yt-dlp>=2023.9.24
 supadata
 alembic>=1.12.0
 google-auth>=2.23.0
+Pillow>=10.0.0
+ffmpeg-python>=0.2.0

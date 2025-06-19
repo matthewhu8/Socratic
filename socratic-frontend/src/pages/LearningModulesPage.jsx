@@ -15,13 +15,21 @@ function LearningModulesPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [player, setPlayer] = useState(null);
-  const [videoPanelWidth, setVideoPanelWidth] = useState(55); // Initial width in percentage
+  const [videoPanelHeight, setVideoPanelHeight] = useState(60); // Changed from videoPanelWidth to videoPanelHeight
   const mainContentRef = useRef(null);
+  const chatMessagesRef = useRef(null); // Add ref for chat messages container
   const isResizing = useRef(false);
+
+  // Auto-scroll to bottom when new messages are added
+  useEffect(() => {
+    if (chatMessagesRef.current) {
+      chatMessagesRef.current.scrollTop = chatMessagesRef.current.scrollHeight;
+    }
+  }, [chatMessages, isLoading]);
 
   const handleMouseDown = (e) => {
     isResizing.current = true;
-    document.body.style.cursor = 'col-resize';
+    document.body.style.cursor = 'row-resize'; // Changed from 'col-resize' to 'row-resize'
   };
 
   useEffect(() => {
@@ -31,12 +39,12 @@ function LearningModulesPage() {
       const mainContent = mainContentRef.current;
       const rect = mainContent.getBoundingClientRect();
       
-      // Calculate the new width as a percentage of the main content area
-      const newWidth = ((e.clientX - rect.left) / rect.width) * 100;
+      // Calculate the new height as a percentage of the main content area
+      const newHeight = ((e.clientY - rect.top) / rect.height) * 100;
       
       // Add constraints to prevent panels from becoming too small
-      if (newWidth > 25 && newWidth < 75) {
-        setVideoPanelWidth(newWidth);
+      if (newHeight > 25 && newHeight < 75) {
+        setVideoPanelHeight(newHeight);
       }
     };
 
@@ -185,22 +193,25 @@ function LearningModulesPage() {
     };
 
     setChatMessages(prev => [...prev, userMessage]);
+    const messageToSend = currentMessage;
     setCurrentMessage('');
     setIsLoading(true);
 
     try {
+      const requestBody = {
+        query: messageToSend,
+        video_id: videoId,
+        video_url: youtubeUrl,
+        timestamp: currentTimestamp
+      };
+
       const response = await fetch(`${API_URL}/chat-video`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
         },
-        body: JSON.stringify({
-          query: currentMessage,
-          video_id: videoId,
-          video_url: youtubeUrl,
-          timestamp: currentTimestamp
-        })
+        body: JSON.stringify(requestBody)
       });
 
       if (response.ok) {
@@ -325,7 +336,7 @@ function LearningModulesPage() {
         <div 
           className="main-content" 
           ref={mainContentRef}
-          style={{ gridTemplateColumns: `${videoPanelWidth}% auto 1fr`, userSelect: isResizing.current ? 'none' : 'auto' }}
+          style={{ gridTemplateRows: `${videoPanelHeight}% auto 1fr`, userSelect: isResizing.current ? 'none' : 'auto' }}
         >
           {/* Video Section */}
           <div className="video-section">
@@ -340,7 +351,7 @@ function LearningModulesPage() {
             </div>
           </div>
 
-          <div className="resizer" onMouseDown={handleMouseDown}></div>
+          <div className="resizer horizontal" onMouseDown={handleMouseDown}></div>
 
           {/* Chat Section */}
           <div className="chat-section">
@@ -349,7 +360,7 @@ function LearningModulesPage() {
               <p>I can help explain concepts, provide additional context, or answer questions about the video content.</p>
             </div>
             
-            <div className="chat-messages">
+            <div className="chat-messages" ref={chatMessagesRef}>
               {chatMessages.map((message, index) => (
                 <div key={index} className={`message ${message.role}`}>
                   <div className="message-content">

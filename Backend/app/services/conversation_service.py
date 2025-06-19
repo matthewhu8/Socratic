@@ -310,8 +310,8 @@ class ConversationService:
         }
             
 
-    async def process_video_chat(self, user_id: int, video_id: str, video_url: str, query: str, session_data: Dict, timestamp: float = None) -> str:
-        """Process a video chat query with session persistence and video context."""
+    async def process_video_chat(self, user_id: int, video_id: str, video_url: str, query: str, session_data: Dict, timestamp: float = None, video_frame: str = None) -> str:
+        """Process a video chat query with session persistence, video context, and server-side frame extraction."""
         # Add user message to session
         session_data["messages"].append({
             "role": "user",
@@ -319,9 +319,22 @@ class ConversationService:
             "timestamp": datetime.now(UTC).isoformat(),
             "video_timestamp": timestamp 
         })
-        # video_info = self.extract_video_info(video_url)
-            
+        
+        # Get transcript context
         transcript = self.get_transcript_context(video_id, timestamp, context_seconds=30)
+        
+        # Extract video frame at specific timestamp using server-side processing
+        extracted_frame = None
+        if timestamp is not None:
+            try:
+                print(f"Extracting video frame at timestamp {timestamp}s for video {video_id}")
+                extracted_frame = self.youtube_service.get_video_frame(video_url, timestamp)
+                if extracted_frame:
+                    print("Successfully extracted video frame")
+                else:
+                    print("Failed to extract video frame")
+            except Exception as e:
+                print(f"Error extracting video frame: {e}")
         
         # Enhanced context for the LLM
         enhanced_context = {
@@ -329,6 +342,7 @@ class ConversationService:
             "video_timestamp": timestamp,
             "video_context": None,
             "transcript": transcript,
+            "video_frame": extracted_frame,  # Use server-extracted frame
             "message_history": session_data["messages"][-5:] if len(session_data["messages"]) > 5 else session_data["messages"]
         }
         
@@ -350,7 +364,7 @@ class ConversationService:
         session_key = f"video_chat:{user_id}:{video_id}"
         self.redis_client.setex(session_key, 24 * 60 * 60, json.dumps(session_data))
         
-        return response_text 
+        return response_text
 
     async def load_and_cache_transcript(self, video_id: str, video_url: str) -> bool:
         """Load transcript from API and cache it in Redis."""

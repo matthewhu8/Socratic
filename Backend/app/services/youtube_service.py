@@ -3,66 +3,147 @@ from youtube_transcript_api import YouTubeTranscriptApi
 from typing import List, Dict, Optional
 from supadata import Supadata, SupadataError
 import os
+import yt_dlp
+import ffmpeg
+import base64
+import tempfile
+import logging
+import subprocess
+from io import BytesIO
+from PIL import Image
 
 class YouTubeTranscriptService:
     def __init__(self):
         api_key = os.getenv("SUPADATA_API_KEY")
         self.supadata_api = Supadata(api_key=api_key)
-        pass
+        
+        # Configure yt-dlp options
+        self.ydl_opts = {
+            'format': 'best[height<=720]/best',  # Get best quality up to 720p
+            'quiet': True,
+            'no_warnings': True,
+            'extractaudio': False,
+            'audioformat': 'mp3',
+            'outtmpl': '%(extractor)s-%(id)s-%(title)s.%(ext)s',
+        }
     
-    def get_transcript_around_timestamp(self, video_id: str, timestamp: float, context_seconds: int = 30) -> str:
+    def get_video_frame(self, video_url_input: str, timestamp: float) -> Optional[str]:
         """
-        Get transcript content around a specific timestamp.
+        Get the video frame at the given timestamp.
         
         Args:
             video_id: YouTube video ID
-            timestamp: Current video timestamp in seconds
-            context_seconds: Seconds of context before/after timestamp
-        
+            timestamp: Time in seconds to extract frame from
+            
         Returns:
-            Formatted transcript text around the timestamp
+            Base64 encoded image string, or None if extraction fails
         """
+        print(f"Getting video frame for {video_url_input} at {timestamp}s")
         try:
-            # Get transcript
-            print(f"GETTING TRANSCRIPT FOR ____ VIDEO: {video_id}")
-            transcript_list = self.supadata_api.youtube.transcript(video_id=video_id, lang="en")
-            print(f"TRANSCRIPT wallahi: {transcript_list}") 
-
-            # Find relevant segments around the timestamp
-            relevant_segments = []
-            start_time = max(0, timestamp - context_seconds)
-            end_time = timestamp + context_seconds
-            
-            for entry in transcript_list:
-                entry_start = entry['start']
-                entry_end = entry['start'] + entry['duration']
+            # Get video streaming URL using yt-dlp
+            youtube_url = video_url_input
+            with yt_dlp.YoutubeDL(self.ydl_opts) as ydl:
+                # Extract video info without downloading
+                info = ydl.extract_info(youtube_url, download=False)
                 
-                # Include if segment overlaps with our time window
-                if (entry_start <= end_time and entry_end >= start_time):
-                    relevant_segments.append({
-                        'start': entry_start,
-                        'text': entry['text']
-                    })
-            
-            # Format the context
-            if relevant_segments:
-                context_text = f"Video content around timestamp {timestamp:.1f}s:\n\n"
-                for segment in relevant_segments:
-                    context_text += f"[{segment['start']:.1f}s] {segment['text']}\n"
-                return context_text
-            else:
-                return f"No transcript available around timestamp {timestamp:.1f}s"
+                # Get the best video format URL
+                video_url = None
+                if 'url' in info:
+                    video_url = info['url']
+                elif 'formats' in info:
+                    # Find the best video format
+                    for fmt in info['formats']:
+                        if fmt.get('vcodec') != 'none' and fmt.get('url'):
+                            video_url = fmt['url']
+                            break
+                
+                if not video_url:
+                    logging.error(f"Could not extract video URL for {video_url_input}")
+                    return None
+                
+                # Use ffmpeg to extract frame at specific timestamp
+                return self._extract_frame_with_ffmpeg(video_url, timestamp)
                 
         except Exception as e:
-            print(f"error getting transcript: {e}")
-            return "Transcript not available for this video."
+            print(f"Error extracting video frame for {video_url_input} at {timestamp}s: {str(e)}")
+            logging.error(f"Error extracting video frame for {video_url_input} at {timestamp}s: {str(e)}")
+            return None
     
-
+    def _extract_frame_with_ffmpeg(self, video_url: str, timestamp: float) -> Optional[str]:
+        """
+        Extract a single frame from video at specified timestamp using ffmpeg.
+        
+        Args:
+            video_url: Direct video stream URL
+            timestamp: Time in seconds to extract frame from
+            
+        Returns:
+            Base64 encoded JPEG image, or None if extraction fails
+        """
+        print(f"Extracting video frame for {video_url} at {timestamp}s")
+        try:
+            # Create a temporary file for the output frame
+            with tempfile.NamedTemporaryFile(suffix='.jpg', delete=False) as temp_file:
+                temp_path = temp_file.name
+            
+            try:
+                # Use ffmpeg to extract frame at specific timestamp
+                process = (
+                    ffmpeg
+                    .input(video_url, ss=timestamp)  # Seek to timestamp
+                    .output(
+                        temp_path,
+                        vframes=1,  # Extract only 1 frame
+                        format='image2',
+                        vcodec='mjpeg',
+                        **{'q:v': 2}  # High quality JPEG
+                    )
+                    .overwrite_output()
+                    .run(capture_stdout=True, capture_stderr=True, quiet=True)
+                )
+                
+                # Check if the file was actually created and has content
+                if not os.path.exists(temp_path) or os.path.getsize(temp_path) == 0:
+                    logging.error(f"FFmpeg did not create output file or file is empty")
+                    return None
+                
+                # Read the extracted frame and convert to base64
+                with open(temp_path, 'rb') as img_file:
+                    img_data = img_file.read()
+                
+                # Convert to base64
+                base64_image = base64.b64encode(img_data).decode('utf-8')
+                
+                # Return in format suitable for Gemini API
+                return f"data:image/jpeg;base64,{base64_image}"
+                
+            finally:
+                # Clean up temporary file
+                if os.path.exists(temp_path):
+                    os.unlink(temp_path)
+                    
+        except subprocess.CalledProcessError as e:
+            # Handle ffmpeg execution errors
+            stderr_output = ""
+            if hasattr(e, 'stderr') and e.stderr:
+                stderr_output = e.stderr.decode('utf-8', errors='ignore')
+            logging.error(f"FFmpeg command failed (return code {e.returncode}): {stderr_output}")
+            return None
+        except FileNotFoundError as e:
+            # Handle case where ffmpeg binary is not found
+            logging.error(f"FFmpeg binary not found: {str(e)}")
+            return None
+        except PermissionError as e:
+            # Handle permission issues
+            logging.error(f"Permission error accessing temporary file: {str(e)}")
+            return None
+        except Exception as e:
+            logging.error(f"Unexpected error in frame extraction: {str(e)}")
+            return None
 
 if __name__ == "__main__":
     # for local testing
-    supadata_api = Supadata(api_key="sd_15c3aa72f9ecd785a95224fdf14b0993")
-    transcript = supadata_api.youtube.transcript(video_id="5iTOphGnCtg", lang="en")
-    print(type(transcript.content))
+    youtube_service = YouTubeTranscriptService()
+    youtube_service.get_video_frame("https://www.youtube.com/watch?v=5iTOphGnCtg&t=548s", 10)
 
     
