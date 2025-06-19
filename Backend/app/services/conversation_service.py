@@ -412,6 +412,7 @@ class ConversationService:
     def get_transcript_context(self, video_id: str, timestamp: float, context_seconds: int = 45) -> str:
         """Get transcript context around timestamp from cache."""
         try:
+            print(f"GETTING TRANSCRIPT CONTEXT FOR: {video_id}")
             cache_key = f"{self.transcript_prefix}{video_id}"
             cached_data = self.redis_client.get(cache_key)
             

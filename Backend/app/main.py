@@ -638,6 +638,38 @@ async def load_video_transcript(
             status_code=500, 
             detail=f"Error loading transcript: {str(e)}"
         )
+    
+@app.post("/api/youtube-video-quiz")
+async def youtube_video_quiz(request: dict, current_user = Depends(get_current_user)):
+    """Generate a quiz for a YouTube video."""
+    try:
+        video_id = request.get("video_id")
+        video_url = request.get("video_url")
+        user_id = current_user.id
+
+        if not video_id or not video_url:
+            raise HTTPException(status_code=400, detail="video_id and video_url are required")
+        
+        # get session data from redis about this video to find previous messages
+        session_data = await convo_service.get_video_session(user_id, video_id)
+        print(f"SESSION DATA RECEIVED: {session_data}")
+        previous_messages = session_data.get("messages", [])
+
+        # get entire video transcript from redis
+        entire_transcript = convo_service.get_transcript_context(video_id, 0, 1000000)
+        print(f"ENTIRE TRANSCRIPT RECEIVED: {entire_transcript[0:100]}")
+        print(f"PREVIOUS MESSAGES RECEIVED: {previous_messages}")
+
+        # Generate quiz using Gemini
+        quiz_response = convo_service.gemini_service.generate_quiz(
+            entire_transcript=entire_transcript,
+            previous_messages=previous_messages
+        )
+
+        return {"quiz": quiz_response}
+    except Exception as e:
+        print(f"Error in youtube_video_quiz endpoint: {e}")
+        raise HTTPException(status_code=500, detail="Failed to generate quiz")
 
 @app.post("/chat-video")
 async def chat_video(request: dict, current_user = Depends(get_current_user)):
