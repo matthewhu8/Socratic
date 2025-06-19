@@ -15,10 +15,19 @@ function LearningModulesPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [player, setPlayer] = useState(null);
-  const [videoPanelHeight, setVideoPanelHeight] = useState(60); // Changed from videoPanelWidth to videoPanelHeight
+  const [videoPanelWidth, setVideoPanelWidth] = useState(50); // Changed from videoPanelHeight to videoPanelWidth
   const mainContentRef = useRef(null);
   const chatMessagesRef = useRef(null); // Add ref for chat messages container
   const isResizing = useRef(false);
+
+  // Quiz state
+  const [showQuiz, setShowQuiz] = useState(false);
+  const [quizData, setQuizData] = useState(null);
+  const [quizLoading, setQuizLoading] = useState(false);
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [selectedAnswers, setSelectedAnswers] = useState({});
+  const [showResults, setShowResults] = useState(false);
+  const [transcriptReady, setTranscriptReady] = useState(false);
 
   // Auto-scroll to bottom when new messages are added
   useEffect(() => {
@@ -29,7 +38,7 @@ function LearningModulesPage() {
 
   const handleMouseDown = (e) => {
     isResizing.current = true;
-    document.body.style.cursor = 'row-resize'; // Changed from 'col-resize' to 'row-resize'
+    document.body.style.cursor = 'col-resize'; // Changed from 'row-resize' to 'col-resize'
   };
 
   useEffect(() => {
@@ -39,12 +48,12 @@ function LearningModulesPage() {
       const mainContent = mainContentRef.current;
       const rect = mainContent.getBoundingClientRect();
       
-      // Calculate the new height as a percentage of the main content area
-      const newHeight = ((e.clientY - rect.top) / rect.height) * 100;
+      // Calculate the new width as a percentage of the main content area
+      const newWidth = ((e.clientX - rect.left) / rect.width) * 100;
       
       // Add constraints to prevent panels from becoming too small
-      if (newHeight > 25 && newHeight < 75) {
-        setVideoPanelHeight(newHeight);
+      if (newWidth > 25 && newWidth < 75) {
+        setVideoPanelWidth(newWidth);
       }
     };
 
@@ -127,6 +136,7 @@ function LearningModulesPage() {
       
       // Load and cache the transcript
       loadVideoTranscript(extractedId, youtubeUrl);
+      setTranscriptReady(false); // Reset transcript ready state
     } else {
       setError('Please enter a valid YouTube URL');
     }
@@ -150,8 +160,10 @@ function LearningModulesPage() {
       if (response.ok) {
         const data = await response.json();
         console.log('Transcript loaded successfully:', data.message);
+        setTranscriptReady(true);
       } else {
         console.error('Failed to load transcript');
+        setTranscriptReady(false);
       }
     } catch (error) {
       console.error('Error loading video transcript:', error);
@@ -246,6 +258,114 @@ function LearningModulesPage() {
     setChatMessages([]);
     setError('');
     setPlayer(null);
+    // Reset quiz state
+    setShowQuiz(false);
+    setQuizData(null);
+    setCurrentQuestionIndex(0);
+    setSelectedAnswers({});
+    setShowResults(false);
+    setTranscriptReady(false);
+  };
+
+  // Generate quiz
+  const generateQuiz = async () => {
+    if (!videoId || !youtubeUrl) {
+      setError('No video loaded to generate quiz from');
+      return;
+    }
+
+    setQuizLoading(true);
+    setError('');
+
+    try {
+      const response = await fetch(`${API_URL}/api/youtube-video-quiz`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+        },
+        body: JSON.stringify({
+          video_id: videoId,
+          video_url: youtubeUrl
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Quiz response:', data);
+        
+        // Parse the quiz JSON string
+        const parsedQuiz = JSON.parse(data.quiz);
+        setQuizData(parsedQuiz);
+        setShowQuiz(true);
+        setCurrentQuestionIndex(0);
+        setSelectedAnswers({});
+        setShowResults(false);
+      } else {
+        throw new Error('Failed to generate quiz');
+      }
+    } catch (error) {
+      console.error('Error generating quiz:', error);
+      setError('Failed to generate quiz. Please try again.');
+    } finally {
+      setQuizLoading(false);
+    }
+  };
+
+  // Handle quiz answer selection
+  const handleAnswerSelect = (questionId, selectedOption) => {
+    setSelectedAnswers(prev => ({
+      ...prev,
+      [questionId]: selectedOption
+    }));
+  };
+
+  // Navigate quiz questions
+  const nextQuestion = () => {
+    if (currentQuestionIndex < quizData.questions.length - 1) {
+      setCurrentQuestionIndex(currentQuestionIndex + 1);
+    }
+  };
+
+  const prevQuestion = () => {
+    if (currentQuestionIndex > 0) {
+      setCurrentQuestionIndex(currentQuestionIndex - 1);
+    }
+  };
+
+  // Submit quiz and show results
+  const submitQuiz = () => {
+    setShowResults(true);
+  };
+
+  // Calculate quiz score
+  const calculateScore = () => {
+    if (!quizData || !quizData.questions) return { correct: 0, total: 0, percentage: 0 };
+
+    let correct = 0;
+    const total = quizData.questions.length;
+
+    quizData.questions.forEach(question => {
+      const selectedAnswer = selectedAnswers[question.id];
+      if (selectedAnswer === question.correct_answer) {
+        correct++;
+      }
+    });
+
+    return {
+      correct,
+      total,
+      percentage: Math.round((correct / total) * 100)
+    };
+  };
+
+  // Close quiz
+  const closeQuiz = () => {
+    setShowQuiz(false);
+    setQuizData(null);
+    setCurrentQuestionIndex(0);
+    setSelectedAnswers({});
+    setShowResults(false);
   };
 
   // Function to format AI response text
@@ -336,22 +456,31 @@ function LearningModulesPage() {
         <div 
           className="main-content" 
           ref={mainContentRef}
-          style={{ gridTemplateRows: `${videoPanelHeight}% auto 1fr`, userSelect: isResizing.current ? 'none' : 'auto' }}
+          style={{ gridTemplateColumns: `${videoPanelWidth}% auto 1fr`, userSelect: isResizing.current ? 'none' : 'auto' }}
         >
           {/* Video Section */}
           <div className="video-section">
             <div className="video-header">
               <h2>{videoTitle}</h2>
-              <button onClick={clearVideo} className="clear-button">
-                Load New Video
-              </button>
+              <div className="video-header-buttons">
+                <button onClick={clearVideo} className="clear-button">
+                  Load New Video
+                </button>
+                <button 
+                  onClick={generateQuiz} 
+                  className="quiz-button" 
+                  disabled={!transcriptReady || quizLoading}
+                >
+                  {quizLoading ? 'Generating...' : !transcriptReady ? 'Loading Transcript...' : 'Generate Quiz'}
+                </button>
+              </div>
             </div>
             <div className="video-container">
               <div id="youtube-player"></div>
             </div>
           </div>
 
-          <div className="resizer horizontal" onMouseDown={handleMouseDown}></div>
+          <div className="resizer vertical" onMouseDown={handleMouseDown}></div>
 
           {/* Chat Section */}
           <div className="chat-section">
@@ -403,6 +532,118 @@ function LearningModulesPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Quiz Overlay */}
+      {showQuiz && quizData && (
+        <div className="quiz-overlay">
+          <div className="quiz-container">
+            <div className="quiz-header">
+              <h2>{quizData.quiz_title}</h2>
+              <button onClick={closeQuiz} className="close-quiz-button">×</button>
+            </div>
+            
+            {!showResults ? (
+              <div className="quiz-content">
+                <div className="quiz-progress">
+                  Question {currentQuestionIndex + 1} of {quizData.questions.length}
+                </div>
+                
+                {quizData.questions[currentQuestionIndex] && (
+                  <div className="question-container">
+                    <h3 className="question-text">
+                      {quizData.questions[currentQuestionIndex].question}
+                    </h3>
+                    
+                    <div className="options-container">
+                      {['option1', 'option2', 'option3'].map((optionKey, index) => {
+                        const option = quizData.questions[currentQuestionIndex][optionKey];
+                        const questionId = quizData.questions[currentQuestionIndex].id;
+                        const isSelected = selectedAnswers[questionId] === option;
+                        
+                        return (
+                          <div
+                            key={index}
+                            className={`option ${isSelected ? 'selected' : ''}`}
+                            onClick={() => handleAnswerSelect(questionId, option)}
+                          >
+                            <div className="option-letter">{String.fromCharCode(65 + index)}</div>
+                            <div className="option-text">{option}</div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+                
+                <div className="quiz-navigation">
+                  <button 
+                    onClick={prevQuestion} 
+                    disabled={currentQuestionIndex === 0}
+                    className="nav-button prev-button"
+                  >
+                    Previous
+                  </button>
+                  
+                  {currentQuestionIndex === quizData.questions.length - 1 ? (
+                    <button onClick={submitQuiz} className="nav-button submit-button">
+                      Submit Quiz
+                    </button>
+                  ) : (
+                    <button onClick={nextQuestion} className="nav-button next-button">
+                      Next
+                    </button>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div className="quiz-results">
+                <h3>Quiz Results</h3>
+                <div className="score-display">
+                  <div className="score-circle">
+                    <span className="score-percentage">{calculateScore().percentage}%</span>
+                  </div>
+                  <p>You got {calculateScore().correct} out of {calculateScore().total} questions correct!</p>
+                </div>
+                
+                <div className="results-details">
+                  {quizData.questions.map((question, index) => {
+                    const userAnswer = selectedAnswers[question.id];
+                    const isCorrect = userAnswer === question.correct_answer;
+                    
+                    return (
+                      <div key={question.id} className={`result-item ${isCorrect ? 'correct' : 'incorrect'}`}>
+                        <div className="result-header">
+                          <span className="question-number">Q{index + 1}</span>
+                          <span className={`result-status ${isCorrect ? 'correct' : 'incorrect'}`}>
+                            {isCorrect ? '✓' : '✗'}
+                          </span>
+                        </div>
+                        <p className="result-question">{question.question}</p>
+                        <p className="result-answers">
+                          <span className={`user-answer ${isCorrect ? 'correct' : 'incorrect'}`}>
+                            Your answer: {userAnswer || 'Not answered'}
+                          </span>
+                          {!isCorrect && (
+                            <span className="correct-answer">
+                              Correct answer: {question.correct_answer}
+                            </span>
+                          )}
+                        </p>
+                      </div>
+                    );
+                  })}
+                </div>
+                
+                <div className="results-actions">
+                  <button onClick={closeQuiz} className="close-results-button">
+                    Close Quiz
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}

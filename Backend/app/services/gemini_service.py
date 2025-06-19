@@ -17,7 +17,8 @@ class GeminiService:
         
         genai.configure(api_key=self.api_key)
         self.model = genai.GenerativeModel('gemini-2.5-flash-preview-05-20', system_instruction="You are a helpful English AI assistant to answer students' questions about this YouTube video. Please answer in English. The student may also be referencing a specific part from the video transcript around their current video timestamp. The image attached shows the video at the point where the student is currently watching the video. When necessary, you can use the image to help you answer their question.")
-        self.video_quiz_model = genai.GenerativeModel('gemini-2.5-flash-preview-05-20', system_instruction="You are video quiz maker who creates questions based on the video transcript. You will be given a video transcript and a question, and you will need to create a multiple choice questions based on the transcript and the question.")
+        self.video_quiz_model = genai.GenerativeModel('gemini-2.5-flash-preview-05-20', system_instruction="You are quiz maker that will test the student's retention of the video. The query will contain a video transcript and a list of their previous messages, create questions in JSON format that tests the user on general subject matter related concepts discussed in the transcript, and place a particular emphasis on the topics the student seemed to be confused about based on the chatlog. Make 5 total questions.")
+
         print(f"GEMINI MODEL: {self.model}")
     
     def format_chat_history(self, chat_history: List[Dict]) -> List[Dict]:
@@ -84,32 +85,15 @@ class GeminiService:
                     original_frame = video_frame
                     if video_frame.startswith('data:image'):
                         video_frame = video_frame.split(',')[1]
-                        print(f"✂️  Removed data URI prefix, new length: {len(video_frame)}")
-                    else:
-                        print(f"⚠️  No data URI prefix found, using raw data")
-                    
-                    print(f"📊 Base64 data length: {len(video_frame)}")
-                    print(f"📊 Base64 data starts with: {video_frame[:50]}...")
                     
                     # Decode base64 image
-                    print(f"🔄 Attempting to decode base64...")
                     image_data = base64.b64decode(video_frame)
-                    print(f"✅ Base64 decode successful!")
-                    print(f"📊 Decoded image data length: {len(image_data)} bytes")
                     
                     # Convert to PIL Image for google-generativeai library
-                    print(f"🔄 Converting to PIL Image...")
                     pil_image = Image.open(io.BytesIO(image_data))
-                    print(f"✅ PIL Image created successfully!")
-                    print(f"📊 Image size: {pil_image.size}")
-                    print(f"📊 Image mode: {pil_image.mode}")
-                    print(f"📊 Image format: {pil_image.format}")
                     
                     # Add PIL image directly to content parts (works with google-generativeai)
                     content_parts.append(pil_image)
-                    print("✅ Added PIL image to Gemini request")
-                    print(f"📊 Final content_parts length: {len(content_parts)}")
-                    print(f"📊 Content parts types: {[type(part) for part in content_parts]}")
                     
                 except Exception as e:
                     print(f"❌ Error processing video frame: {e}")
@@ -137,9 +121,6 @@ class GeminiService:
                 print(f"💬 No chat history, generating fresh response")
                 response = self.model.generate_content(content_parts)
             
-            print(f"✅ Successfully received response from Gemini!")
-            print(f"📊 Response type: {type(response)}")
-            print(f"📊 Response length: {len(response.text) if hasattr(response, 'text') else 'No text attr'}")
             
             return response.text
             
@@ -150,4 +131,134 @@ class GeminiService:
             print(f"🔍 Full traceback:")
             traceback.print_exc()
             return "I'm sorry, I encountered an error while processing your request. Please try again."
+    
+    def generate_quiz(self, entire_transcript: str, previous_messages: List[Dict]) -> str:
+        """Generate a multiple choice quiz for a YouTube video."""
+        try:
+            # Build chat context
+            chat_context = ""
+            if previous_messages:
+                chat_context = "\n--- STUDENT CHAT HISTORY ---\n"
+                for msg in previous_messages:
+                    role = msg.get("role", "unknown")
+                    content = msg.get("content", "")
+                    chat_context += f"{role.upper()}: {content}\n"
+            
+            # Simple, strict prompt with example
+            quiz_prompt = f"""
+You MUST respond with ONLY valid JSON. No explanations, no markdown, no additional text.
+
+Based on the transcript and chat history, generate exactly 5 multiple choice quiz questions.
+
+TRANSCRIPT:
+{entire_transcript}
+
+{chat_context}
+
+REQUIRED JSON FORMAT (respond with EXACTLY this structure):
+{{
+  "quiz_title": "Quiz: [extract main topic from video]",
+  "total_questions": 5,
+  "questions": [
+    {{
+      "id": 1,
+      "question": "What is the main concept discussed in the video?",
+      "option1": "Machine Learning",
+      "option2": "Data Science", 
+      "option3": "Web Development",
+      "correct_answer": "Machine Learning"
+    }},
+    {{
+      "id": 2,
+      "question": "Which algorithm was mentioned first?",
+      "option1": "Linear Regression",
+      "option2": "Neural Networks",
+      "option3": "Decision Trees", 
+      "correct_answer": "Linear Regression"
+    }},
+    {{
+      "id": 3,
+      "question": "What did the student ask about most?",
+      "option1": "Backpropagation",
+      "option2": "Overfitting",
+      "option3": "Training Data",
+      "correct_answer": "Backpropagation"
+    }},
+    {{
+      "id": 4,
+      "question": "What is supervised learning?",
+      "option1": "Learning without labels",
+      "option2": "Learning with labeled data",
+      "option3": "Learning through rewards",
+      "correct_answer": "Learning with labeled data"
+    }},
+    {{
+      "id": 5,
+      "question": "Why is validation data important?",
+      "option1": "To train the model",
+      "option2": "To test model performance",
+      "option3": "To increase accuracy",
+      "correct_answer": "To test model performance"
+    }}
+  ]
+}}
+
+RULES:
+- Focus on topics the student seemed confused about from chat history, if any.
+- Make sure correct_answer exactly matches one of the three options
+- Return ONLY the JSON, nothing else
+"""
+            
+            response = self.video_quiz_model.generate_content(quiz_prompt)
+            return response.text.strip()
+            
+        except Exception as e:
+            print(f"Error generating quiz: {e}")
+            # Simple fallback JSON
+            return '''{
+  "quiz_title": "General Video Quiz",
+  "total_questions": 5,
+  "questions": [
+    {
+      "id": 1,
+      "question": "What was the main topic of this video?",
+      "option1": "Educational Content",
+      "option2": "Entertainment",
+      "option3": "News",
+      "correct_answer": "Educational Content"
+    },
+    {
+      "id": 2,
+      "question": "Did you find the video helpful?",
+      "option1": "Yes, very helpful",
+      "option2": "Somewhat helpful", 
+      "option3": "Not helpful",
+      "correct_answer": "Yes, very helpful"
+    },
+    {
+      "id": 3,
+      "question": "What would you like to learn more about?",
+      "option1": "The same topic",
+      "option2": "Related topics",
+      "option3": "Different topics",
+      "correct_answer": "Related topics"
+    },
+    {
+      "id": 4,
+      "question": "How well did you understand the content?",
+      "option1": "Completely understood",
+      "option2": "Mostly understood",
+      "option3": "Partially understood",
+      "correct_answer": "Mostly understood"
+    },
+    {
+      "id": 5,
+      "question": "Would you recommend this video?",
+      "option1": "Definitely yes",
+      "option2": "Maybe",
+      "option3": "No",
+      "correct_answer": "Definitely yes"
+    }
+  ]
+}'''
 
