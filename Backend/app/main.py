@@ -641,7 +641,7 @@ async def load_video_transcript(
 
 @app.post("/chat-video")
 async def chat_video(request: dict, current_user = Depends(get_current_user)):
-    """Handle chat requests about YouTube videos with context awareness"""
+    """Handle chat requests about YouTube videos with context awareness and optional image"""
     try:
         print(f"REQUEST RECEIVED: {request}")
         query = request.get("query", "")
@@ -657,21 +657,23 @@ async def chat_video(request: dict, current_user = Depends(get_current_user)):
         session_data = await convo_service.get_video_session(user_id, video_id)
         print(f"SESSION DATA RECEIVED: {session_data}")
         print(f"ATTEMPTING TO ANSWER: {query}")
+        
         if timestamp:
             print(f"VIDEO TIMESTAMP: {timestamp}")
+       
         
-        # Process the query and update session with timestamp context
+        # Process the query and update session with timestamp context and image
         response_text = await convo_service.process_video_chat(
-            user_id=user_id,
+            user_id=user_id,   
             video_id=video_id,
             video_url=video_url,
-            query=query,
+            query=query,  
             session_data=session_data,
-            timestamp=timestamp
+            timestamp=timestamp,
         )
 
-        
         return {"response": response_text, "video_id": video_id}
         
     except Exception as e:
+        print(f"Error in chat_video endpoint: {e}")
         raise HTTPException(status_code=500, detail="Failed to process video chat request") 
