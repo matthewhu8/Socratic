@@ -21,7 +21,7 @@ function DynamicLearningPage() {
       description: 'Interactive practice and examples',
       icon: <TbMathFunction />,
       color: '#4285f4',
-      path: '/student/dynamic-learning/mathematics'
+      path: '/student/dynamic-learning/mathematics/select-grade'
     },
     {
       id: 'physics',
@@ -29,7 +29,7 @@ function DynamicLearningPage() {
       description: 'Interactive practice and examples',
       icon: <IoFlashOutline />,
       color: '#9c27b0',
-      path: '/student/dynamic-learning/physics'
+      path: '/student/dynamic-learning/physics/select-grade'
     },
     {
       id: 'chemistry',
@@ -37,7 +37,7 @@ function DynamicLearningPage() {
       description: 'Interactive practice and examples',
       icon: <TbFlask />,
       color: '#4caf50',
-      path: '/student/dynamic-learning/chemistry'
+      path: '/student/dynamic-learning/chemistry/select-grade'
     },
     {
       id: 'biology',
@@ -45,7 +45,7 @@ function DynamicLearningPage() {
       description: 'Interactive practice and examples',
       icon: <FaHeart />,
       color: '#f44336',
-      path: '/student/dynamic-learning/biology'
+      path: '/student/dynamic-learning/biology/select-grade'
     },
     {
       id: 'english',
@@ -53,7 +53,7 @@ function DynamicLearningPage() {
       description: 'Interactive practice and examples',
       icon: <TbBook />,
       color: '#673ab7',
-      path: '/student/dynamic-learning/english'
+      path: '/student/dynamic-learning/english/select-grade'
     }
   ];
 
