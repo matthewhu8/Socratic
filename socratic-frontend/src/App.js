@@ -15,69 +15,11 @@ import StudentAuthPage from './pages/StudentAuthPage';
 import TeacherAuthPage from './pages/TeacherAuthPage';
 import LearningModulesPage from './pages/LearningModulesPage';
 import DynamicLearningPage from './pages/DynamicLearningPage';
-import MathematicsPage from './pages/MathematicsPage';
-import PhysicsPage from './pages/PhysicsPage';
-import ChemistryPage from './pages/ChemistryPage';
-import BiologyPage from './pages/BiologyPage';
+import GradeSelectionPage from './pages/GradeSelectionPage';
 import PracticeModePage from './pages/PracticeModePage';
 import ProtectedRoute from './components/ProtectedRoute';
+import SubjectPageRouter from './components/SubjectPageRouter';
 import { AuthProvider } from './contexts/AuthContext';
-
-// Empty placeholder component for Learning Modules
-const LearningModulesPlaceholder = () => (
-  <div style={{ 
-    padding: '2rem', 
-    textAlign: 'center', 
-    maxWidth: '800px', 
-    margin: '0 auto',
-    marginTop: '2rem'
-  }}>
-    <h1>Learning Modules</h1>
-    <p>This feature is coming soon.</p>
-    <button 
-      onClick={() => window.history.back()} 
-      style={{ 
-        padding: '0.5rem 1rem', 
-        marginTop: '1rem',
-        background: '#3498db',
-        color: 'white',
-        border: 'none',
-        borderRadius: '4px',
-        cursor: 'pointer'
-      }}
-    >
-      Back to Dashboard
-    </button>
-  </div>
-);
-
-// Placeholder component for Create Learning Module
-const CreateLearningModulePlaceholder = () => (
-  <div style={{ 
-    padding: '2rem', 
-    textAlign: 'center', 
-    maxWidth: '800px', 
-    margin: '0 auto',
-    marginTop: '2rem'
-  }}>
-    <h1>Create Learning Module</h1>
-    <p>This feature is coming soon. We're working on building tools to help you create interactive learning experiences for your students.</p>
-    <button 
-      onClick={() => window.history.back()} 
-      style={{ 
-        padding: '0.5rem 1rem', 
-        marginTop: '1rem',
-        background: '#3498db',
-        color: 'white',
-        border: 'none',
-        borderRadius: '4px',
-        cursor: 'pointer'
-      }}
-    >
-      Back to Dashboard
-    </button>
-  </div>
-);
 
 function App() {
   return (
@@ -111,11 +53,9 @@ function App() {
                 <DynamicLearningPage />
               </ProtectedRoute>
             } />
-            <Route path="/student/dynamic-learning/mathematics" element={<ProtectedRoute userType="student"><MathematicsPage /></ProtectedRoute>} />
-            <Route path="/student/dynamic-learning/physics" element={<ProtectedRoute userType="student"><PhysicsPage /></ProtectedRoute>} />
-            <Route path="/student/dynamic-learning/chemistry" element={<ProtectedRoute userType="student"><ChemistryPage /></ProtectedRoute>} />
-            <Route path="/student/dynamic-learning/biology" element={<ProtectedRoute userType="student"><BiologyPage /></ProtectedRoute>} />
-            <Route path="/student/dynamic-learning/:subject/:subtopic" element={<ProtectedRoute userType="student"><PracticeModePage /></ProtectedRoute>} />
+            <Route path="/student/dynamic-learning/:subject/select-grade" element={<ProtectedRoute userType="student"><GradeSelectionPage /></ProtectedRoute>} />
+            <Route path="/student/dynamic-learning/:subject/:gradeParam" element={<ProtectedRoute userType="student"><SubjectPageRouter /></ProtectedRoute>} />
+            <Route path="/student/dynamic-learning/:subject/:gradeParam/:subtopic" element={<ProtectedRoute userType="student"><PracticeModePage /></ProtectedRoute>} />
             <Route path="/student/assessment" element={
               <ProtectedRoute userType="student">
                 <AssessmentPage />

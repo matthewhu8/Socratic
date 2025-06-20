@@ -2,7 +2,7 @@ import React, { useContext } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { AuthContext } from '../contexts/AuthContext';
 
-const ProtectedRoute = ({ children, requiredRole }) => {
+const ProtectedRoute = ({ children, userType }) => {
   const { currentUser, loading } = useContext(AuthContext);
   const location = useLocation();
 
@@ -26,7 +26,7 @@ const ProtectedRoute = ({ children, requiredRole }) => {
   }
 
   // If a role is required, check if the user has the right role
-  if (requiredRole && currentUser.userType !== requiredRole) {
+  if (userType && currentUser.userType !== userType) {
     // Redirect to the appropriate dashboard if they have the wrong role
     const redirectPath = currentUser.userType === 'teacher' 
       ? '/teachers/dashboard' 

@@ -45,6 +45,8 @@ function StudentHomePage() {
           <h2>Dynamic Learning</h2>
           <p>Adaptive AI-powered learning experiences tailored to your progress</p>
         </Link>
+
+
       </div>
     </div>
   );
