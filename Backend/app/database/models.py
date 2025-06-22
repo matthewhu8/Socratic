@@ -118,4 +118,20 @@ class ChatMessage(Base):
     timestamp = Column(DateTime, default=datetime.now)
     
     # Relationships
-    question_result = relationship("QuestionResult", back_populates="chat_messages") 
+    question_result = relationship("QuestionResult", back_populates="chat_messages")
+
+class YouTubeQuizResults(Base):
+    __tablename__ = "youtube_quiz_results"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    student_id = Column(Integer, ForeignKey("student_users.id"), nullable=False)
+    youtube_url = Column(String) 
+    youtube_id = Column(String) 
+    video_title = Column(String, nullable=True) 
+    time_spent = Column(Integer, nullable=True) 
+    raw_quiz = Column(JSON)
+    student_answers = Column(JSON)
+    score = Column(Float)
+    
+    # Relationships
+    student = relationship("StudentUser", foreign_keys=[student_id]) 

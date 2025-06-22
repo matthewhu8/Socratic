@@ -13,8 +13,12 @@ const formatBreadcrumb = (str) => {
 };
 
 function PracticeModePage() {
-  const { subject, subtopic } = useParams();
+  const { subject, subtopic, gradeParam } = useParams();
   const navigate = useNavigate();
+
+  // Handle both old routing (with subtopic) and new routing (with gradeParam)
+  const isGradeLevel = gradeParam && !subtopic;
+  const grade = isGradeLevel ? gradeParam?.replace('grade-', '') : null;
 
   const practiceOptions = [
     {
@@ -23,7 +27,9 @@ function PracticeModePage() {
       icon: <TbBook />,
       color: '#4285f4',
       bgColor: '#e8f0fe',
-      path: `/student/practice/${subject}/${subtopic}/ncert-examples`,
+      path: isGradeLevel 
+        ? `/student/dynamic-learning/${subject}/grade-${grade}/ncert-topics`
+        : `/student/practice/${subject}/${subtopic}/ncert-examples`,
     },
     {
       title: 'Previous Year Questions',
@@ -31,7 +37,9 @@ function PracticeModePage() {
       icon: <TbFileText />,
       color: '#34a853',
       bgColor: '#e6f4ea',
-      path: `/student/practice/${subject}/${subtopic}/previous-year-questions`,
+      path: isGradeLevel 
+        ? `/student/practice/${subject}/grade-${grade}/previous-year-questions`
+        : `/student/practice/${subject}/${subtopic}/previous-year-questions`,
     },
     {
       title: 'Smart Practice',
@@ -39,7 +47,9 @@ function PracticeModePage() {
       icon: <TbBrain />,
       color: '#9c27b0',
       bgColor: '#f3e5f5',
-      path: `/student/practice/${subject}/${subtopic}/smart-practice`,
+      path: isGradeLevel 
+        ? `/student/practice/${subject}/grade-${grade}/smart-practice`
+        : `/student/practice/${subject}/${subtopic}/smart-practice`,
     },
   ];
 
@@ -54,7 +64,10 @@ function PracticeModePage() {
 
       <header className="practice-mode-header">
         <div className="breadcrumbs">
-          {formattedSubject} &gt; {formattedSubtopic}
+          {isGradeLevel 
+            ? `${formattedSubject} > Grade ${grade}`
+            : `${formattedSubject} > ${formattedSubtopic}`
+          }
         </div>
         <h1 className="practice-mode-title">Choose Practice Mode</h1>
       </header>
