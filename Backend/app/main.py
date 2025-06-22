@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 
 # Import our modules
 from .database.database import get_db, engine
-from .database.models import Base, Test, Question, TestQuestion, TestResult, QuestionResult, ChatMessage, StudentUser, TeacherUser
+from .database.models import Base, YouTubeQuizResults, Test, Question, TestQuestion, TestResult, QuestionResult, ChatMessage, StudentUser, TeacherUser
 from .auth.utils import verify_password, get_password_hash, create_access_token, create_refresh_token, SECRET_KEY, ALGORITHM
 from .auth.schemas import TokenResponse, UserLogin, StudentCreate, TeacherCreate, StudentResponse, TeacherResponse, RefreshToken
 from .auth.dependencies import get_current_user, get_current_student, get_current_teacher
@@ -709,3 +709,39 @@ async def chat_video(request: dict, current_user = Depends(get_current_user)):
     except Exception as e:
         print(f"Error in chat_video endpoint: {e}")
         raise HTTPException(status_code=500, detail="Failed to process video chat request") 
+
+@app.post("/api/store-youtube-quiz-results")
+async def store_youtube_quiz_results(request: dict, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
+    """Store the results of a YouTube quiz."""
+    try:
+        video_title = request.get("video_title", "YouTube Video")
+        youtube_url = request.get("youtube_url")
+        youtube_id = request.get("youtube_id")
+        time_spent = request.get("time_spent", 10) # units should be in seconds
+        raw_quiz = request.get("raw_quiz") #JSON format identitcal to how the quiz is returned from the youtube_video_quiz endpoint
+        student_answers = request.get("student_answers") # JSON format, question number as key, answer and True/false boolean for right or wrong as two values
+        score = request.get("score", 0) # score as a percentage
+        
+        db_quiz_result = YouTubeQuizResults(
+            student_id=current_user.id,
+            video_title=video_title,
+            youtube_url=youtube_url,
+            youtube_id=youtube_id,
+            time_spent=time_spent,
+            raw_quiz=raw_quiz,
+            student_answers=student_answers,
+            score=score
+        )
+        db.add(db_quiz_result)
+        db.commit()
+        db.refresh()
+
+        return {"status": "success", "message": "Quiz results stored successfully"}
+    
+    except Exception as e:
+       print(f"Error in store_youtube_quiz_results endpoint: {e}")
+       raise HTTPException(status_code=500, detail="At some point during the storage of the quiz results, something went wrong")
+
+@app.get("/api/get-youtube-quiz-results")
+async def get_youtube_quiz_results(db: Session = Depends(get_db), current_user = Depends(get_current_student)) -> str:
+    pass

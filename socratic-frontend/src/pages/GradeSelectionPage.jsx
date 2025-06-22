@@ -65,7 +65,7 @@ function GradeSelectionPage() {
   }
 
   const handleGradeSelect = (grade) => {
-    navigate(`/student/dynamic-learning/${subject}/grade-${grade}`);
+    navigate(`/student/practice/${subject}/grade-${grade}`);
   };
 
   return (
