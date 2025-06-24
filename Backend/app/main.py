@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 
 # Import our modules
 from .database.database import get_db, engine
-from .database.models import Base, YouTubeQuizResults, Test, Question, TestQuestion, TestResult, QuestionResult, ChatMessage, StudentUser, TeacherUser
+from .database.models import Base, YouTubeQuizResults, StudentUser, TeacherUser
 from .auth.utils import verify_password, get_password_hash, create_access_token, create_refresh_token, SECRET_KEY, ALGORITHM
 from .auth.schemas import TokenResponse, UserLogin, StudentCreate, TeacherCreate, StudentResponse, TeacherResponse, RefreshToken
 from .auth.dependencies import get_current_user, get_current_student, get_current_teacher
