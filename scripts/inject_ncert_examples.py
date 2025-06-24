@@ -21,7 +21,7 @@ from app.database.models import NcertExamples, Base
 
 # Database URLs
 LOCAL_DATABASE_URL = "postgresql://postgres:postgres@localhost:5432/postgres"
-PRODUCTION_DATABASE_URL = "postgresql://postgres:********@shinkansen.proxy.rlwy.net:25660/railway"  # Railway PostgreSQL URL
+PRODUCTION_DATABASE_URL = "postgresql://postgres:ymCIpwSPBraGkdaGRFjACfGJOojfzpOz@shinkansen.proxy.rlwy.net:25660/railway"
 
 def create_database_session(database_url: str, db_name: str):
     """Create a database session for the given URL."""
