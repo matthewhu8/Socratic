@@ -15,9 +15,6 @@ class StudentUser(Base):
     grade = Column(String)
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.now)
-    
-    # Relationship to test results
-    test_results = relationship("TestResult", back_populates="student")
 
 class TeacherUser(Base):
     __tablename__ = "teacher_users"
@@ -74,6 +71,7 @@ class YouTubeQuizResults(Base):
     raw_quiz = Column(JSON)
     student_answers = Column(JSON)
     score = Column(Float)
+    difficulty_rating = Column(String, nullable=True)
     
     # Relationships
     student = relationship("StudentUser", foreign_keys=[student_id]) 
