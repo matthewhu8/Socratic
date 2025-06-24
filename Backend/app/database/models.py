@@ -120,6 +120,37 @@ class ChatMessage(Base):
     # Relationships
     question_result = relationship("QuestionResult", back_populates="chat_messages")
 
+class NcertExamples(Base):
+    __tablename__ = "ncert_examples"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    example = Column(Text, nullable=False)
+    solution = Column(Text, nullable=False)
+    topic = Column(String, nullable=True)
+    example_number = Column(Integer, nullable=True)
+    grade = Column(String, nullable=True)
+
+class NcertExcersizes(Base):
+    __tablename__ = "ncert_excersizes"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    excersize = Column(Text, nullable=False)
+    solution = Column(Text, nullable=True)
+    topic = Column(String, nullable=True)
+    excersize_number = Column(Integer, nullable=True)
+    grade = Column(String, nullable=True)
+
+class PYQs(Base):
+    __tablename__ = "pyqs"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    question = Column(Text, nullable=False)
+    answer = Column(Text, nullable=False)
+    topic = Column(String, nullable=True)
+    difficulty = Column(String, nullable=True)
+    year = Column(Integer, nullable=True)
+
+
 class YouTubeQuizResults(Base):
     __tablename__ = "youtube_quiz_results"
     
