@@ -59,7 +59,7 @@ function App() {
             <Route path="/student/practice/:subject/:gradeParam/previous-year-questions" element={<ProtectedRoute userType="student"><PreviousYearQuestionsPage /></ProtectedRoute>} />
             <Route path="/student/dynamic-learning/:subject/:gradeParam/ncert-topics" element={<ProtectedRoute userType="student"><SubjectPageRouter /></ProtectedRoute>} />
             <Route path="/student/dynamic-learning/:subject/:gradeParam" element={<ProtectedRoute userType="student"><SubjectPageRouter /></ProtectedRoute>} />
-            <Route path="/student/dynamic-learning/:subject/:gradeParam/:subtopic" element={<ProtectedRoute userType="student"><PracticeModePage /></ProtectedRoute>} />
+            <Route path="/student/dynamic-learning/:subject/:gradeParam/:subtopic" element={<ProtectedRoute userType="student"><PreviousYearQuestionsPage /></ProtectedRoute>} />
             <Route path="/student/assessment" element={
               <ProtectedRoute userType="student">
                 <AssessmentPage />

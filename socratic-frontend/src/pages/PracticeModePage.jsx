@@ -32,6 +32,16 @@ function PracticeModePage() {
         : `/student/practice/${subject}/${subtopic}/ncert-examples`,
     },
     {
+      title: 'NCERT Excercises',
+      description: 'Practice with excercises from NCERT textbooks',
+      icon: <TbBook />,
+      color: '#000000',
+      bgColor: '#e6f4ea',
+      path: isGradeLevel 
+        ? `/student/practice/${subject}/grade-${grade}/ncert-excercises`
+        : `/student/practice/${subject}/${subtopic}/ncert-excercises`,
+    },
+    {
       title: 'Previous Year Questions',
       description: 'Solve questions from previous year exams',
       icon: <TbFileText />,
