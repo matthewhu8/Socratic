@@ -35,7 +35,7 @@ class NcertExamples(Base):
     example = Column(Text, nullable=False)
     solution = Column(Text, nullable=False)
     topic = Column(String, nullable=True)
-    example_number = Column(Integer, nullable=True)
+    example_number = Column(Float, nullable=True)
     grade = Column(String, nullable=True)
 
 class NcertExcersizes(Base):
@@ -45,7 +45,7 @@ class NcertExcersizes(Base):
     excersize = Column(Text, nullable=False)
     solution = Column(Text, nullable=True)
     topic = Column(String, nullable=True)
-    excersize_number = Column(Integer, nullable=True)
+    excersize_number = Column(Float, nullable=True)
     grade = Column(String, nullable=True)
 
 class PYQs(Base):

@@ -9,11 +9,17 @@
 /* Header */
 .page-header {
   display: flex;
-  align-items: center;
+  flex-direction: column;
   padding: 1rem 2rem;
   background-color: white;
   border-bottom: 1px solid #e2e8f0;
   flex-shrink: 0;
+  gap: 1rem;
+}
+
+.page-header .top-row {
+  display: flex;
+  align-items: center;
 }
 
 .back-arrow-btn {
@@ -26,6 +32,13 @@
 
 .back-arrow-btn:hover {
   color: #1a202c;
+}
+
+.main-title h1 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #1a202c;
+  margin: 0;
 }
 
 .breadcrumbs {
