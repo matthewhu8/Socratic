@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 
 # Import our modules
 from .database.database import get_db, engine
-from .database.models import Base, YouTubeQuizResults, StudentUser, TeacherUser
+from .database.models import Base, YouTubeQuizResults, StudentUser, TeacherUser, NcertExamples, NcertExcersizes, PYQs
 from .auth.utils import verify_password, get_password_hash, create_access_token, create_refresh_token, SECRET_KEY, ALGORITHM
 from .auth.schemas import TokenResponse, UserLogin, StudentCreate, TeacherCreate, StudentResponse, TeacherResponse, RefreshToken
 from .auth.dependencies import get_current_user, get_current_student, get_current_teacher
@@ -423,3 +423,107 @@ async def store_youtube_quiz_results(request: dict, db: Session = Depends(get_db
 @app.get("/api/get-youtube-quiz-results")
 async def get_youtube_quiz_results(db: Session = Depends(get_db), current_user = Depends(get_current_student)) -> str:
     pass
+
+# Pydantic model for question response
+class QuestionResponse(OrmBaseModel):
+    id: int
+    question_text: str
+    solution: str
+    topic: str
+    question_number: Optional[float] = None
+    max_marks: Optional[int] = 3  # Default marks
+    difficulty: Optional[str] = None
+    year: Optional[int] = None
+
+@app.get("/api/questions", response_model=List[QuestionResponse])
+async def get_questions(
+    practice_mode: str,
+    grade: str, 
+    topic: str,
+    subject: str,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    """Get questions based on practice mode, grade, topic, and subject."""
+    try:
+        # Normalize topic name to match database format
+        # Convert "real-numbers" to "Real Numbers"
+        formatted_topic = topic.replace('-', ' ').title()
+        
+        questions = []
+        
+        if practice_mode == "ncert-examples":
+            # Query NCERT Examples table
+            db_questions = db.query(NcertExamples).filter(
+                NcertExamples.grade == grade,
+                NcertExamples.topic == formatted_topic
+            ).all()
+            
+            # Convert to standard format
+            for i, q in enumerate(db_questions):
+                questions.append(QuestionResponse(
+                    id=q.id,
+                    question_text=q.example,
+                    solution=q.solution,
+                    topic=q.topic,
+                    question_number=q.example_number,
+                    max_marks=3  # Default for examples
+                ))
+                
+        elif practice_mode == "ncert-excercises":
+            # Query NCERT Exercises table
+            db_questions = db.query(NcertExcersizes).filter(
+                NcertExcersizes.grade == grade,
+                NcertExcersizes.topic == formatted_topic
+            ).all()
+            
+            # Convert to standard format
+            for i, q in enumerate(db_questions):
+                questions.append(QuestionResponse(
+                    id=q.id,
+                    question_text=q.excersize,
+                    solution=q.solution or "Solution not available",
+                    topic=q.topic,
+                    question_number=q.excersize_number,
+                    max_marks=5  # Default for exercises
+                ))
+                
+        elif practice_mode == "previous-year-questions" or practice_mode == "smart-practice":
+            # Query Previous Year Questions table
+            if formatted_topic and formatted_topic != "General":
+                # Filter by specific topic
+                db_questions = db.query(PYQs).filter(
+                    PYQs.topic == formatted_topic
+                ).all()
+            else:
+                # Get all PYQs regardless of topic (for direct access)
+                db_questions = db.query(PYQs).limit(50).all()  # Limit to prevent too many results
+            
+            # Convert to standard format
+            for i, q in enumerate(db_questions):
+                questions.append(QuestionResponse(
+                    id=q.id,
+                    question_text=q.question,
+                    solution=q.answer,
+                    topic=q.topic,
+                    question_number=None,
+                    max_marks=6,  # Default for PYQs
+                    difficulty=q.difficulty,
+                    year=q.year
+                ))
+        
+        else:
+            raise HTTPException(status_code=400, detail="Invalid practice mode")
+        
+        if not questions:
+            # Return empty list if no questions found
+            return []
+            
+        return questions
+        
+    except Exception as e:
+        print(f"Error in get_questions endpoint: {e}")
+        raise HTTPException(
+            status_code=500, 
+            detail=f"Failed to fetch questions: {str(e)}"
+        )
