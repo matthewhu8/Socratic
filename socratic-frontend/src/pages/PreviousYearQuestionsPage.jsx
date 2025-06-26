@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import MarkScheme from '../components/MarkScheme';
 import '../styles/PreviousYearQuestionsPage.css';
 
 // Helper to format text
@@ -35,6 +36,7 @@ const PreviousYearQuestionsPage = () => {
 
   const [questionIndex, setQuestionIndex] = useState(0);
   const [chatMessage, setChatMessage] = useState('');
+  const [showMarkScheme, setShowMarkScheme] = useState(false);
   const currentQuestion = mockQuestions[questionIndex];
 
   const handleChatSubmit = (e) => {
@@ -46,6 +48,21 @@ const PreviousYearQuestionsPage = () => {
   const handleSkip = () => {
     // Cycle through questions for demonstration
     setQuestionIndex((prevIndex) => (prevIndex + 1) % mockQuestions.length);
+  };
+
+  const handleNextQuestion = () => {
+    // Same functionality as skip for now
+    setQuestionIndex((prevIndex) => (prevIndex + 1) % mockQuestions.length);
+    // Close mark scheme when moving to next question
+    setShowMarkScheme(false);
+  };
+
+  const handleMarkSchemeClick = () => {
+    setShowMarkScheme(true);
+  };
+
+  const handleCloseMarkScheme = () => {
+    setShowMarkScheme(false);
   };
 
   const formattedSubject = formatBreadcrumb(subject);
@@ -88,7 +105,9 @@ const PreviousYearQuestionsPage = () => {
         {/* Right Column: Actions & Chat */}
         <aside className="right-panel">
           <div className="action-buttons-panel">
-            <button className="action-btn secondary">Mark Scheme</button>
+            <button className="action-btn secondary" onClick={handleMarkSchemeClick}>
+              Mark Scheme
+            </button>
             <button className="action-btn secondary">Video Solution</button>
             <button className="action-btn primary">Submit for Grading</button>
             <button className="action-btn skip" onClick={handleSkip}>Skip Question</button>
@@ -110,21 +129,30 @@ const PreviousYearQuestionsPage = () => {
               </div>
               <span>Chat functionality coming soon...</span>
             </div>
-            <form onSubmit={handleChatSubmit} className="chat-form">
+            <form onSubmit={handleChatSubmit} className="doubt-chat-form">
               <input
                 type="text"
                 value={chatMessage}
                 onChange={(e) => setChatMessage(e.target.value)}
                 placeholder="Type your question..."
-                className="chat-input"
+                className="doubt-chat-input"
               />
-              <button type="submit" className="send-btn">
+              <button type="submit" className="doubt-send-btn">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M2.01 21L23 12L2.01 3L2 10L17 12L2 14L2.01 21Z" fill="white"/></svg>
               </button>
             </form>
           </div>
         </aside>
       </main>
+
+      {/* Mark Scheme Modal */}
+      {showMarkScheme && (
+        <MarkScheme 
+          question={currentQuestion} 
+          onClose={handleCloseMarkScheme}
+          onNextQuestion={handleNextQuestion}
+        />
+      )}
     </div>
   );
 };

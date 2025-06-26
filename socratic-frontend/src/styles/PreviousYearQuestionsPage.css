@@ -204,7 +204,7 @@
   margin-bottom: 1rem;
 }
 
-.chat-form {
+.doubt-chat-form {
   padding: 1rem 1.5rem;
   border-top: 1px solid #e2e8f0;
   display: flex;
@@ -212,7 +212,7 @@
   gap: 0.75rem;
 }
 
-.chat-input {
+.doubt-chat-input {
   flex-grow: 1;
   padding: 0.75rem 1rem;
   border: 1px solid #e2e8f0;
@@ -221,14 +221,14 @@
   font-size: 0.9rem;
 }
 
-.chat-input:focus {
+.doubt-chat-input:focus {
   outline: none;
   border-color: #a3bffa;
   background-color: white;
   box-shadow: 0 0 0 3px rgba(66, 133, 244, 0.1);
 }
 
-.send-btn {
+.doubt-send-btn {
   width: 40px;
   height: 40px;
   border-radius: 50%;
@@ -242,7 +242,7 @@
   flex-shrink: 0;
 }
 
-.send-btn:hover {
+.doubt-send-btn:hover {
   background-color: #3367d6;
 }
 
