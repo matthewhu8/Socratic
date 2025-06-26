@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import '../styles/PreviousYearQuestionsPage.css';
 
 // Helper to format text
@@ -11,9 +11,24 @@ const formatBreadcrumb = (str) => {
     .join(' ');
 };
 
+// Helper to determine practice mode from URL
+const getPracticeModeFromUrl = (pathname) => {
+  if (pathname.includes('ncert-examples') || pathname.includes('ncert-topics')) {
+    return 'NCERT Examples';
+  } else if (pathname.includes('ncert-excercises')) {
+    return 'NCERT Exercises';
+  } else if (pathname.includes('previous-year-questions')) {
+    return 'Previous Year Questions';
+  } else if (pathname.includes('smart-practice')) {
+    return 'Smart Practice';
+  }
+  return 'Previous Year Questions'; // default
+};
+
 const PreviousYearQuestionsPage = () => {
-  const { subject } = useParams();
+  const { subject, gradeParam, practiceMode, subtopic } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   
   // Mock Data for two questions to allow navigation
   const mockQuestions = [
@@ -48,24 +63,70 @@ const PreviousYearQuestionsPage = () => {
     setQuestionIndex((prevIndex) => (prevIndex + 1) % mockQuestions.length);
   };
 
+  // Determine the practice mode and format the title
+  const practiceModeFromUrl = getPracticeModeFromUrl(location.pathname);
   const formattedSubject = formatBreadcrumb(subject);
+  
+  // Use practice mode from URL params if available, otherwise derive from URL
+  const practiceModeMap = {
+    'ncert-examples': 'NCERT Examples',
+    'ncert-excercises': 'NCERT Exercises',
+    'previous-year-questions': 'Previous Year Questions',
+    'smart-practice': 'Smart Practice',
+  };
+  
+  const finalPracticeMode = practiceMode ? 
+    (practiceModeMap[practiceMode] || formatBreadcrumb(practiceMode)) : practiceModeFromUrl;
+  
+  const formattedSubtopic = formatBreadcrumb(subtopic);
+  
+  // Create the main title based on available information
+  const getMainTitle = () => {
+    if (subtopic && subtopic !== 'direct' && finalPracticeMode) {
+      // Has subtopic (from SubtopicSelectionPage): "NCERT Examples - Real Numbers"
+      return `${finalPracticeMode} - ${formattedSubtopic}`;
+    } else if (subtopic === 'direct' && finalPracticeMode && gradeParam) {
+      // Direct route (Previous Year Questions/Smart Practice): "Previous Year Questions - Grade 10"
+      const grade = gradeParam.replace('grade-', '');
+      return `${finalPracticeMode} - Grade ${grade}`;
+    } else if (finalPracticeMode) {
+      return finalPracticeMode;
+    } else {
+      return 'Previous Year Questions';
+    }
+  };
 
   return (
     <div className="page-container">
       {/* Header */}
       <header className="page-header">
-        <button onClick={() => navigate(-1)} className="back-arrow-btn">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M19 12H5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            <path d="M12 19L5 12L12 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
-        </button>
+        <div className="top-row">
+          <button onClick={() => navigate(-1)} className="back-arrow-btn">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M19 12H5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M12 19L5 12L12 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </button>
+        </div>
+        <div className="main-title">
+          <h1>{getMainTitle()}</h1>
+        </div>
         <div className="breadcrumbs">
           <span>{formattedSubject}</span>
+          {gradeParam && (
+            <>
+              <span className="separator">›</span>
+              <span>Grade {gradeParam.replace('grade-', '')}</span>
+            </>
+          )}
+          {subtopic && subtopic !== 'direct' && (
+            <>
+              <span className="separator">›</span>
+              <span>{formattedSubtopic}</span>
+            </>
+          )}
           <span className="separator">›</span>
-          <span>{currentQuestion.topic}</span>
-          <span className="separator">›</span>
-          <span className="current">Previous Year Questions</span>
+          <span className="current">{finalPracticeMode}</span>
         </div>
       </header>
 

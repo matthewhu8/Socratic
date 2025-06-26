@@ -25,8 +25,18 @@ const mathematicsTopicsByGrade = {
     {
       title: 'Real Numbers',
       description: 'Fundamental concepts of real numbers.',
-      path: '/student/dynamic-learning/mathematics/grade-10/trigonometry-basics',
-    }
+      path: '/student/dynamic-learning/mathematics/grade-10/real-numbers',
+    },
+    {
+      title: 'Polynomials',
+      description: 'Properties of polynomials and their roots.',
+      path: '/student/dynamic-learning/mathematics/grade-10/polynomials',
+    },
+    {
+      title: 'Pair of Linear Equations in Two Variables',
+      description: 'Solving pair of linear equations in two variables.',
+      path: '/student/dynamic-learning/mathematics/grade-10/pair-of-linear-equations-in-two-variables',
+    },
   ],
   11: [
     {
