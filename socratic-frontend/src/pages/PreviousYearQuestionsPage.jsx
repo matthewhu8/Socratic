@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import API_URL from '../config/api';
 import '../styles/PreviousYearQuestionsPage.css';
 
 // Helper to format text
@@ -30,27 +31,15 @@ const PreviousYearQuestionsPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   
-  // Mock Data for two questions to allow navigation
-  const mockQuestions = [
-    {
-      id: 1,
-      questionNumber: 1,
-      maxMarks: 3,
-      questionText: "Find the sum of the first 15 terms of the arithmetic progression: 2, 5, 8, ...",
-      topic: "Sequences and Series"
-    },
-    {
-      id: 2,
-      questionNumber: 2,
-      maxMarks: 6,
-      questionText: "The 15th term of an arithmetic sequence is 21, and the common difference is -4. Find the first term and the 29th term.",
-      topic: "Sequences and Series"
-    }
-  ];
-
+  // State for questions and loading
+  const [questions, setQuestions] = useState([]);
   const [questionIndex, setQuestionIndex] = useState(0);
   const [chatMessage, setChatMessage] = useState('');
-  const currentQuestion = mockQuestions[questionIndex];
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [showSolution, setShowSolution] = useState(false);
+  
+  const currentQuestion = questions[questionIndex];
 
   const handleChatSubmit = (e) => {
     e.preventDefault();
@@ -59,9 +48,76 @@ const PreviousYearQuestionsPage = () => {
   };
 
   const handleSkip = () => {
-    // Cycle through questions for demonstration
-    setQuestionIndex((prevIndex) => (prevIndex + 1) % mockQuestions.length);
+    // Cycle through questions
+    if (questions.length > 0) {
+      setQuestionIndex((prevIndex) => (prevIndex + 1) % questions.length);
+      setShowSolution(false); // Reset solution display for new question
+    }
   };
+
+  const toggleSolution = () => {
+    setShowSolution(!showSolution);
+  };
+
+  // Function to fetch questions from API
+  const fetchQuestions = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      // Get parameters for API call
+      const grade = gradeParam?.replace('grade-', '') || '';
+      const topic = subtopic === 'direct' ? '' : subtopic || '';
+      const mode = practiceMode || '';
+      
+      // For direct routes, we don't need to filter by topic
+      let apiUrl;
+      if (subtopic === 'direct') {
+        // For Previous Year Questions and Smart Practice without specific topic
+        apiUrl = `${API_URL}/api/questions?practice_mode=${mode}&grade=${grade}&topic=general&subject=${subject}`;
+      } else {
+        // For specific topics (NCERT Examples/Exercises with subtopic)
+        apiUrl = `${API_URL}/api/questions?practice_mode=${mode}&grade=${grade}&topic=${topic}&subject=${subject}`;
+      }
+      
+      const token = localStorage.getItem('accessToken');
+      if (!token) {
+        setError('Please login to access questions');
+        return;
+      }
+      
+      const response = await fetch(apiUrl, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch questions: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      setQuestions(data);
+      
+      if (data.length === 0) {
+        setError('No questions found for the selected criteria');
+      }
+      
+    } catch (err) {
+      console.error('Error fetching questions:', err);
+      setError(err.message || 'Failed to load questions');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fetch questions when component mounts or parameters change
+  useEffect(() => {
+    if (subject && gradeParam && practiceMode) {
+      fetchQuestions();
+    }
+  }, [subject, gradeParam, practiceMode, subtopic]);
 
   // Determine the practice mode and format the title
   const practiceModeFromUrl = getPracticeModeFromUrl(location.pathname);
@@ -135,24 +191,85 @@ const PreviousYearQuestionsPage = () => {
         {/* Left Column: Question */}
         <section className="question-display-area">
           <div className="question-content-card">
-            {/* <div className="question-number-container">
-              <span className="question-label">Question</span>
-              <span className="question-number">{currentQuestion.questionNumber}</span>
-            </div> */}
-            <div className="question-details-container">
-              <div className="marks-info">[Maximum mark: {currentQuestion.maxMarks}]</div>
-              <p className="question-text">{currentQuestion.questionText}</p>
-            </div>
+            {loading ? (
+              <div className="loading-container">
+                <div className="loading-spinner"></div>
+                <p>Loading questions...</p>
+              </div>
+            ) : error ? (
+              <div className="error-container">
+                <div className="error-icon">⚠️</div>
+                <h3>Error Loading Questions</h3>
+                <p>{error}</p>
+                <button onClick={fetchQuestions} className="retry-btn">
+                  Try Again
+                </button>
+              </div>
+            ) : questions.length === 0 ? (
+              <div className="no-questions-container">
+                <div className="no-questions-icon">📚</div>
+                <h3>No Questions Found</h3>
+                <p>No questions available for the selected criteria.</p>
+              </div>
+            ) : currentQuestion ? (
+              <div className="question-details-container">
+                <div className="question-header">
+                  <div className="marks-info">[Maximum mark: {currentQuestion.max_marks}]</div>
+                  {currentQuestion.question_number && (
+                    <div className="question-number-info">
+                      Question {currentQuestion.question_number}
+                    </div>
+                  )}
+                  {currentQuestion.difficulty && (
+                    <div className="difficulty-info">
+                      Difficulty: {currentQuestion.difficulty}
+                    </div>
+                  )}
+                  {currentQuestion.year && (
+                    <div className="year-info">
+                      Year: {currentQuestion.year}
+                    </div>
+                  )}
+                </div>
+                                 <p className="question-text">{currentQuestion.question_text}</p>
+                 
+                 {showSolution && currentQuestion.solution && (
+                   <div className="solution-container">
+                     <h4>Solution:</h4>
+                     <div className="solution-text">{currentQuestion.solution}</div>
+                   </div>
+                 )}
+                 
+                 <div className="question-footer">
+                   <span className="question-counter">
+                     Question {questionIndex + 1} of {questions.length}
+                   </span>
+                 </div>
+              </div>
+            ) : null}
           </div>
         </section>
 
         {/* Right Column: Actions & Chat */}
         <aside className="right-panel">
           <div className="action-buttons-panel">
-            <button className="action-btn secondary">Mark Scheme</button>
+            {currentQuestion && currentQuestion.solution && (
+              <button 
+                className={`action-btn ${showSolution ? 'primary' : 'secondary'}`}
+                onClick={toggleSolution}
+              >
+                {showSolution ? 'Hide Solution' : 'Show Solution'}
+              </button>
+            )}
             <button className="action-btn secondary">Video Solution</button>
             <button className="action-btn primary">Submit for Grading</button>
-            <button className="action-btn skip" onClick={handleSkip}>Skip Question</button>
+            <button 
+              className="action-btn skip" 
+              onClick={handleSkip}
+              disabled={questions.length === 0}
+            >
+              {questions.length > 1 ? 'Next Question' : 'Skip Question'}
+            </button>
           </div>
           <div className="doubt-card">
             <header className="doubt-header">
