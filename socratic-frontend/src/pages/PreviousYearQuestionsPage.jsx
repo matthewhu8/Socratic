@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import MarkScheme from '../components/MarkScheme';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import API_URL from '../config/api';
@@ -38,7 +38,8 @@ const PreviousYearQuestionsPage = () => {
   const [questionIndex, setQuestionIndex] = useState(0);
   const [chatMessage, setChatMessage] = useState('');
   const [showMarkScheme, setShowMarkScheme] = useState(false);
-  const currentQuestion = mockQuestions[questionIndex];
+  const [showSolution, setShowSolution] = useState(false);
+  const currentQuestion = questions[questionIndex];
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   
@@ -111,7 +112,7 @@ const PreviousYearQuestionsPage = () => {
   };
 
   // Function to fetch questions from API
-  const fetchQuestions = async () => {
+  const fetchQuestions = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -161,13 +162,14 @@ const PreviousYearQuestionsPage = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [subject, gradeParam, practiceMode, subtopic]);
 
   const handleNextQuestion = () => {
     // Same functionality as skip for now
-    setQuestionIndex((prevIndex) => (prevIndex + 1) % mockQuestions.length);
-    // Close mark scheme when moving to next question
+    setQuestionIndex((prevIndex) => (prevIndex + 1) % questions.length);
+    // Close mark scheme and solution when moving to next question
     setShowMarkScheme(false);
+    setShowSolution(false);
   };
 
   const handleMarkSchemeClick = () => {
@@ -183,7 +185,13 @@ const PreviousYearQuestionsPage = () => {
     if (subject && gradeParam && practiceMode) {
       fetchQuestions();
     }
-  }, [subject, gradeParam, practiceMode, subtopic]);
+  }, [subject, gradeParam, practiceMode, subtopic, fetchQuestions]);
+
+  // Reset question index and solution when questions change
+  useEffect(() => {
+    setQuestionIndex(0);
+    setShowSolution(false);
+  }, [questions]);
 
   // Determine the practice mode and format the title
   const practiceModeFromUrl = getPracticeModeFromUrl(location.pathname);
@@ -322,7 +330,13 @@ const PreviousYearQuestionsPage = () => {
             <button className="action-btn secondary" onClick={handleMarkSchemeClick}>
               Mark Scheme
             </button>
-
+            <button 
+              className="action-btn secondary" 
+              onClick={toggleSolution}
+              disabled={!currentQuestion}
+            >
+              {showSolution ? 'Hide Solution' : 'Show Solution'}
+            </button>
             <button className="action-btn secondary">Video Solution</button>
             <button 
               className="action-btn primary" 
@@ -378,6 +392,9 @@ const PreviousYearQuestionsPage = () => {
           question={currentQuestion} 
           onClose={handleCloseMarkScheme}
           onNextQuestion={handleNextQuestion}
+        />
+      )}
+
       {/* QR Grading Modal */}
       {gradingSession && (
         <QRGradingModal

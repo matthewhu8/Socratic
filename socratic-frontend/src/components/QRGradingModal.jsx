@@ -71,7 +71,7 @@ const QRGradingModal = ({
       } catch (error) {
         console.error('Error polling for results:', error);
       }
-    }, 5000); // Poll every 2 seconds
+    }, 5000); // Poll every 5 seconds
 
     return () => clearInterval(pollInterval);
   }, [sessionId, isOpen, status, onGradingComplete]);
