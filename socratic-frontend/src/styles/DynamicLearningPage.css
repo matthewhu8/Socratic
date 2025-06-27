@@ -103,7 +103,7 @@
 .subjects-list {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 24px;
 }
 
 /* Subject Section */
@@ -112,10 +112,13 @@
   border-radius: 16px;
   overflow: hidden;
   transition: all 0.3s ease;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  margin-bottom: 4px;
 }
 
 .subject-section.expanded {
   background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 /* Subject Header */
@@ -161,10 +164,10 @@
 
 /* Subject Content */
 .subject-content {
-  padding: 0 32px 32px;
+  padding: 8px 32px 32px;
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 20px;
+  gap: 24px;
 }
 
 /* Subject Card */
@@ -174,6 +177,7 @@
   padding: 24px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   transition: all 0.3s ease;
+  border: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 .subject-card:hover {
@@ -282,8 +286,9 @@
   }
   
   .subject-content {
-    padding: 0 20px 20px;
+    padding: 8px 20px 20px;
     grid-template-columns: 1fr;
+    gap: 16px;
   }
   
   .subject-icon {
