@@ -58,6 +58,33 @@ class PYQs(Base):
     difficulty = Column(String, nullable=True)
     year = Column(Integer, nullable=True)
 
+class GradingSession(Base):
+    __tablename__ = "grading_sessions"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    session_id = Column(String, unique=True, index=True, nullable=False)
+    user_id = Column(Integer, ForeignKey("student_users.id"), nullable=False)
+    question_id = Column(Integer, nullable=False)
+    question_text = Column(Text, nullable=False)
+    correct_solution = Column(Text, nullable=False)
+    practice_mode = Column(String, nullable=False)
+    subject = Column(String, nullable=False)
+    grade = Column(String, nullable=False)
+    topic = Column(String, nullable=True)
+    status = Column(String, default="waiting_for_submission")
+    image_path = Column(String, nullable=True)
+    image_uploaded_at = Column(DateTime, nullable=True)
+    mobile_connected_at = Column(DateTime, nullable=True)
+    grading_result = Column(JSON, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    expires_at = Column(DateTime, nullable=False)
+    
+    # Relationship
+    student = relationship("StudentUser", back_populates="grading_sessions")
+
+# Add the relationship to StudentUser
+StudentUser.grading_sessions = relationship("GradingSession", back_populates="student")
+
 
 class YouTubeQuizResults(Base):
     __tablename__ = "youtube_quiz_results"

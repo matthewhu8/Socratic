@@ -1,0 +1,303 @@
+/* Mobile Grading Page Styles */
+.mobile-grading-container {
+  min-height: 100vh;
+  background-color: #f8f9fa;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Header */
+.mobile-header {
+  background-color: #4285f4;
+  color: white;
+  padding: 1.5rem 1rem;
+  text-align: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.mobile-header h1 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.session-info {
+  font-size: 0.9rem;
+  opacity: 0.9;
+}
+
+.session-info p {
+  margin: 0.25rem 0;
+}
+
+/* Main Content */
+.mobile-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 1rem;
+}
+
+/* Loading State */
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  text-align: center;
+}
+
+.spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid #e2e8f0;
+  border-top: 4px solid #4285f4;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 1rem;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Error State */
+.error-state, .success-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  text-align: center;
+  padding: 2rem;
+}
+
+.error-icon, .success-icon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+}
+
+.error-state h2, .success-state h2 {
+  margin: 0 0 1rem 0;
+  color: #1a202c;
+}
+
+.error-state p, .success-state p {
+  margin: 0.5rem 0;
+  color: #4a5568;
+  line-height: 1.5;
+}
+
+/* Start Camera Section */
+.start-camera-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 2rem 0;
+}
+
+.question-preview {
+  background-color: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 500px;
+}
+
+.question-preview h3 {
+  margin: 0 0 1rem 0;
+  color: #2d3748;
+  font-size: 1.1rem;
+}
+
+.question-preview p {
+  margin: 0;
+  color: #4a5568;
+  line-height: 1.6;
+}
+
+.start-camera-btn {
+  background-color: #4285f4;
+  color: white;
+  border: none;
+  border-radius: 50px;
+  padding: 1rem 3rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  transition: all 0.2s;
+}
+
+.start-camera-btn:active {
+  transform: scale(0.95);
+  background-color: #3367d6;
+}
+
+.instructions {
+  color: #718096;
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+/* Camera Section */
+.camera-section {
+  position: relative;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.camera-preview {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 12px;
+  background-color: #000;
+}
+
+.camera-controls {
+  position: absolute;
+  bottom: 2rem;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 2rem;
+}
+
+.cancel-btn {
+  background-color: rgba(255, 255, 255, 0.9);
+  color: #1a202c;
+  border: none;
+  border-radius: 50px;
+  padding: 0.75rem 2rem;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.capture-btn {
+  width: 70px;
+  height: 70px;
+  background-color: white;
+  border: 5px solid rgba(255, 255, 255, 0.5);
+  border-radius: 50%;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s;
+}
+
+.capture-btn:active {
+  transform: scale(0.9);
+}
+
+.capture-icon {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 50px;
+  height: 50px;
+  background-color: #e53e3e;
+  border-radius: 50%;
+}
+
+/* Preview Section */
+.preview-section {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.captured-preview {
+  width: 100%;
+  height: auto;
+  max-height: 60vh;
+  object-fit: contain;
+  border-radius: 12px;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.preview-controls {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.retake-btn, .submit-btn {
+  flex: 1;
+  padding: 1rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.retake-btn {
+  background-color: #e2e8f0;
+  color: #2d3748;
+}
+
+.retake-btn:active:not(:disabled) {
+  transform: scale(0.95);
+  background-color: #cbd5e0;
+}
+
+.submit-btn {
+  background-color: #48bb78;
+  color: white;
+}
+
+.submit-btn:active:not(:disabled) {
+  transform: scale(0.95);
+  background-color: #38a169;
+}
+
+.retake-btn:disabled, .submit-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.error-message {
+  color: #e53e3e;
+  text-align: center;
+  margin: 0.5rem 0;
+  font-size: 0.9rem;
+}
+
+/* Responsive adjustments */
+@media (max-height: 600px) {
+  .mobile-header {
+    padding: 1rem;
+  }
+  
+  .mobile-header h1 {
+    font-size: 1.25rem;
+  }
+  
+  .camera-controls {
+    bottom: 1rem;
+  }
+}
+
+@media (min-width: 768px) {
+  .mobile-grading-container {
+    max-width: 600px;
+    margin: 0 auto;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+  }
+} 

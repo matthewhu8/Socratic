@@ -1,15 +1,18 @@
-from fastapi import FastAPI, HTTPException, Depends, status, Request
+from fastapi import FastAPI, HTTPException, Depends, status, Request, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from pydantic import BaseModel, EmailStr
 from typing import List, Dict, Any, Optional
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 from dotenv import load_dotenv
+import uuid
+import time
+import json
 
 # Import our modules
 from .database.database import get_db, engine
-from .database.models import Base, YouTubeQuizResults, StudentUser, TeacherUser, NcertExamples, NcertExcersizes, PYQs
+from .database.models import Base, YouTubeQuizResults, StudentUser, TeacherUser, NcertExamples, NcertExcersizes, PYQs, GradingSession
 from .auth.utils import verify_password, get_password_hash, create_access_token, create_refresh_token, SECRET_KEY, ALGORITHM
 from .auth.schemas import TokenResponse, UserLogin, StudentCreate, TeacherCreate, StudentResponse, TeacherResponse, RefreshToken
 from .auth.dependencies import get_current_user, get_current_student, get_current_teacher
@@ -527,3 +530,310 @@ async def get_questions(
             status_code=500, 
             detail=f"Failed to fetch questions: {str(e)}"
         )
+
+# Pydantic models for grading sessions
+class GradingSessionCreate(BaseModel):
+    questionId: int
+    questionText: str
+    correctSolution: str
+    practiceMode: str
+    subject: str
+    grade: str
+    topic: Optional[str] = None
+
+class GradingSessionResponse(BaseModel):
+    sessionId: str
+    qrCodeUrl: str
+    expiresIn: int
+
+# Temporary token creation for mobile access
+def create_temp_token(session_id: str, user_id: int) -> str:
+    """Create a temporary token for mobile access to a specific grading session."""
+    token_data = {
+        "sub": str(user_id),
+        "session_id": session_id,
+        "type": "grading_temp",
+        "exp": datetime.utcnow() + timedelta(minutes=5)
+    }
+    return jwt.encode(token_data, SECRET_KEY, algorithm=ALGORITHM)
+
+@app.post("/api/create-grading-session", response_model=GradingSessionResponse)
+async def create_grading_session(
+    session_data: GradingSessionCreate,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    """Create a new grading session and return QR code URL."""
+    try:
+        # Generate unique session ID
+        session_id = f"grade_{int(time.time())}_{uuid.uuid4().hex[:8]}"
+        
+        # Create session record in database
+        grading_session = GradingSession(
+            session_id=session_id,
+            user_id=current_user.id,
+            question_id=session_data.questionId,
+            question_text=session_data.questionText,
+            correct_solution=session_data.correctSolution,
+            practice_mode=session_data.practiceMode,
+            subject=session_data.subject,
+            grade=session_data.grade,
+            topic=session_data.topic,
+            status="waiting_for_submission",
+            expires_at=datetime.utcnow() + timedelta(minutes=5),
+            created_at=datetime.utcnow()
+        )
+        
+        db.add(grading_session)
+        db.commit()
+        db.refresh(grading_session)
+        
+        # Generate mobile URL with temporary token
+        temp_token = create_temp_token(session_id, current_user.id)
+        # Use the actual frontend URL based on environment
+        frontend_url = os.getenv("FRONTEND_URL", "http://localhost:3000")
+        # For production, this would be your actual domain
+        if os.getenv("RAILWAY_ENVIRONMENT"):
+            frontend_url = "https://socratic.up.railway.app"
+        mobile_url = f"{frontend_url}/mobile-grade/{session_id}?token={temp_token}"
+        
+        # Store session in Redis for fast lookup
+        if hasattr(convo_service, 'redis_client'):
+            convo_service.redis_client.setex(
+                f"session:{session_id}",
+                300,  # 5 minutes TTL
+                json.dumps({
+                    "user_id": current_user.id,
+                    "question_id": session_data.questionId,
+                    "status": "waiting",
+                    "created_at": datetime.utcnow().isoformat()
+                })
+            )
+        
+        return {
+            "sessionId": session_id,
+            "qrCodeUrl": mobile_url,
+            "expiresIn": 300  # seconds
+        }
+        
+    except Exception as e:
+        print(f"Error creating grading session: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to create session: {str(e)}")
+
+@app.get("/api/validate-grading-session/{session_id}")
+async def validate_grading_session(
+    session_id: str,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    """Validate a grading session for mobile access."""
+    try:
+        # Check Redis for fast lookup
+        if hasattr(convo_service, 'redis_client'):
+            session_data = convo_service.redis_client.get(f"session:{session_id}")
+            if not session_data:
+                raise HTTPException(status_code=404, detail="Session not found or expired")
+            
+            session_info = json.loads(session_data)
+            
+            # Verify user ownership
+            if session_info["user_id"] != current_user.id:
+                raise HTTPException(status_code=403, detail="Unauthorized access")
+        
+        # Check database
+        db_session = db.query(GradingSession).filter(
+            GradingSession.session_id == session_id,
+            GradingSession.expires_at > datetime.utcnow(),
+            GradingSession.status.in_(["waiting_for_submission", "mobile_connected"])
+        ).first()
+        
+        if not db_session:
+            raise HTTPException(status_code=410, detail="Session expired")
+        
+        return {
+            "sessionId": session_id,
+            "questionText": db_session.question_text,
+            "subject": db_session.subject,
+            "grade": db_session.grade,
+            "topic": db_session.topic,
+            "status": db_session.status,
+            "timeRemaining": int((db_session.expires_at - datetime.utcnow()).total_seconds())
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error validating session: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
+
+@app.patch("/api/grading-session/{session_id}/connect-mobile")
+async def connect_mobile_to_session(
+    session_id: str,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    """Update session status when mobile connects."""
+    try:
+        # Update session status
+        db_session = db.query(GradingSession).filter(
+            GradingSession.session_id == session_id,
+            GradingSession.user_id == current_user.id
+        ).first()
+        
+        if not db_session:
+            raise HTTPException(status_code=404, detail="Session not found")
+        
+        db_session.status = "mobile_connected"
+        db_session.mobile_connected_at = datetime.utcnow()
+        db.commit()
+        
+        # Update Redis cache
+        if hasattr(convo_service, 'redis_client'):
+            convo_service.redis_client.setex(
+                f"session:{session_id}",
+                300,
+                json.dumps({
+                    "user_id": current_user.id,
+                    "question_id": db_session.question_id,
+                    "status": "mobile_connected",
+                    "mobile_connected_at": datetime.utcnow().isoformat()
+                })
+            )
+        
+        # TODO: Notify computer via WebSocket
+        
+        return {"status": "connected"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error connecting mobile: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/submit-grading-image")
+async def submit_grading_image(
+    sessionId: str = Form(...),
+    timestamp: str = Form(...),
+    imageSize: int = Form(...),
+    metadata: str = Form(...),
+    image: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    """Submit an image for grading."""
+    try:
+        # Validate session
+        db_session = db.query(GradingSession).filter(
+            GradingSession.session_id == sessionId,
+            GradingSession.user_id == current_user.id,
+            GradingSession.status.in_(["mobile_connected", "waiting_for_submission"]),
+            GradingSession.expires_at > datetime.utcnow()
+        ).first()
+        
+        if not db_session:
+            raise HTTPException(status_code=404, detail="Invalid or expired session")
+        
+        # Validate image file
+        if not image.content_type.startswith('image/'):
+            raise HTTPException(status_code=400, detail="Invalid file type")
+        
+        if imageSize > 10 * 1024 * 1024:  # 10MB limit
+            raise HTTPException(status_code=400, detail="File too large")
+        
+        # Create uploads directory if it doesn't exist
+        upload_dir = "temp_uploads"
+        os.makedirs(upload_dir, exist_ok=True)
+        
+        # Save image with unique filename
+        filename = f"{sessionId}_{int(time.time())}.jpg"
+        file_path = os.path.join(upload_dir, filename)
+        
+        # Save file
+        content = await image.read()
+        with open(file_path, "wb") as f:
+            f.write(content)
+        
+        # Update session status
+        db_session.status = "image_uploaded"
+        db_session.image_path = file_path
+        db_session.image_uploaded_at = datetime.utcnow()
+        db.commit()
+        
+        # Update Redis if available
+        if hasattr(convo_service, 'redis_client'):
+            convo_service.redis_client.setex(
+                f"session:{sessionId}",
+                300,
+                json.dumps({
+                    "user_id": current_user.id,
+                    "question_id": db_session.question_id,
+                    "status": "image_uploaded",
+                    "image_path": file_path,
+                    "uploaded_at": datetime.utcnow().isoformat()
+                })
+            )
+        
+        # TODO: Trigger grading process (async task)
+        # For now, we'll just simulate grading
+        grading_result = {
+            "grade": "8/10",
+            "feedback": "Good work! Your approach is correct. Minor calculation error in step 3.",
+            "corrections": ["Line 3: 15 × 2 = 30, not 25"],
+            "strengths": ["Good understanding of the quadratic formula", "Clear step-by-step work"]
+        }
+        
+        # Update with grading result
+        db_session.grading_result = grading_result
+        db_session.status = "completed"
+        db.commit()
+        
+        # TODO: Notify computer via WebSocket with results
+        
+        return {
+            "status": "success",
+            "message": "Image uploaded and graded successfully",
+            "sessionId": sessionId,
+            "result": grading_result
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        # Clean up uploaded file if error occurs
+        if 'file_path' in locals() and os.path.exists(file_path):
+            os.remove(file_path)
+        print(f"Error uploading image: {e}")
+        raise HTTPException(status_code=500, detail=f"Upload failed: {str(e)}")
+
+@app.get("/api/grading-session/{session_id}/result")
+async def get_grading_result(
+    session_id: str,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    """Get the grading result for a session."""
+    try:
+        db_session = db.query(GradingSession).filter(
+            GradingSession.session_id == session_id,
+            GradingSession.user_id == current_user.id
+        ).first()
+        
+        if not db_session:
+            raise HTTPException(status_code=404, detail="Session not found")
+        
+        if db_session.status != "completed":
+            return {
+                "status": db_session.status,
+                "result": None
+            }
+        
+        return {
+            "status": "completed",
+            "result": db_session.grading_result
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error getting result: {e}")
+        raise HTTPException(status_code=500, detail=str(e))

@@ -1,0 +1,273 @@
+/* QR Grading Modal Styles */
+.qr-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.qr-modal-content {
+  background: white;
+  border-radius: 16px;
+  padding: 2rem;
+  max-width: 500px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.qr-modal-close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: none;
+  border: none;
+  font-size: 2rem;
+  cursor: pointer;
+  color: #718096;
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.qr-modal-close:hover {
+  background-color: #f7fafc;
+  color: #2d3748;
+}
+
+.qr-modal-content h2 {
+  margin: 0 0 1.5rem 0;
+  color: #1a202c;
+  font-size: 1.75rem;
+  text-align: center;
+}
+
+/* Status Indicator */
+.status-indicator {
+  text-align: center;
+  margin-bottom: 1.5rem;
+  min-height: 24px;
+}
+
+.status-indicator p {
+  margin: 0;
+  font-size: 1rem;
+  color: #718096;
+}
+
+.status-indicator .connected {
+  color: #48bb78;
+  font-weight: 600;
+}
+
+.status-indicator .processing {
+  color: #4299e1;
+  font-weight: 600;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+/* QR Code Container */
+.qr-code-container {
+  display: flex;
+  justify-content: center;
+  margin: 2rem 0;
+  padding: 1rem;
+  background-color: #f7fafc;
+  border-radius: 12px;
+}
+
+.qr-code-container img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+}
+
+/* Instructions */
+.instructions {
+  background-color: #e6fffa;
+  border: 1px solid #9ae6b4;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin: 1.5rem 0;
+}
+
+.instructions h3 {
+  margin: 0 0 1rem 0;
+  color: #22543d;
+  font-size: 1.1rem;
+}
+
+.instructions ol {
+  margin: 0;
+  padding-left: 1.5rem;
+  color: #2f855a;
+}
+
+.instructions li {
+  margin: 0.5rem 0;
+}
+
+/* Timer */
+.timer {
+  text-align: center;
+  margin: 1.5rem 0;
+  font-size: 1.1rem;
+  color: #4a5568;
+}
+
+.timer span {
+  font-weight: 600;
+  color: #2d3748;
+}
+
+.timer span.urgent {
+  color: #e53e3e;
+  animation: blink 1s ease-in-out infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* Session Info */
+.session-info {
+  text-align: center;
+  padding-top: 1rem;
+  border-top: 1px solid #e2e8f0;
+  color: #a0aec0;
+  font-size: 0.85rem;
+}
+
+/* Grading Result */
+.grading-result {
+  animation: fadeIn 0.5s ease-out;
+}
+
+.grade-display {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin: 2rem 0;
+  padding: 1.5rem;
+  background-color: #f0f9ff;
+  border-radius: 12px;
+  border: 2px solid #3182ce;
+}
+
+.grade-label {
+  font-size: 1.2rem;
+  color: #2c5282;
+}
+
+.grade-value {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #2b6cb5;
+}
+
+.feedback-section,
+.corrections-section,
+.strengths-section {
+  margin: 1.5rem 0;
+}
+
+.feedback-section h3,
+.corrections-section h3,
+.strengths-section h3 {
+  margin: 0 0 0.75rem 0;
+  color: #2d3748;
+  font-size: 1.1rem;
+}
+
+.feedback-section p {
+  color: #4a5568;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.corrections-section ul,
+.strengths-section ul {
+  margin: 0;
+  padding-left: 1.5rem;
+}
+
+.corrections-section li {
+  color: #e53e3e;
+  margin: 0.5rem 0;
+}
+
+.strengths-section li {
+  color: #38a169;
+  margin: 0.5rem 0;
+}
+
+.close-button {
+  width: 100%;
+  padding: 0.75rem 1.5rem;
+  margin-top: 2rem;
+  background-color: #4285f4;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.close-button:hover {
+  background-color: #3367d6;
+}
+
+/* Mobile Responsive */
+@media (max-width: 640px) {
+  .qr-modal-content {
+    padding: 1.5rem;
+    margin: 1rem;
+  }
+  
+  .qr-modal-content h2 {
+    font-size: 1.5rem;
+  }
+  
+  .grade-value {
+    font-size: 2rem;
+  }
+} 
