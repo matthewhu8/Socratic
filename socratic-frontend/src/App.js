@@ -71,6 +71,18 @@ function App() {
               </ProtectedRoute>
             } />
             
+            {/* New Practice Routes with Practice Mode and Topic */}
+            <Route path="/student/practice/:subject/:practiceMode/:topic" element={
+              <ProtectedRoute userType="student">
+                <PreviousYearQuestionsPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/student/practice/:subject/:subSubject/:practiceMode/:topic" element={
+              <ProtectedRoute userType="student">
+                <PreviousYearQuestionsPage />
+              </ProtectedRoute>
+            } />
+            
             {/* Existing Routes */}
             <Route path="/student/dynamic-learning/:subject/select-grade" element={<ProtectedRoute userType="student"><GradeSelectionPage /></ProtectedRoute>} />
             <Route path="/student/practice/:subject/:gradeParam" element={<ProtectedRoute userType="student"><PracticeModePage /></ProtectedRoute>} />
