@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import API_URL from '../config/api';
+import QRGradingModal from '../components/QRGradingModal';
 import '../styles/PreviousYearQuestionsPage.css';
 
 // Helper to format text
@@ -39,6 +40,10 @@ const PreviousYearQuestionsPage = () => {
   const [error, setError] = useState(null);
   const [showSolution, setShowSolution] = useState(false);
   
+  // State for QR grading modal
+  const [showQRModal, setShowQRModal] = useState(false);
+  const [gradingSession, setGradingSession] = useState(null);
+  
   const currentQuestion = questions[questionIndex];
 
   const handleChatSubmit = (e) => {
@@ -57,6 +62,51 @@ const PreviousYearQuestionsPage = () => {
 
   const toggleSolution = () => {
     setShowSolution(!showSolution);
+  };
+
+  // Handle submit for grading
+  const handleSubmitForGrading = async () => {
+    if (!currentQuestion) return;
+
+    try {
+      // Create grading session
+      const sessionData = {
+        questionId: currentQuestion.id,
+        questionText: currentQuestion.question_text,
+        correctSolution: currentQuestion.solution,
+        practiceMode: practiceMode || '',
+        subject: subject || '',
+        grade: gradeParam?.replace('grade-', '') || '',
+        topic: subtopic !== 'direct' ? subtopic : null
+      };
+
+      const response = await fetch(`${API_URL}/api/create-grading-session`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(sessionData)
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to create grading session');
+      }
+
+      const data = await response.json();
+      setGradingSession(data);
+      setShowQRModal(true);
+      
+    } catch (error) {
+      console.error('Error creating grading session:', error);
+      alert('Failed to create grading session. Please try again.');
+    }
+  };
+
+  // Handle grading completion
+  const handleGradingComplete = (result) => {
+    console.log('Grading completed:', result);
+    // You can handle the grading result here (e.g., store it, show additional UI, etc.)
   };
 
   // Function to fetch questions from API
@@ -262,7 +312,13 @@ const PreviousYearQuestionsPage = () => {
               </button>
             )}
             <button className="action-btn secondary">Video Solution</button>
-            <button className="action-btn primary">Submit for Grading</button>
+            <button 
+              className="action-btn primary" 
+              onClick={handleSubmitForGrading}
+              disabled={!currentQuestion}
+            >
+              Submit for Grading
+            </button>
             <button 
               className="action-btn skip" 
               onClick={handleSkip}
@@ -303,6 +359,18 @@ const PreviousYearQuestionsPage = () => {
           </div>
         </aside>
       </main>
+
+      {/* QR Grading Modal */}
+      {gradingSession && (
+        <QRGradingModal
+          isOpen={showQRModal}
+          onClose={() => setShowQRModal(false)}
+          sessionId={gradingSession.sessionId}
+          qrCodeUrl={gradingSession.qrCodeUrl}
+          expiresIn={gradingSession.expiresIn}
+          onGradingComplete={handleGradingComplete}
+        />
+      )}
     </div>
   );
 };
