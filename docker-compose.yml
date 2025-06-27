@@ -32,4 +32,4 @@ services:
       retries: 3
 
 volumes:
-  postgres_data: 
+  postgres_data:

@@ -18,6 +18,7 @@ import DynamicLearningPage from './pages/DynamicLearningPage';
 import GradeSelectionPage from './pages/GradeSelectionPage';
 import PracticeModePage from './pages/PracticeModePage';
 import PreviousYearQuestionsPage from './pages/PreviousYearQuestionsPage';
+import TopicSelectionPage from './pages/TopicSelectionPage';
 import SubtopicSelectionPage from './pages/SubtopicSelectionPage';
 import MobileGradingPage from './pages/MobileGradingPage';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -57,11 +58,24 @@ function App() {
                 <DynamicLearningPage />
               </ProtectedRoute>
             } />
+            
+            {/* New CBSE Dynamic Learning Routes */}
+            <Route path="/student/dynamic-learning/:subject/:optionType/topics" element={
+              <ProtectedRoute userType="student">
+                <TopicSelectionPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/student/dynamic-learning/:subject/:subSubject/:optionType/topics" element={
+              <ProtectedRoute userType="student">
+                <TopicSelectionPage />
+              </ProtectedRoute>
+            } />
+            
+            {/* Existing Routes */}
             <Route path="/student/dynamic-learning/:subject/select-grade" element={<ProtectedRoute userType="student"><GradeSelectionPage /></ProtectedRoute>} />
             <Route path="/student/practice/:subject/:gradeParam" element={<ProtectedRoute userType="student"><PracticeModePage /></ProtectedRoute>} />
-            <Route path="/student/practice/:subject/:gradeParam/:practiceMode" element={<ProtectedRoute userType="student"><SubtopicSelectionPage /></ProtectedRoute>} />
-            <Route path="/student/practice/:subject/:gradeParam/:practiceMode/direct" element={<ProtectedRoute userType="student"><PreviousYearQuestionsPage /></ProtectedRoute>} />
-            <Route path="/student/practice/:subject/:gradeParam/:practiceMode/:subtopic" element={<ProtectedRoute userType="student"><PreviousYearQuestionsPage /></ProtectedRoute>} />
+            <Route path="/student/practice/:subject/:gradeParam/previous-year-questions" element={<ProtectedRoute userType="student"><PreviousYearQuestionsPage /></ProtectedRoute>} />
+            <Route path="/student/practice/:subject/:subSubject/:gradeParam/previous-year-questions" element={<ProtectedRoute userType="student"><PreviousYearQuestionsPage /></ProtectedRoute>} />
             <Route path="/student/dynamic-learning/:subject/:gradeParam/ncert-topics" element={<ProtectedRoute userType="student"><SubjectPageRouter /></ProtectedRoute>} />
             <Route path="/student/dynamic-learning/:subject/:gradeParam" element={<ProtectedRoute userType="student"><SubjectPageRouter /></ProtectedRoute>} />
             <Route path="/student/dynamic-learning/:subject/:gradeParam/:subtopic" element={<ProtectedRoute userType="student"><PracticeModePage /></ProtectedRoute>} />

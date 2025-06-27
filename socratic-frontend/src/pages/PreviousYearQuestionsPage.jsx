@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import MarkScheme from '../components/MarkScheme';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import API_URL from '../config/api';
 import QRGradingModal from '../components/QRGradingModal';
@@ -36,15 +37,15 @@ const PreviousYearQuestionsPage = () => {
   const [questions, setQuestions] = useState([]);
   const [questionIndex, setQuestionIndex] = useState(0);
   const [chatMessage, setChatMessage] = useState('');
+  const [showMarkScheme, setShowMarkScheme] = useState(false);
+  const currentQuestion = mockQuestions[questionIndex];
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [showSolution, setShowSolution] = useState(false);
   
   // State for QR grading modal
   const [showQRModal, setShowQRModal] = useState(false);
   const [gradingSession, setGradingSession] = useState(null);
-  
-  const currentQuestion = questions[questionIndex];
+ 
 
   const handleChatSubmit = (e) => {
     e.preventDefault();
@@ -160,6 +161,21 @@ const PreviousYearQuestionsPage = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleNextQuestion = () => {
+    // Same functionality as skip for now
+    setQuestionIndex((prevIndex) => (prevIndex + 1) % mockQuestions.length);
+    // Close mark scheme when moving to next question
+    setShowMarkScheme(false);
+  };
+
+  const handleMarkSchemeClick = () => {
+    setShowMarkScheme(true);
+  };
+
+  const handleCloseMarkScheme = () => {
+    setShowMarkScheme(false);
   };
 
   // Fetch questions when component mounts or parameters change
@@ -303,14 +319,10 @@ const PreviousYearQuestionsPage = () => {
         {/* Right Column: Actions & Chat */}
         <aside className="right-panel">
           <div className="action-buttons-panel">
-            {currentQuestion && currentQuestion.solution && (
-              <button 
-                className={`action-btn ${showSolution ? 'primary' : 'secondary'}`}
-                onClick={toggleSolution}
-              >
-                {showSolution ? 'Hide Solution' : 'Show Solution'}
-              </button>
-            )}
+            <button className="action-btn secondary" onClick={handleMarkSchemeClick}>
+              Mark Scheme
+            </button>
+
             <button className="action-btn secondary">Video Solution</button>
             <button 
               className="action-btn primary" 
@@ -344,15 +356,15 @@ const PreviousYearQuestionsPage = () => {
               </div>
               <span>Chat functionality coming soon...</span>
             </div>
-            <form onSubmit={handleChatSubmit} className="chat-form">
+            <form onSubmit={handleChatSubmit} className="doubt-chat-form">
               <input
                 type="text"
                 value={chatMessage}
                 onChange={(e) => setChatMessage(e.target.value)}
                 placeholder="Type your question..."
-                className="chat-input"
+                className="doubt-chat-input"
               />
-              <button type="submit" className="send-btn">
+              <button type="submit" className="doubt-send-btn">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M2.01 21L23 12L2.01 3L2 10L17 12L2 14L2.01 21Z" fill="white"/></svg>
               </button>
             </form>
@@ -360,6 +372,12 @@ const PreviousYearQuestionsPage = () => {
         </aside>
       </main>
 
+      {/* Mark Scheme Modal */}
+      {showMarkScheme && (
+        <MarkScheme 
+          question={currentQuestion} 
+          onClose={handleCloseMarkScheme}
+          onNextQuestion={handleNextQuestion}
       {/* QR Grading Modal */}
       {gradingSession && (
         <QRGradingModal

@@ -1,0 +1,174 @@
+/* Topic Selection Page Styles */
+.topic-selection-container {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+}
+
+/* Header */
+.topic-header {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  padding: 20px 40px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Breadcrumb */
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: white;
+  font-size: 1rem;
+}
+
+.back-button {
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: white;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-right: 4px;
+}
+
+.back-button:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: translateX(-2px);
+}
+
+.breadcrumb span {
+  opacity: 0.9;
+}
+
+.breadcrumb .separator {
+  opacity: 0.5;
+}
+
+/* Main Content */
+.topic-main {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px 40px;
+}
+
+.topic-main h1 {
+  color: white;
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 12px;
+  text-align: center;
+}
+
+.topic-subtitle {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 1.25rem;
+  text-align: center;
+  margin-bottom: 48px;
+}
+
+/* Topics Grid */
+.topics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 24px;
+}
+
+/* Topic Card */
+.topic-card {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.topic-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+}
+
+.topic-info {
+  flex: 1;
+}
+
+.topic-info h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin: 0 0 8px 0;
+  line-height: 1.4;
+}
+
+.question-count {
+  font-size: 0.9rem;
+  color: #666;
+  margin: 0;
+}
+
+.topic-arrow {
+  color: #999;
+  margin-left: 20px;
+  transition: all 0.2s ease;
+}
+
+.topic-card:hover .topic-arrow {
+  color: #4285f4;
+  transform: translateX(4px);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .topic-header {
+    padding: 16px 20px;
+  }
+  
+  .topic-main {
+    padding: 16px 20px;
+  }
+  
+  .topic-main h1 {
+    font-size: 2rem;
+  }
+  
+  .topic-subtitle {
+    font-size: 1.1rem;
+    margin-bottom: 32px;
+  }
+  
+  .topics-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  
+  .topic-card {
+    padding: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .breadcrumb {
+    font-size: 0.9rem;
+  }
+  
+  .topic-main h1 {
+    font-size: 1.75rem;
+  }
+  
+  .topic-info h3 {
+    font-size: 1rem;
+  }
+  
+  .question-count {
+    font-size: 0.85rem;
+  }
+} 
