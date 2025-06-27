@@ -39,6 +39,13 @@ app.add_middleware(
         "http://localhost",       # Frontend in containerized environment (default port 80)
         "http://frontend:80",     # Frontend service name in Docker network
         "http://frontend",
+        "http://0.0.0.0:3000",
+        "0.0.0.0:3000",
+        "http://0.0.0.0:8000",
+        "http://10.147.120.71:3000",
+        "http://10.147.120.71:8000",
+        "http://Matthews-MacBook-Pro.local:3000",
+        "http://Matthews-MacBook-Pro.local:8000",
         # Add your production domains here
         "https://*.up.railway.app",  # All Railway subdomains
         "https://*.netlify.app",  # In case you use Netlify for frontend
@@ -591,29 +598,28 @@ async def create_grading_session(
         # Generate mobile URL with temporary token
         temp_token = create_temp_token(session_id, current_user.id)
         # Use the actual frontend URL based on environment
-        frontend_url = os.getenv("FRONTEND_URL", "http://localhost:3000")
+        frontend_url = os.getenv("FRONTEND_URL", "http://Matthews-MacBook-Pro.local:3000")
         # For production, this would be your actual domain
         if os.getenv("RAILWAY_ENVIRONMENT"):
             frontend_url = "https://socratic.up.railway.app"
         mobile_url = f"{frontend_url}/mobile-grade/{session_id}?token={temp_token}"
         
-        # Store session in Redis for fast lookup
-        if hasattr(convo_service, 'redis_client'):
-            convo_service.redis_client.setex(
+        
+        convo_service.redis_client.setex(
                 f"session:{session_id}",
-                300,  # 5 minutes TTL
+                600,  # 10 minutes TTL
                 json.dumps({
                     "user_id": current_user.id,
                     "question_id": session_data.questionId,
                     "status": "waiting",
                     "created_at": datetime.utcnow().isoformat()
-                })
-            )
+            })
+        )
         
         return {
             "sessionId": session_id,
             "qrCodeUrl": mobile_url,
-            "expiresIn": 300  # seconds
+            "expiresIn": 600  # seconds
         }
         
     except Exception as e:
@@ -623,22 +629,42 @@ async def create_grading_session(
 @app.get("/api/validate-grading-session/{session_id}")
 async def validate_grading_session(
     session_id: str,
-    db: Session = Depends(get_db),
-    current_user = Depends(get_current_user)
+    request: Request,
+    db: Session = Depends(get_db)
 ):
     """Validate a grading session for mobile access."""
     try:
+        print(f"VALIDATING SESSION: {session_id}")
+        
+        # Extract and validate temporary token
+        auth_header = request.headers.get("Authorization")
+        if not auth_header or not auth_header.startswith("Bearer "):
+            raise HTTPException(status_code=401, detail="Missing or invalid authorization header")
+        
+        token = auth_header.split(" ")[1]
+        
+        try:
+            payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+            token_type = payload.get("type")
+            token_session_id = payload.get("session_id")
+            user_id = int(payload.get("sub"))
+            
+            # Verify it's a grading temp token for this session
+            if token_type != "grading_temp" or token_session_id != session_id:
+                raise HTTPException(status_code=401, detail="Invalid token for this session")
+                
+        except JWTError:
+            raise HTTPException(status_code=401, detail="Invalid token")
+        
         # Check Redis for fast lookup
-        if hasattr(convo_service, 'redis_client'):
-            session_data = convo_service.redis_client.get(f"session:{session_id}")
-            if not session_data:
-                raise HTTPException(status_code=404, detail="Session not found or expired")
-            
-            session_info = json.loads(session_data)
-            
-            # Verify user ownership
-            if session_info["user_id"] != current_user.id:
-                raise HTTPException(status_code=403, detail="Unauthorized access")
+        session_data = convo_service.redis_client.get(f"session:{session_id}")
+        if not session_data:
+            raise HTTPException(status_code=404, detail="Session not found or expired")            
+        session_info = json.loads(session_data)
+        
+        # Verify user ownership
+        if session_info["user_id"] != user_id:
+            raise HTTPException(status_code=403, detail="Unauthorized access")
         
         # Check database
         db_session = db.query(GradingSession).filter(
@@ -669,15 +695,35 @@ async def validate_grading_session(
 @app.patch("/api/grading-session/{session_id}/connect-mobile")
 async def connect_mobile_to_session(
     session_id: str,
-    db: Session = Depends(get_db),
-    current_user = Depends(get_current_user)
+    request: Request,
+    db: Session = Depends(get_db)
 ):
     """Update session status when mobile connects."""
     try:
+        # Extract and validate temporary token
+        auth_header = request.headers.get("Authorization")
+        if not auth_header or not auth_header.startswith("Bearer "):
+            raise HTTPException(status_code=401, detail="Missing or invalid authorization header")
+        
+        token = auth_header.split(" ")[1]
+        
+        try:
+            payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+            token_type = payload.get("type")
+            token_session_id = payload.get("session_id")
+            user_id = int(payload.get("sub"))
+            
+            # Verify it's a grading temp token for this session
+            if token_type != "grading_temp" or token_session_id != session_id:
+                raise HTTPException(status_code=401, detail="Invalid token for this session")
+                
+        except JWTError:
+            raise HTTPException(status_code=401, detail="Invalid token")
+        
         # Update session status
         db_session = db.query(GradingSession).filter(
             GradingSession.session_id == session_id,
-            GradingSession.user_id == current_user.id
+            GradingSession.user_id == user_id
         ).first()
         
         if not db_session:
@@ -691,9 +737,9 @@ async def connect_mobile_to_session(
         if hasattr(convo_service, 'redis_client'):
             convo_service.redis_client.setex(
                 f"session:{session_id}",
-                300,
+                 300,
                 json.dumps({
-                    "user_id": current_user.id,
+                    "user_id": user_id,
                     "question_id": db_session.question_id,
                     "status": "mobile_connected",
                     "mobile_connected_at": datetime.utcnow().isoformat()
@@ -712,20 +758,40 @@ async def connect_mobile_to_session(
 
 @app.post("/api/submit-grading-image")
 async def submit_grading_image(
+    request: Request,
     sessionId: str = Form(...),
     timestamp: str = Form(...),
     imageSize: int = Form(...),
     metadata: str = Form(...),
     image: UploadFile = File(...),
-    db: Session = Depends(get_db),
-    current_user = Depends(get_current_user)
+    db: Session = Depends(get_db)
 ):
     """Submit an image for grading."""
     try:
+        # Extract and validate temporary token
+        auth_header = request.headers.get("Authorization")
+        if not auth_header or not auth_header.startswith("Bearer "):
+            raise HTTPException(status_code=401, detail="Missing or invalid authorization header")
+        
+        token = auth_header.split(" ")[1]
+        
+        try:
+            payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+            token_type = payload.get("type")
+            token_session_id = payload.get("session_id")
+            user_id = int(payload.get("sub"))
+            
+            # Verify it's a grading temp token for this session
+            if token_type != "grading_temp" or token_session_id != sessionId:
+                raise HTTPException(status_code=401, detail="Invalid token for this session")
+                
+        except JWTError:
+            raise HTTPException(status_code=401, detail="Invalid token")
+        
         # Validate session
         db_session = db.query(GradingSession).filter(
             GradingSession.session_id == sessionId,
-            GradingSession.user_id == current_user.id,
+            GradingSession.user_id == user_id,
             GradingSession.status.in_(["mobile_connected", "waiting_for_submission"]),
             GradingSession.expires_at > datetime.utcnow()
         ).first()
@@ -765,7 +831,7 @@ async def submit_grading_image(
                 f"session:{sessionId}",
                 300,
                 json.dumps({
-                    "user_id": current_user.id,
+                    "user_id": user_id,
                     "question_id": db_session.question_id,
                     "status": "image_uploaded",
                     "image_path": file_path,
