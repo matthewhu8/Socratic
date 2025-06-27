@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useContext } from 'react';
 import MarkScheme from '../components/MarkScheme';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { AuthContext } from '../contexts/AuthContext';
 import API_URL from '../config/api';
 import QRGradingModal from '../components/QRGradingModal';
 import '../styles/PreviousYearQuestionsPage.css';
@@ -29,9 +30,16 @@ const getPracticeModeFromUrl = (pathname) => {
 };
 
 const PreviousYearQuestionsPage = () => {
-  const { subject, gradeParam, practiceMode, subtopic } = useParams();
+  const { subject, gradeParam, practiceMode, subtopic, subSubject, topic } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
+  const { currentUser } = useContext(AuthContext);
+
+  // Determine if we're using the new URL structure or old one
+  const isNewUrlStructure = topic !== undefined;
+  const currentTopic = isNewUrlStructure ? topic : subtopic;
+  const currentGrade = isNewUrlStructure ? currentUser?.grade : gradeParam?.replace('grade-', '');
+  const currentPracticeMode = practiceMode;
   
   // State for questions and loading
   const [questions, setQuestions] = useState([]);
@@ -71,15 +79,25 @@ const PreviousYearQuestionsPage = () => {
     if (!currentQuestion) return;
 
     try {
+      // Map practice mode for backend consistency
+      const practiceModeMapping = {
+        'ncert-examples': 'ncert-examples',
+        'ncert-exercises': 'ncert-excercises',
+        'pyqs': 'previous-year-questions',
+        'smart-learning': 'smart-practice',
+        'previous-year-questions': 'previous-year-questions',
+        'smart-practice': 'smart-practice'
+      };
+
       // Create grading session
       const sessionData = {
         questionId: currentQuestion.id,
         questionText: currentQuestion.question_text,
         correctSolution: currentQuestion.solution,
-        practiceMode: practiceMode || '',
+        practiceMode: practiceModeMapping[currentPracticeMode] || currentPracticeMode || '',
         subject: subject || '',
-        grade: gradeParam?.replace('grade-', '') || '',
-        topic: subtopic !== 'direct' ? subtopic : null
+        grade: currentGrade || '',
+        topic: currentTopic !== 'direct' ? currentTopic : null
       };
 
       const response = await fetch(`${API_URL}/api/create-grading-session`, {
@@ -117,19 +135,30 @@ const PreviousYearQuestionsPage = () => {
       setLoading(true);
       setError(null);
       
+      // Map new practice mode names to backend expected values
+      const practiceModeMapping = {
+        'ncert-examples': 'ncert-examples',
+        'ncert-exercises': 'ncert-excercises', // Note: backend has typo
+        'pyqs': 'previous-year-questions',
+        'smart-learning': 'smart-practice',
+        // For backward compatibility
+        'previous-year-questions': 'previous-year-questions',
+        'smart-practice': 'smart-practice'
+      };
+      
       // Get parameters for API call
-      const grade = gradeParam?.replace('grade-', '') || '';
-      const topic = subtopic === 'direct' ? '' : subtopic || '';
-      const mode = practiceMode || '';
+      const grade = currentGrade || '';
+      const topicParam = currentTopic === 'direct' ? '' : currentTopic || '';
+      const mode = practiceModeMapping[currentPracticeMode] || currentPracticeMode || '';
       
       // For direct routes, we don't need to filter by topic
       let apiUrl;
-      if (subtopic === 'direct') {
+      if (currentTopic === 'direct') {
         // For Previous Year Questions and Smart Practice without specific topic
         apiUrl = `${API_URL}/api/questions?practice_mode=${mode}&grade=${grade}&topic=general&subject=${subject}`;
       } else {
-        // For specific topics (NCERT Examples/Exercises with subtopic)
-        apiUrl = `${API_URL}/api/questions?practice_mode=${mode}&grade=${grade}&topic=${topic}&subject=${subject}`;
+        // For specific topics (NCERT Examples/Exercises with topic)
+        apiUrl = `${API_URL}/api/questions?practice_mode=${mode}&grade=${grade}&topic=${topicParam}&subject=${subject}`;
       }
       
       const token = localStorage.getItem('accessToken');
@@ -162,7 +191,7 @@ const PreviousYearQuestionsPage = () => {
     } finally {
       setLoading(false);
     }
-  }, [subject, gradeParam, practiceMode, subtopic]);
+  }, [subject, currentGrade, currentPracticeMode, currentTopic]);
 
   const handleNextQuestion = () => {
     // Same functionality as skip for now
@@ -182,10 +211,11 @@ const PreviousYearQuestionsPage = () => {
 
   // Fetch questions when component mounts or parameters change
   useEffect(() => {
-    if (subject && gradeParam && practiceMode) {
+    if (subject && (currentGrade || gradeParam) && currentPracticeMode) {
+      console.log('Fetching questions with params:', { subject, currentGrade, currentPracticeMode, currentTopic });
       fetchQuestions();
     }
-  }, [subject, gradeParam, practiceMode, subtopic, fetchQuestions]);
+  }, [subject, currentGrade, currentPracticeMode, currentTopic, fetchQuestions]);
 
   // Reset question index and solution when questions change
   useEffect(() => {
@@ -200,25 +230,26 @@ const PreviousYearQuestionsPage = () => {
   // Use practice mode from URL params if available, otherwise derive from URL
   const practiceModeMap = {
     'ncert-examples': 'NCERT Examples',
-    'ncert-excercises': 'NCERT Exercises',
-    'previous-year-questions': 'Previous Year Questions',
-    'smart-practice': 'Smart Practice',
+    'ncert-exercises': 'NCERT Exercises', 
+    'pyqs': 'Previous Year Questions',
+    'smart-learning': 'Smart Learning',
+    'previous-year-questions': 'Previous Year Questions', // For backward compatibility
+    'smart-practice': 'Smart Practice', // For backward compatibility
   };
   
-  const finalPracticeMode = practiceMode ? 
-    (practiceModeMap[practiceMode] || formatBreadcrumb(practiceMode)) : practiceModeFromUrl;
+  const finalPracticeMode = currentPracticeMode ? 
+    (practiceModeMap[currentPracticeMode] || formatBreadcrumb(currentPracticeMode)) : practiceModeFromUrl;
   
-  const formattedSubtopic = formatBreadcrumb(subtopic);
+  const formattedCurrentTopic = formatBreadcrumb(currentTopic);
   
   // Create the main title based on available information
   const getMainTitle = () => {
-    if (subtopic && subtopic !== 'direct' && finalPracticeMode) {
-      // Has subtopic (from SubtopicSelectionPage): "NCERT Examples - Real Numbers"
-      return `${finalPracticeMode} - ${formattedSubtopic}`;
-    } else if (subtopic === 'direct' && finalPracticeMode && gradeParam) {
-      // Direct route (Previous Year Questions/Smart Practice): "Previous Year Questions - Grade 10"
-      const grade = gradeParam.replace('grade-', '');
-      return `${finalPracticeMode} - Grade ${grade}`;
+    if (currentTopic && currentTopic !== 'direct' && finalPracticeMode) {
+      // Has topic: "NCERT Examples - Real Numbers" or "NCERT Examples - Chapter 1"
+      return `${finalPracticeMode} - ${formattedCurrentTopic}`;
+    } else if (currentTopic === 'direct' && finalPracticeMode && currentGrade) {
+      // Direct route: "Previous Year Questions - Grade 10"
+      return `${finalPracticeMode} - Grade ${currentGrade}`;
     } else if (finalPracticeMode) {
       return finalPracticeMode;
     } else {
@@ -243,16 +274,22 @@ const PreviousYearQuestionsPage = () => {
         </div>
         <div className="breadcrumbs">
           <span>{formattedSubject}</span>
-          {gradeParam && (
+          {subSubject && (
             <>
               <span className="separator">›</span>
-              <span>Grade {gradeParam.replace('grade-', '')}</span>
+              <span>{formatBreadcrumb(subSubject)}</span>
             </>
           )}
-          {subtopic && subtopic !== 'direct' && (
+          {currentGrade && (
             <>
               <span className="separator">›</span>
-              <span>{formattedSubtopic}</span>
+              <span>Grade {currentGrade}</span>
+            </>
+          )}
+          {currentTopic && currentTopic !== 'direct' && (
+            <>
+              <span className="separator">›</span>
+              <span>{formattedCurrentTopic}</span>
             </>
           )}
           <span className="separator">›</span>
@@ -330,13 +367,7 @@ const PreviousYearQuestionsPage = () => {
             <button className="action-btn secondary" onClick={handleMarkSchemeClick}>
               Mark Scheme
             </button>
-            <button 
-              className="action-btn secondary" 
-              onClick={toggleSolution}
-              disabled={!currentQuestion}
-            >
-              {showSolution ? 'Hide Solution' : 'Show Solution'}
-            </button>
+            
             <button className="action-btn secondary">Video Solution</button>
             <button 
               className="action-btn primary" 

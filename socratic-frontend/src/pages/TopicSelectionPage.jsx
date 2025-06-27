@@ -1,10 +1,12 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { AuthContext } from '../contexts/AuthContext';
 import '../styles/TopicSelectionPage.css';
 
 function TopicSelectionPage() {
   const { subject, subSubject, optionType } = useParams();
   const navigate = useNavigate();
+  const { currentUser } = useContext(AuthContext);
 
   // Topic data for different subjects
   const topicsData = {
@@ -108,8 +110,16 @@ function TopicSelectionPage() {
   const topics = getTopics();
 
   const handleTopicClick = (topicId) => {
-    const basePath = subSubject ? `${subject}/${subSubject}` : subject;
-    navigate(`/student/practice/${basePath}/grade-10/previous-year-questions`);
+    const userGrade = currentUser?.grade || '10'; // Fallback to grade 10 if not set
+    const practiceMode = optionType; // Use the actual practice mode selected
+    
+    if (subSubject) {
+      // For science subjects: /student/practice/science/physics/ncert-exercises/ch10
+      navigate(`/student/practice/${subject}/${subSubject}/${practiceMode}/${topicId}`);
+    } else {
+      // For other subjects: /student/practice/mathematics/ncert-exercises/ch1
+      navigate(`/student/practice/${subject}/${practiceMode}/${topicId}`);
+    }
   };
 
   const formatSubjectName = (name) => {

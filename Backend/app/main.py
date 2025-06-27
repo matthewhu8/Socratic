@@ -283,6 +283,45 @@ async def get_teacher_profile(current_user: TeacherUser = Depends(get_current_te
     """Get current teacher profile."""
     return current_user
 
+# Pydantic model for profile updates
+class StudentProfileUpdate(BaseModel):
+    name: Optional[str] = None
+    grade: Optional[str] = None
+
+@app.patch("/api/auth/student/profile")
+async def update_student_profile(
+    profile_data: StudentProfileUpdate,
+    current_user: StudentUser = Depends(get_current_student),
+    db: Session = Depends(get_db)
+):
+    """Update current student profile."""
+    try:
+        # Update fields if provided
+        if profile_data.name is not None:
+            current_user.name = profile_data.name
+        if profile_data.grade is not None:
+            current_user.grade = profile_data.grade
+        
+        # Save changes
+        db.commit()
+        db.refresh(current_user)
+        
+        return {
+            "status": "success",
+            "message": "Profile updated successfully",
+            "user": {
+                "id": current_user.id,
+                "name": current_user.name,
+                "email": current_user.email,
+                "grade": current_user.grade
+            }
+        }
+        
+    except Exception as e:
+        db.rollback()
+        print(f"Error updating profile: {e}")
+        raise HTTPException(status_code=500, detail="Failed to update profile")
+
 # Health check
 @app.get("/health")
 async def health_check():

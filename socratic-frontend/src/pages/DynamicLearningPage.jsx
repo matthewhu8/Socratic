@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { AuthContext } from '../contexts/AuthContext';
 import { 
   TbMathFunction, 
   TbFlask, 
@@ -17,7 +18,17 @@ import '../styles/DynamicLearningPage.css';
 
 function DynamicLearningPage() {
   const navigate = useNavigate();
+  const { currentUser } = useContext(AuthContext);
   const [expandedSubject, setExpandedSubject] = useState('mathematics'); // Mathematics open by default
+
+  // Get dynamic class title based on user's grade
+  const getClassTitle = () => {
+    const userGrade = currentUser?.grade;
+    if (userGrade) {
+      return `CBSE Class ${userGrade} Learning Platform`;
+    }
+    return 'CBSE Learning Platform'; // Fallback if no grade is set
+  };
 
   const subjects = [
     {
@@ -423,8 +434,8 @@ function DynamicLearningPage() {
         </button>
       </div>
       <div className="hero-section">
-        <h1>CBSE Class 10 Learning Platform</h1>
-        <p>The comprehensive platform designed to excel in your board exams</p>
+        <h1>{getClassTitle()}</h1>
+        <p>The comprehensive platform designed to excel in your CBSE board exams</p>
         <div className="stats-container">
           <div className="stat-item">
             <h2>95%</h2>
