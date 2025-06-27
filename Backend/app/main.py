@@ -1,15 +1,18 @@
-from fastapi import FastAPI, HTTPException, Depends, status, Request
+from fastapi import FastAPI, HTTPException, Depends, status, Request, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from pydantic import BaseModel, EmailStr
 from typing import List, Dict, Any, Optional
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 from dotenv import load_dotenv
+import uuid
+import time
+import json
 
 # Import our modules
 from .database.database import get_db, engine
-from .database.models import Base, YouTubeQuizResults, Test, Question, TestQuestion, TestResult, QuestionResult, ChatMessage, StudentUser, TeacherUser
+from .database.models import Base, YouTubeQuizResults, StudentUser, TeacherUser, NcertExamples, NcertExcersizes, PYQs, GradingSession
 from .auth.utils import verify_password, get_password_hash, create_access_token, create_refresh_token, SECRET_KEY, ALGORITHM
 from .auth.schemas import TokenResponse, UserLogin, StudentCreate, TeacherCreate, StudentResponse, TeacherResponse, RefreshToken
 from .auth.dependencies import get_current_user, get_current_student, get_current_teacher
@@ -36,6 +39,13 @@ app.add_middleware(
         "http://localhost",       # Frontend in containerized environment (default port 80)
         "http://frontend:80",     # Frontend service name in Docker network
         "http://frontend",
+        "http://0.0.0.0:3000",
+        "0.0.0.0:3000",
+        "http://0.0.0.0:8000",
+        "http://10.147.120.71:3000",
+        "http://10.147.120.71:8000",
+        "http://Matthews-MacBook-Pro.local:3000",
+        "http://Matthews-MacBook-Pro.local:8000",
         # Add your production domains here
         "https://*.up.railway.app",  # All Railway subdomains
         "https://*.netlify.app",  # In case you use Netlify for frontend
@@ -56,120 +66,6 @@ convo_service = ConversationService(redis_url=REDIS_URL)
 class OrmBaseModel(BaseModel):
     class Config:
         from_attributes = True
-
-class TestBase(OrmBaseModel):
-    test_name: Optional[str] = None
-    code: str
-    isPracticeExam: Optional[bool] = False
-
-class TestCreate(TestBase):
-    questions: List[Dict[str, Any]]
-
-class QuestionBase(OrmBaseModel):
-    public_question: str
-    hidden_values: Dict[str, Any]
-    answer: str
-    formula: Optional[str] = None
-    teacher_instructions: Optional[str] = None
-    hint_level: Optional[str] = None
-    subject: Optional[str] = None
-    topic: Optional[str] = None
-
-class TestQuestionCreate(OrmBaseModel):
-    test_id: int
-    question_id: int
-    position: int
-
-class TestResultBase(OrmBaseModel):
-    test_code: str
-    username: str
-    score: Optional[float] = None
-    total_questions: Optional[int] = None
-    correct_questions: Optional[int] = None
-    end_time: Optional[datetime] = None
-
-class QuestionResultBase(OrmBaseModel):
-    question_id: int
-    student_answer: Optional[str] = None
-    isCorrect: Optional[bool] = False
-    time_spent: Optional[int] = None
-    start_time: datetime
-    end_time: Optional[datetime] = None
-
-class ChatMessageBase(OrmBaseModel):
-    sender: str
-    content: str
-    timestamp: Optional[datetime] = None
-
-# Response models
-class ChatMessageResponse(ChatMessageBase):
-    id: int
-    question_result_id: int
-
-class QuestionResultResponse(QuestionResultBase):
-    id: int
-    test_result_id: int
-    chat_messages: List[ChatMessageResponse] = []
-
-class TestResultResponse(TestResultBase):
-    id: int
-    start_time: datetime
-    question_results: List[QuestionResultResponse] = []
-
-class QuestionResponse(QuestionBase):
-    id: int
-
-class TestResponse(TestBase):
-    id: int
-    test_name: str
-    code: str
-    isPracticeExam: bool = False
-    questions: List[QuestionResponse] = []
-
-# Request models
-class ChatQuery(BaseModel):
-    test_id: int
-    test_code: str
-    question_id: int
-    public_question: str
-    query: str
-    user_id: int
-    isPracticeExam: bool = False
-
-class Question(BaseModel):
-    public_question: str
-    hidden_values: Optional[Dict[str, Any]] = {}
-    answer: str
-    formula: Optional[str] = None
-    teacher_instructions: Optional[str] = None
-    hint_level: Optional[str] = None
-    subject: Optional[str] = None
-    topic: Optional[str] = None
-
-class TestCreateRequest(BaseModel):
-    name: str
-    code: str
-    isPracticeExam: bool = False
-    questions: List[Question]
-
-class AnswerSubmission(BaseModel):
-    user_id: int
-    test_code: str
-    question_id: int
-    question_index: int
-    answer: str
-
-class TestFinishRequest(BaseModel):
-    user_id: str
-    test_id: Optional[int] = None
-    test_code: str
-
-class TestSessionStart(BaseModel):
-    user_id: int
-    test_id: int
-    test_code: str
-    question_ids: List[int]
-    total_questions: int
 
 # Pydantic model for Google token
 class GoogleToken(BaseModel):
@@ -393,214 +289,6 @@ async def health_check():
     """Health check endpoint."""
     return {"status": "healthy"}
 
-# Chat endpoint
-@app.post("/chat")
-async def chat(query: ChatQuery):
-    """Process a chat query using Gemini."""
-    try:
-        response = await convo_service.process_query(
-            query=query.query,
-            user_id=query.user_id,
-            test_code=query.test_code,
-            question_id=query.question_id,
-            public_question=query.public_question,
-            test_id=query.test_id,
-            is_practice_exam=query.isPracticeExam
-        )
-        return {"response": response}
-    except Exception as e:
-        print(f"Error in chat endpoint: {e}")
-        raise HTTPException(status_code=500, detail="Failed to process chat query")
-
-# Test management endpoints
-@app.post("/tests", response_model=TestResponse)
-async def create_test(test: TestCreateRequest, db: Session = Depends(get_db)):
-    """Create a new test with questions."""
-    # Create the test
-    db_test = Test(
-        test_name=test.name,
-        code=test.code,
-        isPracticeExam=test.isPracticeExam
-    )
-    db.add(db_test)
-    db.commit()
-    db.refresh(db_test)
-    
-    # Create questions and link them to the test
-    for position, question_data in enumerate(test.questions):
-        # Create the question
-        db_question = Question(
-            public_question=question_data.public_question,
-            hidden_values=question_data.hidden_values or {},
-            answer=question_data.answer,
-            formula=question_data.formula,
-            teacher_instructions=question_data.teacher_instructions,
-            hint_level=question_data.hint_level,
-            subject=question_data.subject,
-            topic=question_data.topic
-        )
-        db.add(db_question)
-        db.commit()
-        db.refresh(db_question)
-        
-        # Create the test-question relationship
-        db_test_question = TestQuestion(
-            test_id=db_test.id,
-            question_id=db_question.id,
-            position=position
-        )
-        db.add(db_test_question)
-    
-    db.commit()
-    
-    # Return the test with questions
-    return get_test_by_code(test.code, db)
-
-@app.get("/tests/{code}", response_model=TestResponse)
-async def get_test_by_code(code: str, db: Session = Depends(get_db), user_id: Optional[str] = None):
-    """Get a test by its code."""
-    # Get the test and join with questions through TestQuestion
-    test = db.query(Test).filter(Test.code == code).first()
-    if not test:
-        raise HTTPException(status_code=404, detail="Test not found")
-    
-    # Get questions ordered by position
-    test_questions = (
-        db.query(TestQuestion, Question)
-        .join(Question, TestQuestion.question_id == Question.id)
-        .filter(TestQuestion.test_id == test.id)
-        .order_by(TestQuestion.position)
-        .all()
-    )
-    
-    questions = []
-    for test_question, question in test_questions:
-        questions.append({
-            "id": question.id,
-            "public_question": question.public_question,
-            "hidden_values": question.hidden_values,
-            "answer": question.answer,
-            "formula": question.formula,
-            "teacher_instructions": question.teacher_instructions,
-            "hint_level": question.hint_level,
-            "subject": question.subject,
-            "topic": question.topic
-        })
-    
-    return {
-        "id": test.id,
-        "test_name": test.test_name,
-        "code": test.code,
-        "isPracticeExam": test.isPracticeExam,
-        "questions": questions
-    }
-
-@app.get("/tests/{code}/questions/{index}")
-async def get_question(code: str, index: int, db: Session = Depends(get_db)):
-    """Get a specific question from a test by index."""
-    # Get the test
-    test = db.query(Test).filter(Test.code == code).first()
-    if not test:
-        raise HTTPException(status_code=404, detail="Test not found")
-    
-    # Get the question at the specified position
-    test_question = (
-        db.query(TestQuestion, Question)
-        .join(Question, TestQuestion.question_id == Question.id)
-        .filter(TestQuestion.test_id == test.id, TestQuestion.position == index)
-        .first()
-    )
-    
-    if not test_question:
-        raise HTTPException(status_code=404, detail="Question not found")
-    
-    _, question = test_question
-    
-    return {
-        "id": question.id,
-        "public_question": question.public_question,
-        "hidden_values": question.hidden_values,
-        "answer": question.answer,
-        "formula": question.formula,
-        "teacher_instructions": question.teacher_instructions,
-        "hint_level": question.hint_level,
-        "subject": question.subject,
-        "topic": question.topic
-    }
-
-# Test session management
-@app.post("/start-test")
-async def start_test(request: TestSessionStart):
-    """Start a test session."""
-    try:
-        result = await convo_service.start_test(
-            user_id=request.user_id,
-            test_id=request.test_id,
-            test_code=request.test_code,
-            list_question_ids=request.question_ids,
-            total_questions=request.total_questions
-        )
-        return result
-    except Exception as e:
-        print(f"Error starting test: {e}")
-        raise HTTPException(status_code=500, detail="Failed to start test")
-
-@app.post("/submit-answer")
-async def submit_answer(submission: AnswerSubmission):
-    """Submit an answer for a question."""
-    try:
-        result = await convo_service.submit_answer(
-            user_id=submission.user_id,
-            test_code=submission.test_code,
-            question_id=submission.question_id,
-            question_index=submission.question_index,
-            answer=submission.answer
-        )
-        return result
-    except Exception as e:
-        print(f"Error submitting answer: {e}")
-        raise HTTPException(status_code=500, detail="Failed to submit answer")
-
-@app.post("/finish-test")
-async def finish_test(request: TestFinishRequest):
-    """Finish a test session."""
-    try:
-        result = await convo_service.finish_test(
-            user_id=request.user_id,
-            test_id=str(request.test_id) if request.test_id else None,
-            request_data=request.dict()
-        )
-        return result
-    except Exception as e:
-        print(f"Error finishing test: {e}")
-        raise HTTPException(status_code=500, detail="Failed to finish test")
-
-# Question management
-@app.post("/create-question", response_model=QuestionResponse)
-async def create_question(question: QuestionBase, db: Session = Depends(get_db)):
-    """Create a new question."""
-    db_question = Question(
-        public_question=question.public_question,
-        hidden_values=question.hidden_values,
-        answer=question.answer,
-        formula=question.formula,
-        teacher_instructions=question.teacher_instructions,
-        hint_level=question.hint_level,
-        subject=question.subject,
-        topic=question.topic
-    )
-    db.add(db_question)
-    db.commit()
-    db.refresh(db_question)
-    return db_question
-
-@app.get("/questions/{question_id}", response_model=QuestionResponse)
-async def get_question_by_id(question_id: int, db: Session = Depends(get_db)):
-    """Get a question by ID."""
-    question = db.query(Question).filter(Question.id == question_id).first()
-    if not question:
-        raise HTTPException(status_code=404, detail="Question not found")
-    return question
 
 @app.post("/api/video/load-transcript")
 async def load_video_transcript(
@@ -745,3 +433,473 @@ async def store_youtube_quiz_results(request: dict, db: Session = Depends(get_db
 @app.get("/api/get-youtube-quiz-results")
 async def get_youtube_quiz_results(db: Session = Depends(get_db), current_user = Depends(get_current_student)) -> str:
     pass
+
+# Pydantic model for question response
+class QuestionResponse(OrmBaseModel):
+    id: int
+    question_text: str
+    solution: str
+    topic: str
+    question_number: Optional[float] = None
+    max_marks: Optional[int] = 3  # Default marks
+    difficulty: Optional[str] = None
+    year: Optional[int] = None
+
+@app.get("/api/questions", response_model=List[QuestionResponse])
+async def get_questions(
+    practice_mode: str,
+    grade: str, 
+    topic: str,
+    subject: str,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    """Get questions based on practice mode, grade, topic, and subject."""
+    try:
+        # Normalize topic name to match database format
+        # Convert "real-numbers" to "Real Numbers"
+        formatted_topic = topic.replace('-', ' ').title()
+        
+        questions = []
+        
+        if practice_mode == "ncert-examples":
+            # Query NCERT Examples table
+            db_questions = db.query(NcertExamples).filter(
+                NcertExamples.grade == grade,
+                NcertExamples.topic == formatted_topic
+            ).all()
+            
+            # Convert to standard format
+            for i, q in enumerate(db_questions):
+                questions.append(QuestionResponse(
+                    id=q.id,
+                    question_text=q.example,
+                    solution=q.solution,
+                    topic=q.topic,
+                    question_number=q.example_number,
+                    max_marks=3  # Default for examples
+                ))
+                
+        elif practice_mode == "ncert-excercises":
+            # Query NCERT Exercises table
+            db_questions = db.query(NcertExcersizes).filter(
+                NcertExcersizes.grade == grade,
+                NcertExcersizes.topic == formatted_topic
+            ).all()
+            
+            # Convert to standard format
+            for i, q in enumerate(db_questions):
+                questions.append(QuestionResponse(
+                    id=q.id,
+                    question_text=q.excersize,
+                    solution=q.solution or "Solution not available",
+                    topic=q.topic,
+                    question_number=q.excersize_number,
+                    max_marks=5  # Default for exercises
+                ))
+                
+        elif practice_mode == "previous-year-questions" or practice_mode == "smart-practice":
+            # Query Previous Year Questions table
+            if formatted_topic and formatted_topic != "General":
+                # Filter by specific topic
+                db_questions = db.query(PYQs).filter(
+                    PYQs.topic == formatted_topic
+                ).all()
+            else:
+                # Get all PYQs regardless of topic (for direct access)
+                db_questions = db.query(PYQs).limit(50).all()  # Limit to prevent too many results
+            
+            # Convert to standard format
+            for i, q in enumerate(db_questions):
+                questions.append(QuestionResponse(
+                    id=q.id,
+                    question_text=q.question,
+                    solution=q.answer,
+                    topic=q.topic,
+                    question_number=None,
+                    max_marks=6,  # Default for PYQs
+                    difficulty=q.difficulty,
+                    year=q.year
+                ))
+        
+        else:
+            raise HTTPException(status_code=400, detail="Invalid practice mode")
+        
+        if not questions:
+            # Return empty list if no questions found
+            return []
+            
+        return questions
+        
+    except Exception as e:
+        print(f"Error in get_questions endpoint: {e}")
+        raise HTTPException(
+            status_code=500, 
+            detail=f"Failed to fetch questions: {str(e)}"
+        )
+
+# Pydantic models for grading sessions
+class GradingSessionCreate(BaseModel):
+    questionId: int
+    questionText: str
+    correctSolution: str
+    practiceMode: str
+    subject: str
+    grade: str
+    topic: Optional[str] = None
+
+class GradingSessionResponse(BaseModel):
+    sessionId: str
+    qrCodeUrl: str
+    expiresIn: int
+
+# Temporary token creation for mobile access
+def create_temp_token(session_id: str, user_id: int) -> str:
+    """Create a temporary token for mobile access to a specific grading session."""
+    token_data = {
+        "sub": str(user_id),
+        "session_id": session_id,
+        "type": "grading_temp",
+        "exp": datetime.utcnow() + timedelta(minutes=5)
+    }
+    return jwt.encode(token_data, SECRET_KEY, algorithm=ALGORITHM)
+
+@app.post("/api/create-grading-session", response_model=GradingSessionResponse)
+async def create_grading_session(
+    session_data: GradingSessionCreate,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    """Create a new grading session and return QR code URL."""
+    try:
+        # Generate unique session ID
+        session_id = f"grade_{int(time.time())}_{uuid.uuid4().hex[:8]}"
+        
+        # Create session record in database
+        grading_session = GradingSession(
+            session_id=session_id,
+            user_id=current_user.id,
+            question_id=session_data.questionId,
+            question_text=session_data.questionText,
+            correct_solution=session_data.correctSolution,
+            practice_mode=session_data.practiceMode,
+            subject=session_data.subject,
+            grade=session_data.grade,
+            topic=session_data.topic,
+            status="waiting_for_submission",
+            expires_at=datetime.utcnow() + timedelta(minutes=5),
+            created_at=datetime.utcnow()
+        )
+        
+        db.add(grading_session)
+        db.commit()
+        db.refresh(grading_session)
+        
+        # Generate mobile URL with temporary token
+        temp_token = create_temp_token(session_id, current_user.id)
+        # Use the actual frontend URL based on environment
+        frontend_url = os.getenv("FRONTEND_URL", "http://Matthews-MacBook-Pro.local:3000")
+        # For production, this would be your actual domain
+        if os.getenv("RAILWAY_ENVIRONMENT"):
+            frontend_url = "https://socratic.up.railway.app"
+        mobile_url = f"{frontend_url}/mobile-grade/{session_id}?token={temp_token}"
+        
+        
+        convo_service.redis_client.setex(
+                f"session:{session_id}",
+                600,  # 10 minutes TTL
+                json.dumps({
+                    "user_id": current_user.id,
+                    "question_id": session_data.questionId,
+                    "status": "waiting",
+                    "created_at": datetime.utcnow().isoformat()
+            })
+        )
+        
+        return {
+            "sessionId": session_id,
+            "qrCodeUrl": mobile_url,
+            "expiresIn": 600  # seconds
+        }
+        
+    except Exception as e:
+        print(f"Error creating grading session: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to create session: {str(e)}")
+
+@app.get("/api/validate-grading-session/{session_id}")
+async def validate_grading_session(
+    session_id: str,
+    request: Request,
+    db: Session = Depends(get_db)
+):
+    """Validate a grading session for mobile access."""
+    try:
+        print(f"VALIDATING SESSION: {session_id}")
+        
+        # Extract and validate temporary token
+        auth_header = request.headers.get("Authorization")
+        if not auth_header or not auth_header.startswith("Bearer "):
+            raise HTTPException(status_code=401, detail="Missing or invalid authorization header")
+        
+        token = auth_header.split(" ")[1]
+        
+        try:
+            payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+            token_type = payload.get("type")
+            token_session_id = payload.get("session_id")
+            user_id = int(payload.get("sub"))
+            
+            # Verify it's a grading temp token for this session
+            if token_type != "grading_temp" or token_session_id != session_id:
+                raise HTTPException(status_code=401, detail="Invalid token for this session")
+                
+        except JWTError:
+            raise HTTPException(status_code=401, detail="Invalid token")
+        
+        # Check Redis for fast lookup
+        session_data = convo_service.redis_client.get(f"session:{session_id}")
+        if not session_data:
+            raise HTTPException(status_code=404, detail="Session not found or expired")            
+        session_info = json.loads(session_data)
+        
+        # Verify user ownership
+        if session_info["user_id"] != user_id:
+            raise HTTPException(status_code=403, detail="Unauthorized access")
+        
+        # Check database
+        db_session = db.query(GradingSession).filter(
+            GradingSession.session_id == session_id,
+            GradingSession.expires_at > datetime.utcnow(),
+            GradingSession.status.in_(["waiting_for_submission", "mobile_connected"])
+        ).first()
+        
+        if not db_session:
+            raise HTTPException(status_code=410, detail="Session expired")
+        
+        return {
+            "sessionId": session_id,
+            "questionText": db_session.question_text,
+            "subject": db_session.subject,
+            "grade": db_session.grade,
+            "topic": db_session.topic,
+            "status": db_session.status,
+            "timeRemaining": int((db_session.expires_at - datetime.utcnow()).total_seconds())
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error validating session: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
+
+@app.patch("/api/grading-session/{session_id}/connect-mobile")
+async def connect_mobile_to_session(
+    session_id: str,
+    request: Request,
+    db: Session = Depends(get_db)
+):
+    """Update session status when mobile connects."""
+    try:
+        # Extract and validate temporary token
+        auth_header = request.headers.get("Authorization")
+        if not auth_header or not auth_header.startswith("Bearer "):
+            raise HTTPException(status_code=401, detail="Missing or invalid authorization header")
+        
+        token = auth_header.split(" ")[1]
+        
+        try:
+            payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+            token_type = payload.get("type")
+            token_session_id = payload.get("session_id")
+            user_id = int(payload.get("sub"))
+            
+            # Verify it's a grading temp token for this session
+            if token_type != "grading_temp" or token_session_id != session_id:
+                raise HTTPException(status_code=401, detail="Invalid token for this session")
+                
+        except JWTError:
+            raise HTTPException(status_code=401, detail="Invalid token")
+        
+        # Update session status
+        db_session = db.query(GradingSession).filter(
+            GradingSession.session_id == session_id,
+            GradingSession.user_id == user_id
+        ).first()
+        
+        if not db_session:
+            raise HTTPException(status_code=404, detail="Session not found")
+        
+        db_session.status = "mobile_connected"
+        db_session.mobile_connected_at = datetime.utcnow()
+        db.commit()
+        
+        # Update Redis cache
+        if hasattr(convo_service, 'redis_client'):
+            convo_service.redis_client.setex(
+                f"session:{session_id}",
+                 300,
+                json.dumps({
+                    "user_id": user_id,
+                    "question_id": db_session.question_id,
+                    "status": "mobile_connected",
+                    "mobile_connected_at": datetime.utcnow().isoformat()
+                })
+            )
+        
+        # TODO: Notify computer via WebSocket
+        
+        return {"status": "connected"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error connecting mobile: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/submit-grading-image")
+async def submit_grading_image(
+    request: Request,
+    sessionId: str = Form(...),
+    timestamp: str = Form(...),
+    imageSize: int = Form(...),
+    metadata: str = Form(...),
+    image: UploadFile = File(...),
+    db: Session = Depends(get_db)
+):
+    """Submit an image for grading."""
+    try:
+        # Extract and validate temporary token
+        auth_header = request.headers.get("Authorization")
+        if not auth_header or not auth_header.startswith("Bearer "):
+            raise HTTPException(status_code=401, detail="Missing or invalid authorization header")
+        
+        token = auth_header.split(" ")[1]
+        
+        try:
+            payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+            token_type = payload.get("type")
+            token_session_id = payload.get("session_id")
+            user_id = int(payload.get("sub"))
+            
+            # Verify it's a grading temp token for this session
+            if token_type != "grading_temp" or token_session_id != sessionId:
+                raise HTTPException(status_code=401, detail="Invalid token for this session")
+                
+        except JWTError:
+            raise HTTPException(status_code=401, detail="Invalid token")
+        
+        # Validate session
+        db_session = db.query(GradingSession).filter(
+            GradingSession.session_id == sessionId,
+            GradingSession.user_id == user_id,
+            GradingSession.status.in_(["mobile_connected", "waiting_for_submission"]),
+            GradingSession.expires_at > datetime.utcnow()
+        ).first()
+        
+        if not db_session:
+            raise HTTPException(status_code=404, detail="Invalid or expired session")
+        
+        # Validate image file
+        if not image.content_type.startswith('image/'):
+            raise HTTPException(status_code=400, detail="Invalid file type")
+        
+        if imageSize > 10 * 1024 * 1024:  # 10MB limit
+            raise HTTPException(status_code=400, detail="File too large")
+        
+        # Create uploads directory if it doesn't exist
+        upload_dir = "temp_uploads"
+        os.makedirs(upload_dir, exist_ok=True)
+        
+        # Save image with unique filename
+        filename = f"{sessionId}_{int(time.time())}.jpg"
+        file_path = os.path.join(upload_dir, filename)
+        
+        # Save file
+        content = await image.read()
+        with open(file_path, "wb") as f:
+            f.write(content)
+        
+        # Update session status
+        db_session.status = "image_uploaded"
+        db_session.image_path = file_path
+        db_session.image_uploaded_at = datetime.utcnow()
+        db.commit()
+        
+        # Update Redis if available
+        if hasattr(convo_service, 'redis_client'):
+            convo_service.redis_client.setex(
+                f"session:{sessionId}",
+                300,
+                json.dumps({
+                    "user_id": user_id,
+                    "question_id": db_session.question_id,
+                    "status": "image_uploaded",
+                    "image_path": file_path,
+                    "uploaded_at": datetime.utcnow().isoformat()
+                })
+            )
+        
+        # TODO: Trigger grading process (async task)
+        # For now, we'll just simulate grading
+        grading_result = {
+            "grade": "8/10",
+            "feedback": "Good work! Your approach is correct. Minor calculation error in step 3.",
+            "corrections": ["Line 3: 15 × 2 = 30, not 25"],
+            "strengths": ["Good understanding of the quadratic formula", "Clear step-by-step work"]
+        }
+        
+        # Update with grading result
+        db_session.grading_result = grading_result
+        db_session.status = "completed"
+        db.commit()
+        
+        # TODO: Notify computer via WebSocket with results
+        
+        return {
+            "status": "success",
+            "message": "Image uploaded and graded successfully",
+            "sessionId": sessionId,
+            "result": grading_result
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        # Clean up uploaded file if error occurs
+        if 'file_path' in locals() and os.path.exists(file_path):
+            os.remove(file_path)
+        print(f"Error uploading image: {e}")
+        raise HTTPException(status_code=500, detail=f"Upload failed: {str(e)}")
+
+@app.get("/api/grading-session/{session_id}/result")
+async def get_grading_result(
+    session_id: str,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    """Get the grading result for a session."""
+    try:
+        db_session = db.query(GradingSession).filter(
+            GradingSession.session_id == session_id,
+            GradingSession.user_id == current_user.id
+        ).first()
+        
+        if not db_session:
+            raise HTTPException(status_code=404, detail="Session not found")
+        
+        if db_session.status != "completed":
+            return {
+                "status": db_session.status,
+                "result": None
+            }
+        
+        return {
+            "status": "completed",
+            "result": db_session.grading_result
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error getting result: {e}")
+        raise HTTPException(status_code=500, detail=str(e))

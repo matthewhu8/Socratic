@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
 import MarkScheme from '../components/MarkScheme';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import API_URL from '../config/api';
+import QRGradingModal from '../components/QRGradingModal';
 import '../styles/PreviousYearQuestionsPage.css';
 
 // Helper to format text
@@ -12,32 +14,38 @@ const formatBreadcrumb = (str) => {
     .join(' ');
 };
 
-const PreviousYearQuestionsPage = () => {
-  const { subject } = useParams();
-  const navigate = useNavigate();
-  
-  // Mock Data for two questions to allow navigation
-  const mockQuestions = [
-    {
-      id: 1,
-      questionNumber: 1,
-      maxMarks: 3,
-      questionText: "Find the sum of the first 15 terms of the arithmetic progression: 2, 5, 8, ...",
-      topic: "Sequences and Series"
-    },
-    {
-      id: 2,
-      questionNumber: 2,
-      maxMarks: 6,
-      questionText: "The 15th term of an arithmetic sequence is 21, and the common difference is -4. Find the first term and the 29th term.",
-      topic: "Sequences and Series"
-    }
-  ];
+// Helper to determine practice mode from URL
+const getPracticeModeFromUrl = (pathname) => {
+  if (pathname.includes('ncert-examples') || pathname.includes('ncert-topics')) {
+    return 'NCERT Examples';
+  } else if (pathname.includes('ncert-excercises')) {
+    return 'NCERT Exercises';
+  } else if (pathname.includes('previous-year-questions')) {
+    return 'Previous Year Questions';
+  } else if (pathname.includes('smart-practice')) {
+    return 'Smart Practice';
+  }
+  return 'Previous Year Questions'; // default
+};
 
+const PreviousYearQuestionsPage = () => {
+  const { subject, gradeParam, practiceMode, subtopic } = useParams();
+  const navigate = useNavigate();
+  const location = useLocation();
+  
+  // State for questions and loading
+  const [questions, setQuestions] = useState([]);
   const [questionIndex, setQuestionIndex] = useState(0);
   const [chatMessage, setChatMessage] = useState('');
   const [showMarkScheme, setShowMarkScheme] = useState(false);
   const currentQuestion = mockQuestions[questionIndex];
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  
+  // State for QR grading modal
+  const [showQRModal, setShowQRModal] = useState(false);
+  const [gradingSession, setGradingSession] = useState(null);
+ 
 
   const handleChatSubmit = (e) => {
     e.preventDefault();
@@ -46,8 +54,113 @@ const PreviousYearQuestionsPage = () => {
   };
 
   const handleSkip = () => {
-    // Cycle through questions for demonstration
-    setQuestionIndex((prevIndex) => (prevIndex + 1) % mockQuestions.length);
+    // Cycle through questions
+    if (questions.length > 0) {
+      setQuestionIndex((prevIndex) => (prevIndex + 1) % questions.length);
+      setShowSolution(false); // Reset solution display for new question
+    }
+  };
+
+  const toggleSolution = () => {
+    setShowSolution(!showSolution);
+  };
+
+  // Handle submit for grading
+  const handleSubmitForGrading = async () => {
+    if (!currentQuestion) return;
+
+    try {
+      // Create grading session
+      const sessionData = {
+        questionId: currentQuestion.id,
+        questionText: currentQuestion.question_text,
+        correctSolution: currentQuestion.solution,
+        practiceMode: practiceMode || '',
+        subject: subject || '',
+        grade: gradeParam?.replace('grade-', '') || '',
+        topic: subtopic !== 'direct' ? subtopic : null
+      };
+
+      const response = await fetch(`${API_URL}/api/create-grading-session`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(sessionData)
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to create grading session');
+      }
+
+      const data = await response.json();
+      setGradingSession(data);
+      setShowQRModal(true);
+      
+    } catch (error) {
+      console.error('Error creating grading session:', error);
+      alert('Failed to create grading session. Please try again.');
+    }
+  };
+
+  // Handle grading completion
+  const handleGradingComplete = (result) => {
+    console.log('Grading completed:', result);
+    // You can handle the grading result here (e.g., store it, show additional UI, etc.)
+  };
+
+  // Function to fetch questions from API
+  const fetchQuestions = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      // Get parameters for API call
+      const grade = gradeParam?.replace('grade-', '') || '';
+      const topic = subtopic === 'direct' ? '' : subtopic || '';
+      const mode = practiceMode || '';
+      
+      // For direct routes, we don't need to filter by topic
+      let apiUrl;
+      if (subtopic === 'direct') {
+        // For Previous Year Questions and Smart Practice without specific topic
+        apiUrl = `${API_URL}/api/questions?practice_mode=${mode}&grade=${grade}&topic=general&subject=${subject}`;
+      } else {
+        // For specific topics (NCERT Examples/Exercises with subtopic)
+        apiUrl = `${API_URL}/api/questions?practice_mode=${mode}&grade=${grade}&topic=${topic}&subject=${subject}`;
+      }
+      
+      const token = localStorage.getItem('accessToken');
+      if (!token) {
+        setError('Please login to access questions');
+        return;
+      }
+      
+      const response = await fetch(apiUrl, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch questions: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      setQuestions(data);
+      
+      if (data.length === 0) {
+        setError('No questions found for the selected criteria');
+      }
+      
+    } catch (err) {
+      console.error('Error fetching questions:', err);
+      setError(err.message || 'Failed to load questions');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleNextQuestion = () => {
@@ -65,24 +178,77 @@ const PreviousYearQuestionsPage = () => {
     setShowMarkScheme(false);
   };
 
+  // Fetch questions when component mounts or parameters change
+  useEffect(() => {
+    if (subject && gradeParam && practiceMode) {
+      fetchQuestions();
+    }
+  }, [subject, gradeParam, practiceMode, subtopic]);
+
+  // Determine the practice mode and format the title
+  const practiceModeFromUrl = getPracticeModeFromUrl(location.pathname);
   const formattedSubject = formatBreadcrumb(subject);
+  
+  // Use practice mode from URL params if available, otherwise derive from URL
+  const practiceModeMap = {
+    'ncert-examples': 'NCERT Examples',
+    'ncert-excercises': 'NCERT Exercises',
+    'previous-year-questions': 'Previous Year Questions',
+    'smart-practice': 'Smart Practice',
+  };
+  
+  const finalPracticeMode = practiceMode ? 
+    (practiceModeMap[practiceMode] || formatBreadcrumb(practiceMode)) : practiceModeFromUrl;
+  
+  const formattedSubtopic = formatBreadcrumb(subtopic);
+  
+  // Create the main title based on available information
+  const getMainTitle = () => {
+    if (subtopic && subtopic !== 'direct' && finalPracticeMode) {
+      // Has subtopic (from SubtopicSelectionPage): "NCERT Examples - Real Numbers"
+      return `${finalPracticeMode} - ${formattedSubtopic}`;
+    } else if (subtopic === 'direct' && finalPracticeMode && gradeParam) {
+      // Direct route (Previous Year Questions/Smart Practice): "Previous Year Questions - Grade 10"
+      const grade = gradeParam.replace('grade-', '');
+      return `${finalPracticeMode} - Grade ${grade}`;
+    } else if (finalPracticeMode) {
+      return finalPracticeMode;
+    } else {
+      return 'Previous Year Questions';
+    }
+  };
 
   return (
     <div className="page-container">
       {/* Header */}
       <header className="page-header">
-        <button onClick={() => navigate(-1)} className="back-arrow-btn">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M19 12H5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            <path d="M12 19L5 12L12 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
-        </button>
+        <div className="top-row">
+          <button onClick={() => navigate(-1)} className="back-arrow-btn">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M19 12H5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M12 19L5 12L12 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </button>
+        </div>
+        <div className="main-title">
+          <h1>{getMainTitle()}</h1>
+        </div>
         <div className="breadcrumbs">
           <span>{formattedSubject}</span>
+          {gradeParam && (
+            <>
+              <span className="separator">›</span>
+              <span>Grade {gradeParam.replace('grade-', '')}</span>
+            </>
+          )}
+          {subtopic && subtopic !== 'direct' && (
+            <>
+              <span className="separator">›</span>
+              <span>{formattedSubtopic}</span>
+            </>
+          )}
           <span className="separator">›</span>
-          <span>{currentQuestion.topic}</span>
-          <span className="separator">›</span>
-          <span className="current">Previous Year Questions</span>
+          <span className="current">{finalPracticeMode}</span>
         </div>
       </header>
 
@@ -91,14 +257,62 @@ const PreviousYearQuestionsPage = () => {
         {/* Left Column: Question */}
         <section className="question-display-area">
           <div className="question-content-card">
-            {/* <div className="question-number-container">
-              <span className="question-label">Question</span>
-              <span className="question-number">{currentQuestion.questionNumber}</span>
-            </div> */}
-            <div className="question-details-container">
-              <div className="marks-info">[Maximum mark: {currentQuestion.maxMarks}]</div>
-              <p className="question-text">{currentQuestion.questionText}</p>
-            </div>
+            {loading ? (
+              <div className="loading-container">
+                <div className="loading-spinner"></div>
+                <p>Loading questions...</p>
+              </div>
+            ) : error ? (
+              <div className="error-container">
+                <div className="error-icon">⚠️</div>
+                <h3>Error Loading Questions</h3>
+                <p>{error}</p>
+                <button onClick={fetchQuestions} className="retry-btn">
+                  Try Again
+                </button>
+              </div>
+            ) : questions.length === 0 ? (
+              <div className="no-questions-container">
+                <div className="no-questions-icon">📚</div>
+                <h3>No Questions Found</h3>
+                <p>No questions available for the selected criteria.</p>
+              </div>
+            ) : currentQuestion ? (
+              <div className="question-details-container">
+                <div className="question-header">
+                  <div className="marks-info">[Maximum mark: {currentQuestion.max_marks}]</div>
+                  {currentQuestion.question_number && (
+                    <div className="question-number-info">
+                      Question {currentQuestion.question_number}
+                    </div>
+                  )}
+                  {currentQuestion.difficulty && (
+                    <div className="difficulty-info">
+                      Difficulty: {currentQuestion.difficulty}
+                    </div>
+                  )}
+                  {currentQuestion.year && (
+                    <div className="year-info">
+                      Year: {currentQuestion.year}
+                    </div>
+                  )}
+                </div>
+                                 <p className="question-text">{currentQuestion.question_text}</p>
+                 
+                 {showSolution && currentQuestion.solution && (
+                   <div className="solution-container">
+                     <h4>Solution:</h4>
+                     <div className="solution-text">{currentQuestion.solution}</div>
+                   </div>
+                 )}
+                 
+                 <div className="question-footer">
+                   <span className="question-counter">
+                     Question {questionIndex + 1} of {questions.length}
+                   </span>
+                 </div>
+              </div>
+            ) : null}
           </div>
         </section>
 
@@ -108,9 +322,22 @@ const PreviousYearQuestionsPage = () => {
             <button className="action-btn secondary" onClick={handleMarkSchemeClick}>
               Mark Scheme
             </button>
+
             <button className="action-btn secondary">Video Solution</button>
-            <button className="action-btn primary">Submit for Grading</button>
-            <button className="action-btn skip" onClick={handleSkip}>Skip Question</button>
+            <button 
+              className="action-btn primary" 
+              onClick={handleSubmitForGrading}
+              disabled={!currentQuestion}
+            >
+              Submit for Grading
+            </button>
+            <button 
+              className="action-btn skip" 
+              onClick={handleSkip}
+              disabled={questions.length === 0}
+            >
+              {questions.length > 1 ? 'Next Question' : 'Skip Question'}
+            </button>
           </div>
           <div className="doubt-card">
             <header className="doubt-header">
@@ -151,6 +378,15 @@ const PreviousYearQuestionsPage = () => {
           question={currentQuestion} 
           onClose={handleCloseMarkScheme}
           onNextQuestion={handleNextQuestion}
+      {/* QR Grading Modal */}
+      {gradingSession && (
+        <QRGradingModal
+          isOpen={showQRModal}
+          onClose={() => setShowQRModal(false)}
+          sessionId={gradingSession.sessionId}
+          qrCodeUrl={gradingSession.qrCodeUrl}
+          expiresIn={gradingSession.expiresIn}
+          onGradingComplete={handleGradingComplete}
         />
       )}
     </div>

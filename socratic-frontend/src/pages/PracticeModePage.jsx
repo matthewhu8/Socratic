@@ -27,9 +27,15 @@ function PracticeModePage() {
       icon: <TbBook />,
       color: '#4285f4',
       bgColor: '#e8f0fe',
-      path: isGradeLevel 
-        ? `/student/dynamic-learning/${subject}/grade-${grade}/ncert-topics`
-        : `/student/practice/${subject}/${subtopic}/ncert-examples`,
+      path: `/student/practice/${subject}/grade-${grade}/ncert-examples`,
+    },
+    {
+      title: 'NCERT Excercises',
+      description: 'Practice with excercises from NCERT textbooks',
+      icon: <TbBook />,
+      color: '#000000',
+      bgColor: '#e6f4ea',
+      path: `/student/practice/${subject}/grade-${grade}/ncert-excercises`,
     },
     {
       title: 'Previous Year Questions',
@@ -37,9 +43,7 @@ function PracticeModePage() {
       icon: <TbFileText />,
       color: '#34a853',
       bgColor: '#e6f4ea',
-      path: isGradeLevel 
-        ? `/student/practice/${subject}/grade-${grade}/previous-year-questions`
-        : `/student/practice/${subject}/${subtopic}/previous-year-questions`,
+      path: `/student/practice/${subject}/grade-${grade}/previous-year-questions/direct`,
     },
     {
       title: 'Smart Practice',
@@ -47,9 +51,7 @@ function PracticeModePage() {
       icon: <TbBrain />,
       color: '#9c27b0',
       bgColor: '#f3e5f5',
-      path: isGradeLevel 
-        ? `/student/practice/${subject}/grade-${grade}/smart-practice`
-        : `/student/practice/${subject}/${subtopic}/smart-practice`,
+      path: `/student/practice/${subject}/grade-${grade}/smart-practice/direct`,
     },
   ];
 

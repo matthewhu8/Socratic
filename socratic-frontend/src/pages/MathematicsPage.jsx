@@ -23,19 +23,19 @@ const mathematicsTopicsByGrade = {
   ],
   10: [
     {
-      title: 'Trigonometry Basics',
-      description: 'Sine, cosine, and tangent functions.',
-      path: '/student/dynamic-learning/mathematics/grade-10/trigonometry-basics',
+      title: 'Real Numbers',
+      description: 'Fundamental concepts of real numbers.',
+      path: '/student/dynamic-learning/mathematics/grade-10/real-numbers',
     },
     {
-      title: 'Polynomial Functions',
-      description: 'Understanding polynomials and their properties.',
-      path: '/student/dynamic-learning/mathematics/grade-10/polynomial-functions',
+      title: 'Polynomials',
+      description: 'Properties of polynomials and their roots.',
+      path: '/student/dynamic-learning/mathematics/grade-10/polynomials',
     },
     {
-      title: 'Circle Geometry',
-      description: 'Properties of circles and related theorems.',
-      path: '/student/dynamic-learning/mathematics/grade-10/circle-geometry',
+      title: 'Pair of Linear Equations in Two Variables',
+      description: 'Solving pair of linear equations in two variables.',
+      path: '/student/dynamic-learning/mathematics/grade-10/pair-of-linear-equations-in-two-variables',
     },
   ],
   11: [

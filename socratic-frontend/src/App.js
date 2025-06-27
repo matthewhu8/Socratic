@@ -19,6 +19,8 @@ import GradeSelectionPage from './pages/GradeSelectionPage';
 import PracticeModePage from './pages/PracticeModePage';
 import PreviousYearQuestionsPage from './pages/PreviousYearQuestionsPage';
 import TopicSelectionPage from './pages/TopicSelectionPage';
+import SubtopicSelectionPage from './pages/SubtopicSelectionPage';
+import MobileGradingPage from './pages/MobileGradingPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import SubjectPageRouter from './components/SubjectPageRouter';
 import { AuthProvider } from './contexts/AuthContext';
@@ -33,6 +35,7 @@ function App() {
             <Route path="/" element={<HomePage />} />
             <Route path="/student/auth" element={<StudentAuthPage />} />
             <Route path="/teachers/auth" element={<TeacherAuthPage />} />
+            <Route path="/mobile-grade/:sessionId" element={<MobileGradingPage />} />
             
             {/* Student Protected Routes */}
             <Route path="/student/home" element={
