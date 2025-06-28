@@ -17,6 +17,7 @@ const MobileGradingPage = () => {
   const [uploading, setUploading] = useState(false);
   const [uploadSuccess, setUploadSuccess] = useState(false);
   const [error, setError] = useState(null);
+  const [videoLoading, setVideoLoading] = useState(false);
 
   // Validate session on mount
   useEffect(() => {
@@ -73,30 +74,63 @@ const MobileGradingPage = () => {
   // Start camera
   const startCamera = async () => {
     try {
+      console.log('Starting camera...');
+      setVideoLoading(true);
+      setCameraActive(true); // Show camera section immediately
+      setError(null); // Clear any previous errors
+      
+      // Request camera permissions with better constraints
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { 
-          facingMode: 'environment',
-          width: { ideal: 1920 },
-          height: { ideal: 1080 }
-        }
+          facingMode: { ideal: 'environment' },
+          width: { ideal: 1920, min: 640 },
+          height: { ideal: 1080, min: 480 }
+        },
+        audio: false
       });
+      
+      console.log('Camera stream obtained:', stream);
       
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
-        setCameraActive(true);
         
-        // iOS requires explicit play() call after setting srcObject
-        // Wait for metadata to load before playing
-        videoRef.current.onloadedmetadata = () => {
-          videoRef.current.play().catch(err => {
-            console.error('Video play error:', err);
-            setError('Camera preview failed to start. Please try again.');
-          });
+        // Ensure video element is ready before setting camera active
+        videoRef.current.onloadedmetadata = async () => {
+          console.log('Video metadata loaded');
+          try {
+            await videoRef.current.play();
+            console.log('Video playing successfully');
+            setVideoLoading(false);
+          } catch (playError) {
+            console.error('Video play error:', playError);
+            setError('Camera preview failed. Please try again.');
+            setVideoLoading(false);
+            setCameraActive(false); // Reset camera state on failure
+            // Stop the stream if play fails
+            stream.getTracks().forEach(track => track.stop());
+          }
+        };
+        
+        // Add error handler for video element
+        videoRef.current.onerror = (err) => {
+          console.error('Video element error:', err);
+          setError('Camera preview error. Please refresh and try again.');
+          setVideoLoading(false);
+          setCameraActive(false); // Reset camera state on error
+          stream.getTracks().forEach(track => track.stop());
         };
       }
     } catch (error) {
       console.error('Camera access error:', error);
-      setError('Unable to access camera. Please check permissions.');
+      setVideoLoading(false);
+      setCameraActive(false); // Reset camera state on error
+      if (error.name === 'NotAllowedError') {
+        setError('Camera permission denied. Please allow camera access and try again.');
+      } else if (error.name === 'NotFoundError') {
+        setError('No camera found. Please check your device.');
+      } else {
+        setError('Unable to access camera. Please check permissions.');
+      }
     }
   };
 
@@ -268,9 +302,18 @@ const MobileGradingPage = () => {
               autoPlay 
               playsInline
               muted
-              webkit-playsinline
+              webkit-playsinline="true"
+              x-webkit-airplay="allow"
               className="camera-preview"
+              style={{ backgroundColor: '#000' }}
             />
+            {/* Add loading indicator while video loads */}
+            {videoLoading && (
+              <div className="camera-loading">
+                <div className="spinner"></div>
+                <p>Initializing camera...</p>
+              </div>
+            )}
             <div className="camera-controls">
               <button className="cancel-btn" onClick={stopCamera}>Cancel</button>
               <button className="capture-btn" onClick={captureImage}>
