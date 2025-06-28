@@ -165,6 +165,7 @@ const PreviousYearQuestionsPage = () => {
       }
 
       const data = await response.json();
+      console.log('API Response - Questions:', data); // Debug log
       setGradingSession(data);
       setShowQRModal(true);
       
@@ -232,6 +233,7 @@ const PreviousYearQuestionsPage = () => {
       }
       
       const data = await response.json();
+      console.log('API Response - Questions with mark schemes:', data); // Debug log to see mark scheme data
       setQuestions(data);
       
       if (data.length === 0) {
@@ -434,7 +436,7 @@ const PreviousYearQuestionsPage = () => {
               onClick={handleSkip}
               disabled={questions.length === 0}
             >
-              {questions.length > 1 ? 'Next Question' : 'Skip Question'}
+              {'Next Question'}
             </button>
           </div>
           <div className="doubt-card">
