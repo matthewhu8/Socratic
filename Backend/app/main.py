@@ -495,70 +495,70 @@ async def get_questions(
 ):
     """Get questions based on practice mode, grade, topic, and subject."""
     try:
-        # Normalize topic name to match database format
-        # Convert "real-numbers" to "Real Numbers"
-        formatted_topic = topic.replace('-', ' ').title()
+        # The 'topic' parameter now contains the full chapter name
+        # e.g., "Chapter 5: Arithmetic Progressions"
+        chapter_name = topic
         
         questions = []
         
         if practice_mode == "ncert-examples":
-            # Query NCERT Examples table
+            # Query NCERT Examples table by chapter
             db_questions = db.query(NcertExamples).filter(
                 NcertExamples.grade == grade,
-                NcertExamples.topic == formatted_topic
+                NcertExamples.chapter == chapter_name
             ).all()
             
             # Convert to standard format
             for i, q in enumerate(db_questions):
                 questions.append(QuestionResponse(
                     id=q.id,
-                    question_text=q.example,
-                    solution=q.solution,
-                    topic=q.topic,
-                    question_number=q.example_number,
+                    question_text=q.question_text or q.example,  # Use new field if available
+                    solution=q.answer or q.solution,  # Use new field if available
+                    topic=q.topic or "",
+                    question_number=q.source_example_number or q.example_number,
                     max_marks=3  # Default for examples
                 ))
                 
         elif practice_mode == "ncert-exercises":
-            # Query NCERT Exercises table
+            # Query NCERT Exercises table by chapter
             db_questions = db.query(NcertExercises).filter(
                 NcertExercises.grade == grade,
-                NcertExercises.topic == formatted_topic
+                NcertExercises.chapter == chapter_name
             ).all()
             
             # Convert to standard format
             for i, q in enumerate(db_questions):
                 questions.append(QuestionResponse(
                     id=q.id,
-                    question_text=q.exercise,
-                    solution=q.solution or "Solution not available",
-                    topic=q.topic,
-                    question_number=q.exercise_number,
+                    question_text=q.question_text or q.exercise,  # Use new field if available
+                    solution=q.answer or q.solution or "Solution not available",  # Use new field if available
+                    topic=q.topic or "",
+                    question_number=q.source_question_number or q.exercise_number,
                     max_marks=5  # Default for exercises
                 ))
                 
         elif practice_mode == "previous-year-questions" or practice_mode == "smart-practice":
             # Query Previous Year Questions table
-            if formatted_topic and formatted_topic != "General":
-                # Filter by specific topic
+            if chapter_name and chapter_name.lower() != "general":
+                # Filter by specific chapter
                 db_questions = db.query(PYQs).filter(
-                    PYQs.topic == formatted_topic
+                    PYQs.chapter == chapter_name
                 ).all()
             else:
-                # Get all PYQs regardless of topic (for direct access)
+                # Get all PYQs regardless of chapter (for direct access)
                 db_questions = db.query(PYQs).limit(50).all()  # Limit to prevent too many results
             
             # Convert to standard format
             for i, q in enumerate(db_questions):
                 questions.append(QuestionResponse(
                     id=q.id,
-                    question_text=q.question,
+                    question_text=q.question_text or q.question,  # Use new field if available
                     solution=q.answer,
-                    topic=q.topic,
-                    question_number=None,
-                    max_marks=6,  # Default for PYQs
+                    topic=q.topic or "",
+                    question_number=q.source_question_number,
+                    max_marks=q.max_marks or 6,  # Use actual marks if available
                     difficulty=q.difficulty,
-                    year=q.year
+                    year=q.source_year or q.year
                 ))
         
         else:

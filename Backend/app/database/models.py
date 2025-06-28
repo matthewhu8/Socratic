@@ -39,6 +39,7 @@ class NcertExamples(Base):
     chapter = Column(String, nullable=True)
     topic = Column(String, nullable=True)
     question_type = Column(String, nullable=True)
+    grade = Column(String, nullable=True)
     
     # Source information
     source_example_number = Column(Integer, nullable=True)
@@ -93,6 +94,7 @@ class PYQs(Base):
     topic = Column(String, nullable=True)
     question_type = Column(String, nullable=True)
     max_marks = Column(Integer, nullable=True)
+    grade = Column(String, nullable=True)
     
     # Source information
     source_year = Column(Integer, nullable=True)
