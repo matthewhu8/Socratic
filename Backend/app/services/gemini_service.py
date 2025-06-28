@@ -18,7 +18,7 @@ class GeminiService:
         genai.configure(api_key=self.api_key)
         self.model = genai.GenerativeModel('gemini-2.5-flash-preview-05-20', system_instruction="You are a helpful English AI assistant to answer students' questions about this YouTube video. Please answer in English. The student may also be referencing a specific part from the video transcript around their current video timestamp. The image attached shows the video at the point where the student is currently watching the video. When necessary, you can use the image to help you answer their question.")
         self.video_quiz_model = genai.GenerativeModel('gemini-2.5-flash-preview-05-20', system_instruction="You are quiz maker that will test the student's retention of the video. The query will contain a video transcript and a list of their previous messages, create questions in JSON format that tests the user on general subject matter related concepts discussed in the transcript, and place a particular emphasis on the topics the student seemed to be confused about based on the chatlog. Make 5 total questions.")
-
+        self.photo_grading_model = genai.GenerativeModel('gemini-2.5-flash-preview-05-20', system_instruction="You are a detailed oriented CBSE style grader for 10th grade math questions. ")
         print(f"GEMINI MODEL: {self.model}")
     
     def format_chat_history(self, chat_history: List[Dict]) -> List[Dict]:
@@ -226,38 +226,6 @@ RULES:
       "option2": "Entertainment",
       "option3": "News",
       "correct_answer": "Educational Content"
-    },
-    {
-      "id": 2,
-      "question": "Did you find the video helpful?",
-      "option1": "Yes, very helpful",
-      "option2": "Somewhat helpful", 
-      "option3": "Not helpful",
-      "correct_answer": "Yes, very helpful"
-    },
-    {
-      "id": 3,
-      "question": "What would you like to learn more about?",
-      "option1": "The same topic",
-      "option2": "Related topics",
-      "option3": "Different topics",
-      "correct_answer": "Related topics"
-    },
-    {
-      "id": 4,
-      "question": "How well did you understand the content?",
-      "option1": "Completely understood",
-      "option2": "Mostly understood",
-      "option3": "Partially understood",
-      "correct_answer": "Mostly understood"
-    },
-    {
-      "id": 5,
-      "question": "Would you recommend this video?",
-      "option1": "Definitely yes",
-      "option2": "Maybe",
-      "option3": "No",
-      "correct_answer": "Definitely yes"
     }
   ]
 }'''
