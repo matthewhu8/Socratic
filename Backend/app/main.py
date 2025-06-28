@@ -12,7 +12,7 @@ import json
 
 # Import our modules
 from .database.database import get_db, engine
-from .database.models import Base, YouTubeQuizResults, StudentUser, TeacherUser, NcertExamples, NcertExcersizes, PYQs, GradingSession
+from .database.models import Base, YouTubeQuizResults, StudentUser, TeacherUser, NcertExamples, NcertExercises, PYQs, GradingSession
 from .auth.utils import verify_password, get_password_hash, create_access_token, create_refresh_token, SECRET_KEY, ALGORITHM
 from .auth.schemas import TokenResponse, UserLogin, StudentCreate, TeacherCreate, StudentResponse, TeacherResponse, RefreshToken
 from .auth.dependencies import get_current_user, get_current_student, get_current_teacher
@@ -519,21 +519,21 @@ async def get_questions(
                     max_marks=3  # Default for examples
                 ))
                 
-        elif practice_mode == "ncert-excercises":
+        elif practice_mode == "ncert-exercises":
             # Query NCERT Exercises table
-            db_questions = db.query(NcertExcersizes).filter(
-                NcertExcersizes.grade == grade,
-                NcertExcersizes.topic == formatted_topic
+            db_questions = db.query(NcertExercises).filter(
+                NcertExercises.grade == grade,
+                NcertExercises.topic == formatted_topic
             ).all()
             
             # Convert to standard format
             for i, q in enumerate(db_questions):
                 questions.append(QuestionResponse(
                     id=q.id,
-                    question_text=q.excersize,
+                    question_text=q.exercise,
                     solution=q.solution or "Solution not available",
                     topic=q.topic,
-                    question_number=q.excersize_number,
+                    question_number=q.exercise_number,
                     max_marks=5  # Default for exercises
                 ))
                 

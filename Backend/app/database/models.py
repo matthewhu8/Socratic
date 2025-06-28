@@ -32,31 +32,82 @@ class NcertExamples(Base):
     __tablename__ = "ncert_examples"
     
     id = Column(Integer, primary_key=True, index=True)
-    example = Column(Text, nullable=False)
-    solution = Column(Text, nullable=False)
+    question_id = Column(String, nullable=True)  # The custom id like "q_math_ch5_example_2"
+    
+    # Question metadata
+    subject = Column(String, nullable=True)
+    chapter = Column(String, nullable=True)
     topic = Column(String, nullable=True)
-    example_number = Column(Float, nullable=True)
-    grade = Column(String, nullable=True)
+    question_type = Column(String, nullable=True)
+    
+    # Source information
+    source_example_number = Column(Integer, nullable=True)
+    source_question_number = Column(Integer, nullable=True)
+    source_part_number = Column(Integer, nullable=True)
+    
+    # Question and answer
+    question_text = Column(Text, nullable=True)
+    answer = Column(Text, nullable=True)
+    
+    # Mark scheme information (stored as JSON)
+    marking_criteria = Column(JSON, nullable=True)  # Array of marking criteria
+    common_mistakes = Column(JSON, nullable=True)  # Array of common mistakes
+    teacher_notes = Column(JSON, nullable=True)  # Array of teacher notes
 
-class NcertExcersizes(Base):
-    __tablename__ = "ncert_excersizes"
+class NcertExercises(Base):
+    __tablename__ = "ncert_exercises"
     
     id = Column(Integer, primary_key=True, index=True)
-    excersize = Column(Text, nullable=False)
-    solution = Column(Text, nullable=True)
+    question_id = Column(String, nullable=True)  # The custom id like "q_math_ch5_ex5.1_q1_part1"
+    
+    # Question metadata
+    subject = Column(String, nullable=True)
+    chapter = Column(String, nullable=True)
     topic = Column(String, nullable=True)
-    excersize_number = Column(Float, nullable=True)
+    question_type = Column(String, nullable=True)
     grade = Column(String, nullable=True)
+    
+    # Source information
+    source_exercise_number = Column(String, nullable=True)
+    source_question_number = Column(Integer, nullable=True)
+    source_part_number = Column(Integer, nullable=True)
+    
+    # Question and answer
+    question_text = Column(Text, nullable=True)
+    answer = Column(Text, nullable=True)
+    
+    # Mark scheme information (stored as JSON)
+    marking_criteria = Column(JSON, nullable=True)  # Array of marking criteria
+    common_mistakes = Column(JSON, nullable=True)  # Array of common mistakes
+    teacher_notes = Column(JSON, nullable=True)  # Array of teacher notes
 
 class PYQs(Base):
     __tablename__ = "pyqs"
     
     id = Column(Integer, primary_key=True, index=True)
-    question = Column(Text, nullable=False)
-    answer = Column(Text, nullable=False)
+    question_id = Column(String, nullable=True)  # The custom id like "q_math_pyq_2023_q15"
+    
+    # Question metadata
+    subject = Column(String, nullable=True)
+    chapter = Column(String, nullable=True)
     topic = Column(String, nullable=True)
-    difficulty = Column(String, nullable=True)
-    year = Column(Integer, nullable=True)
+    question_type = Column(String, nullable=True)
+    max_marks = Column(Integer, nullable=True)
+    
+    # Source information
+    source_year = Column(Integer, nullable=True)
+    source_question_number = Column(Integer, nullable=True)
+    source_part_number = Column(Integer, nullable=True)
+    
+    # Question and answer
+    question_text = Column(Text, nullable=True)
+    answer = Column(Text, nullable=True)
+    
+    # Mark scheme information (stored as JSON)
+    total_marks = Column(Integer, nullable=True)
+    marking_criteria = Column(JSON, nullable=True)  # Array of marking criteria with marks
+    common_mistakes = Column(JSON, nullable=True)  # Array of common mistakes with deductions
+    teacher_notes = Column(JSON, nullable=True)  # Array of teacher notes
 
 class GradingSession(Base):
     __tablename__ = "grading_sessions"
