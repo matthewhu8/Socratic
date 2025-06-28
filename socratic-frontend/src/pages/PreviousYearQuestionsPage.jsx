@@ -15,6 +15,18 @@ const formatBreadcrumb = (str) => {
     .join(' ');
 };
 
+// Helper to format topic names for display
+const formatTopicName = (str) => {
+  if (!str) return '';
+  // Convert URL-friendly format back to readable format
+  // "real-numbers" -> "Real Numbers"
+  // "light-reflection-and-refraction" -> "Light Reflection And Refraction"
+  return str
+    .split('-')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+};
+
 // Helper to determine practice mode from URL
 const getPracticeModeFromUrl = (pathname) => {
   if (pathname.includes('ncert-examples') || pathname.includes('ncert-topics')) {
@@ -240,7 +252,7 @@ const PreviousYearQuestionsPage = () => {
   const finalPracticeMode = currentPracticeMode ? 
     (practiceModeMap[currentPracticeMode] || formatBreadcrumb(currentPracticeMode)) : practiceModeFromUrl;
   
-  const formattedCurrentTopic = formatBreadcrumb(currentTopic);
+  const formattedCurrentTopic = formatTopicName(currentTopic);
   
   // Create the main title based on available information
   const getMainTitle = () => {
@@ -289,7 +301,7 @@ const PreviousYearQuestionsPage = () => {
           {currentTopic && currentTopic !== 'direct' && (
             <>
               <span className="separator">›</span>
-              <span>{formattedCurrentTopic}</span>
+              <span>{formatTopicName(currentTopic)}</span>
             </>
           )}
           <span className="separator">›</span>
