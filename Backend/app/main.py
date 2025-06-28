@@ -483,6 +483,10 @@ class QuestionResponse(OrmBaseModel):
     max_marks: Optional[int] = 3  # Default marks
     difficulty: Optional[str] = None
     year: Optional[int] = None
+    # Mark scheme fields
+    marking_criteria: Optional[List[Dict[str, Any]]] = None
+    common_mistakes: Optional[List[Dict[str, Any]]] = None
+    teacher_notes: Optional[List[str]] = None
 
 @app.get("/api/questions", response_model=List[QuestionResponse])
 async def get_questions(
@@ -516,7 +520,10 @@ async def get_questions(
                     solution=q.answer or q.solution,  # Use new field if available
                     topic=q.topic or "",
                     question_number=q.source_example_number or q.example_number,
-                    max_marks=3  # Default for examples
+                    max_marks=3,  # Default for examples
+                    marking_criteria=q.marking_criteria,
+                    common_mistakes=q.common_mistakes,
+                    teacher_notes=q.teacher_notes
                 ))
                 
         elif practice_mode == "ncert-exercises":
@@ -526,6 +533,13 @@ async def get_questions(
                 NcertExercises.chapter == chapter_name
             ).all()
             
+            print(f"Found {len(db_questions)} exercises for grade={grade}, chapter={chapter_name}")
+            if db_questions:
+                first_q = db_questions[0]
+                print(f"First question has marking_criteria: {first_q.marking_criteria is not None}")
+                print(f"First question has common_mistakes: {first_q.common_mistakes is not None}")
+                print(f"First question has teacher_notes: {first_q.teacher_notes is not None}")
+            
             # Convert to standard format
             for i, q in enumerate(db_questions):
                 questions.append(QuestionResponse(
@@ -534,7 +548,10 @@ async def get_questions(
                     solution=q.answer or q.solution or "Solution not available",  # Use new field if available
                     topic=q.topic or "",
                     question_number=q.source_question_number or q.exercise_number,
-                    max_marks=5  # Default for exercises
+                    max_marks=5,  # Default for exercises
+                    marking_criteria=q.marking_criteria,
+                    common_mistakes=q.common_mistakes,
+                    teacher_notes=q.teacher_notes
                 ))
                 
         elif practice_mode == "previous-year-questions" or practice_mode == "smart-practice":
@@ -556,9 +573,12 @@ async def get_questions(
                     solution=q.answer,
                     topic=q.topic or "",
                     question_number=q.source_question_number,
-                    max_marks=q.max_marks or 6,  # Use actual marks if available
+                    max_marks=q.max_marks or q.total_marks or 6,  # Use actual marks if available
                     difficulty=q.difficulty,
-                    year=q.source_year or q.year
+                    year=q.source_year or q.year,
+                    marking_criteria=q.marking_criteria,
+                    common_mistakes=q.common_mistakes,
+                    teacher_notes=q.teacher_notes
                 ))
         
         else:

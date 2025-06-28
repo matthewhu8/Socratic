@@ -7,68 +7,47 @@ const MarkScheme = ({ question, onClose, onNextQuestion }) => {
   const [currentMessage, setCurrentMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  // Mock mark scheme data
-  const mockMarkScheme = {
-    totalMarks: question?.maxMarks || 3,
-    markingCriteria: [
+  // Debug log to check the question data
+  console.log('Mark Scheme - Question data:', question);
+
+  // Use actual mark scheme data from question, with fallbacks
+  const markScheme = {
+    totalMarks: question?.max_marks || question?.maxMarks || 3,
+    markingCriteria: question?.marking_criteria || [
       {
-        step: "1a",
-        description: "Identify the arithmetic progression",
-        details: "Recognize that this is an arithmetic progression with first term a = 2 and common difference d = 3",
-        marks: 1,
-        acceptableAnswers: [
-          "a = 2, d = 3",
-          "First term = 2, common difference = 3",
-          "a₁ = 2, d = 5 - 2 = 3"
-        ]
-      },
-      {
-        step: "1b", 
-        description: "Apply the sum formula",
-        details: "Use the formula Sₙ = n/2[2a + (n-1)d] where n = 15",
-        marks: 1,
-        acceptableAnswers: [
-          "S₁₅ = 15/2[2(2) + (15-1)(3)]",
-          "S₁₅ = 15/2[4 + 14(3)]",
-          "S₁₅ = 15/2[4 + 42]"
-        ]
-      },
-      {
-        step: "1c",
-        description: "Calculate the final answer",
-        details: "Complete the calculation to find S₁₅ = 345",
-        marks: 1,
-        acceptableAnswers: [
-          "345",
-          "S₁₅ = 345",
-          "Sum = 345"
-        ]
+        step: "1",
+        description: "No marking criteria available",
+        details: "Marking criteria not provided for this question",
+        marks: question?.max_marks || question?.maxMarks || 3,
+        acceptableAnswers: ["See solution provided"]
       }
     ],
-    commonMistakes: [
+    commonMistakes: question?.common_mistakes || [
       {
-        mistake: "Using wrong common difference",
-        description: "Students often calculate d = 5 - 2 = 3 incorrectly or use d = 2",
-        deduction: "Lose 1 mark for incorrect d value"
-      },
-      {
-        mistake: "Formula error",
-        description: "Using Sₙ = n(a + l)/2 without finding the last term first",
-        deduction: "Partial credit possible if method is shown"
-      },
-      {
-        mistake: "Arithmetic errors",
-        description: "Correct method but calculation mistakes",
-        deduction: "Lose 1 mark for final answer, method marks awarded"
+        mistake: "No common mistakes documented",
+        description: "Common mistakes not provided for this question",
+        deduction: "Please refer to your teacher for guidance"
       }
     ],
-    teacherNotes: [
-      "Accept equivalent forms of the arithmetic progression formula",
-      "Award method marks even if final answer is incorrect due to arithmetic errors",
-      "Look for clear identification of a and d values",
-      "Partial credit available for correct substitution into formula"
+    teacherNotes: question?.teacher_notes || [
+      "No teacher notes available for this question"
     ]
   };
+
+  // Process marking criteria to ensure acceptableAnswers is always an array
+  if (markScheme.markingCriteria && markScheme.markingCriteria.length > 0) {
+    markScheme.markingCriteria = markScheme.markingCriteria.map(criteria => ({
+      ...criteria,
+      // Ensure marks field exists, default to 1 if not provided
+      marks: criteria.marks || 1,
+      // Ensure acceptableAnswers is an array
+      acceptableAnswers: Array.isArray(criteria.acceptableAnswers) 
+        ? criteria.acceptableAnswers 
+        : criteria.acceptableAnswers 
+          ? [criteria.acceptableAnswers]
+          : []
+    }));
+  }
 
   const handleChatToggle = () => {
     setIsChatMode(!isChatMode);
@@ -105,14 +84,14 @@ const MarkScheme = ({ question, onClose, onNextQuestion }) => {
   const renderMarkSchemeContent = () => (
     <div className="mark-scheme-content">
       <div className="question-reference">
-        <h3>Question: {question?.questionText}</h3>
-        <div className="total-marks">Total Marks: {mockMarkScheme.totalMarks}</div>
+        <h3>Question: {question?.question_text || question?.questionText}</h3>
+        <div className="total-marks">Total Marks: {markScheme.totalMarks}</div>
       </div>
 
       <div className="marking-criteria-section">
         <h4>Marking Criteria</h4>
         <div className="criteria-list">
-          {mockMarkScheme.markingCriteria.map((criteria, index) => (
+          {markScheme.markingCriteria.map((criteria, index) => (
             <div key={index} className="criteria-item">
               <div className="criteria-header">
                 <span className="step-label">Step {criteria.step}</span>
@@ -136,7 +115,7 @@ const MarkScheme = ({ question, onClose, onNextQuestion }) => {
       <div className="common-mistakes-section">
         <h4>Common Mistakes</h4>
         <div className="mistakes-list">
-          {mockMarkScheme.commonMistakes.map((mistake, index) => (
+          {markScheme.commonMistakes.map((mistake, index) => (
             <div key={index} className="mistake-item">
               <h5>{mistake.mistake}</h5>
               <p>{mistake.description}</p>
@@ -149,7 +128,7 @@ const MarkScheme = ({ question, onClose, onNextQuestion }) => {
       <div className="teacher-notes-section">
         <h4>Teacher Notes</h4>
         <ul className="teacher-notes-list">
-          {mockMarkScheme.teacherNotes.map((note, index) => (
+          {markScheme.teacherNotes.map((note, index) => (
             <li key={index}>{note}</li>
           ))}
         </ul>
