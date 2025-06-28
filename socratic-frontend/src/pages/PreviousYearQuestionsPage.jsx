@@ -27,11 +27,47 @@ const formatTopicName = (str) => {
     .join(' ');
 };
 
+// Mapping of URL-friendly topic names to full chapter names
+const topicToChapterMapping = {
+  // Mathematics Grade 10
+  'real-numbers': 'Chapter 1: Real Numbers',
+  'polynomials': 'Chapter 2: Polynomials',
+  'pair-of-linear-equations': 'Chapter 3: Pair of Linear Equations in Two Variables',
+  'quadratic-equations': 'Chapter 4: Quadratic Equations',
+  'arithmetic-progressions': 'Chapter 5: Arithmetic Progressions',
+  'triangles': 'Chapter 6: Triangles',
+  'coordinate-geometry': 'Chapter 7: Coordinate Geometry',
+  'introduction-to-trigonometry': 'Chapter 8: Introduction to Trigonometry',
+  'some-applications-of-trigonometry': 'Chapter 9: Some Applications of Trigonometry',
+  'circles': 'Chapter 10: Circles',
+  'constructions': 'Chapter 11: Constructions',
+  'areas-related-to-circles': 'Chapter 12: Areas Related to Circles',
+  'surface-areas-and-volumes': 'Chapter 13: Surface Areas and Volumes',
+  'statistics': 'Chapter 14: Statistics',
+  'probability': 'Chapter 15: Probability',
+  
+  // Add more mappings for other subjects and grades as needed
+  // Physics
+  'light-reflection-and-refraction': 'Chapter 10: Light - Reflection and Refraction',
+  'human-eye-and-colourful-world': 'Chapter 11: Human Eye and Colourful World',
+  'electricity': 'Chapter 12: Electricity',
+  'magnetic-effects-of-electric-current': 'Chapter 13: Magnetic Effects of Electric Current',
+  'sources-of-energy': 'Chapter 14: Sources of Energy',
+  
+  // Add more subjects and chapters as needed
+};
+
+// Helper to get chapter name from topic
+const getChapterFromTopic = (topic) => {
+  if (!topic || topic === 'direct') return '';
+  return topicToChapterMapping[topic] || formatTopicName(topic);
+};
+
 // Helper to determine practice mode from URL
 const getPracticeModeFromUrl = (pathname) => {
   if (pathname.includes('ncert-examples') || pathname.includes('ncert-topics')) {
     return 'NCERT Examples';
-  } else if (pathname.includes('ncert-excercises')) {
+  } else if (pathname.includes('ncert-exercises')) {
     return 'NCERT Exercises';
   } else if (pathname.includes('previous-year-questions')) {
     return 'Previous Year Questions';
@@ -94,12 +130,15 @@ const PreviousYearQuestionsPage = () => {
       // Map practice mode for backend consistency
       const practiceModeMapping = {
         'ncert-examples': 'ncert-examples',
-        'ncert-exercises': 'ncert-excercises',
+        'ncert-exercises': 'ncert-exercises',
         'pyqs': 'previous-year-questions',
         'smart-learning': 'smart-practice',
         'previous-year-questions': 'previous-year-questions',
         'smart-practice': 'smart-practice'
       };
+
+      // Get the full chapter name for the grading session
+      const chapterName = getChapterFromTopic(currentTopic);
 
       // Create grading session
       const sessionData = {
@@ -109,7 +148,7 @@ const PreviousYearQuestionsPage = () => {
         practiceMode: practiceModeMapping[currentPracticeMode] || currentPracticeMode || '',
         subject: subject || '',
         grade: currentGrade || '',
-        topic: currentTopic !== 'direct' ? currentTopic : null
+        topic: currentTopic !== 'direct' ? chapterName : null
       };
 
       const response = await fetch(`${API_URL}/api/create-grading-session`, {
@@ -150,7 +189,7 @@ const PreviousYearQuestionsPage = () => {
       // Map new practice mode names to backend expected values
       const practiceModeMapping = {
         'ncert-examples': 'ncert-examples',
-        'ncert-exercises': 'ncert-excercises', // Note: backend has typo
+        'ncert-exercises': 'ncert-exercises', // Note: backend has typo
         'pyqs': 'previous-year-questions',
         'smart-learning': 'smart-practice',
         // For backward compatibility
@@ -160,7 +199,8 @@ const PreviousYearQuestionsPage = () => {
       
       // Get parameters for API call
       const grade = currentGrade || '';
-      const topicParam = currentTopic === 'direct' ? '' : currentTopic || '';
+      // Use the full chapter name for API calls
+      const chapterName = getChapterFromTopic(currentTopic);
       const mode = practiceModeMapping[currentPracticeMode] || currentPracticeMode || '';
       
       // For direct routes, we don't need to filter by topic
@@ -170,7 +210,8 @@ const PreviousYearQuestionsPage = () => {
         apiUrl = `${API_URL}/api/questions?practice_mode=${mode}&grade=${grade}&topic=general&subject=${subject}`;
       } else {
         // For specific topics (NCERT Examples/Exercises with topic)
-        apiUrl = `${API_URL}/api/questions?practice_mode=${mode}&grade=${grade}&topic=${topicParam}&subject=${subject}`;
+        // Use the full chapter name instead of just the topic
+        apiUrl = `${API_URL}/api/questions?practice_mode=${mode}&grade=${grade}&topic=${encodeURIComponent(chapterName)}&subject=${subject}`;
       }
       
       const token = localStorage.getItem('accessToken');
@@ -252,7 +293,7 @@ const PreviousYearQuestionsPage = () => {
   const finalPracticeMode = currentPracticeMode ? 
     (practiceModeMap[currentPracticeMode] || formatBreadcrumb(currentPracticeMode)) : practiceModeFromUrl;
   
-  const formattedCurrentTopic = formatTopicName(currentTopic);
+  const formattedCurrentTopic = getChapterFromTopic(currentTopic);
   
   // Create the main title based on available information
   const getMainTitle = () => {
@@ -301,7 +342,7 @@ const PreviousYearQuestionsPage = () => {
           {currentTopic && currentTopic !== 'direct' && (
             <>
               <span className="separator">›</span>
-              <span>{formatTopicName(currentTopic)}</span>
+              <span>{formattedCurrentTopic}</span>
             </>
           )}
           <span className="separator">›</span>

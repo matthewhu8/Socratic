@@ -373,7 +373,7 @@ const formatBreadcrumb = (str) => {
 const getPracticeModeDisplayName = (practiceMode) => {
   const modeMap = {
     'ncert-examples': 'NCERT Examples',
-    'ncert-excercises': 'NCERT Exercises',
+    'ncert-exercises': 'NCERT Exercises',
     'previous-year-questions': 'Previous Year Questions',
     'smart-practice': 'Smart Practice',
   };
