@@ -84,6 +84,15 @@ const MobileGradingPage = () => {
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
         setCameraActive(true);
+        
+        // iOS requires explicit play() call after setting srcObject
+        // Wait for metadata to load before playing
+        videoRef.current.onloadedmetadata = () => {
+          videoRef.current.play().catch(err => {
+            console.error('Video play error:', err);
+            setError('Camera preview failed to start. Please try again.');
+          });
+        };
       }
     } catch (error) {
       console.error('Camera access error:', error);
@@ -258,6 +267,8 @@ const MobileGradingPage = () => {
               ref={videoRef} 
               autoPlay 
               playsInline
+              muted
+              webkit-playsinline
               className="camera-preview"
             />
             <div className="camera-controls">
