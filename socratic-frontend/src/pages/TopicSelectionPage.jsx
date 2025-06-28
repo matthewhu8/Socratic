@@ -109,16 +109,32 @@ function TopicSelectionPage() {
 
   const topics = getTopics();
 
-  const handleTopicClick = (topicId) => {
+  const handleTopicClick = (topicId, topicName) => {
     const userGrade = currentUser?.grade || '10'; // Fallback to grade 10 if not set
     const practiceMode = optionType; // Use the actual practice mode selected
     
+    // Extract the actual topic name from the chapter title
+    // "Chapter 1: Real Numbers" -> "Real Numbers"
+    // "Chapter 10: Light - Reflection and Refraction" -> "Light - Reflection and Refraction"
+    let actualTopicName = topicName;
+    if (topicName.includes(': ')) {
+      actualTopicName = topicName.split(': ')[1];
+    }
+    
+    // Convert topic name to URL-friendly format
+    // "Real Numbers" -> "real-numbers"
+    // "Light - Reflection and Refraction" -> "light-reflection-and-refraction"
+    const urlFriendlyTopic = actualTopicName
+      .toLowerCase()
+      .replace(/\s+/g, '-')
+      .replace(/[^\w-]/g, ''); // Remove special characters except hyphens
+    
     if (subSubject) {
-      // For science subjects: /student/practice/science/physics/ncert-exercises/ch10
-      navigate(`/student/practice/${subject}/${subSubject}/${practiceMode}/${topicId}`);
+      // For science subjects: /student/practice/science/physics/ncert-exercises/real-numbers
+      navigate(`/student/practice/${subject}/${subSubject}/${practiceMode}/${urlFriendlyTopic}`);
     } else {
-      // For other subjects: /student/practice/mathematics/ncert-exercises/ch1
-      navigate(`/student/practice/${subject}/${practiceMode}/${topicId}`);
+      // For other subjects: /student/practice/mathematics/ncert-exercises/real-numbers
+      navigate(`/student/practice/${subject}/${practiceMode}/${urlFriendlyTopic}`);
     }
   };
 
@@ -169,7 +185,7 @@ function TopicSelectionPage() {
             <div 
               key={topic.id} 
               className="topic-card"
-              onClick={() => handleTopicClick(topic.id)}
+              onClick={() => handleTopicClick(topic.id, topic.name)}
             >
               <div className="topic-info">
                 <h3>{topic.name}</h3>
