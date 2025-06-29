@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import MathText from './MathText';
 import './MarkScheme.css';
 
 const MarkScheme = ({ question, onClose, onNextQuestion }) => {
@@ -10,10 +11,14 @@ const MarkScheme = ({ question, onClose, onNextQuestion }) => {
   // Debug log to check the question data
   console.log('Mark Scheme - Question data:', question);
 
+  // Check if this is an NCERT Example with solution_data
+  const hasStepwiseSolution = question?.solution_data && question.solution_data.steps;
+
   // Use actual mark scheme data from question, with fallbacks
   const markScheme = {
     totalMarks: question?.max_marks || question?.maxMarks || 3,
-    markingCriteria: question?.marking_criteria || [
+    solutionData: question?.solution_data || null,
+    markingCriteria: question?.marking_criteria || (hasStepwiseSolution ? null : [
       {
         step: "1",
         description: "No marking criteria available",
@@ -21,7 +26,7 @@ const MarkScheme = ({ question, onClose, onNextQuestion }) => {
         marks: question?.max_marks || question?.maxMarks || 3,
         acceptableAnswers: ["See solution provided"]
       }
-    ],
+    ]),
     commonMistakes: question?.common_mistakes || [
       {
         mistake: "No common mistakes documented",
@@ -84,42 +89,102 @@ const MarkScheme = ({ question, onClose, onNextQuestion }) => {
   const renderMarkSchemeContent = () => (
     <div className="mark-scheme-content">
       <div className="question-reference">
-        <h3>Question: {question?.question_text || question?.questionText}</h3>
+        <h3>Question: <MathText text={question?.question_text || question?.questionText} /></h3>
         <div className="total-marks">Total Marks: {markScheme.totalMarks}</div>
+        {question?.solution && (
+          <div className="final-answer">
+            <strong>Final Answer:</strong> <MathText text={question.solution} />
+          </div>
+        )}
       </div>
 
-      <div className="marking-criteria-section">
-        <h4>Marking Criteria</h4>
-        <div className="criteria-list">
-          {markScheme.markingCriteria.map((criteria, index) => (
-            <div key={index} className="criteria-item">
-              <div className="criteria-header">
-                <span className="step-label">Step {criteria.step}</span>
-                <span className="marks-badge">{criteria.marks} mark{criteria.marks > 1 ? 's' : ''}</span>
-              </div>
-              <h5>{criteria.description}</h5>
-              <p className="criteria-details">{criteria.details}</p>
-              <div className="acceptable-answers">
-                <strong>Acceptable answers:</strong>
-                <ul>
-                  {criteria.acceptableAnswers.map((answer, answerIndex) => (
-                    <li key={answerIndex}>{answer}</li>
-                  ))}
-                </ul>
-              </div>
+      {/* Display step-wise solution for NCERT Examples */}
+      {hasStepwiseSolution && (
+        <div className="solution-section">
+          <h4>Step-by-Step Solution</h4>
+          
+          {markScheme.solutionData.introduction && (
+            <div className="solution-introduction">
+              <p><MathText text={markScheme.solutionData.introduction} /></p>
             </div>
-          ))}
+          )}
+
+          <div className="solution-steps">
+            {markScheme.solutionData.steps.map((step, index) => (
+              <div key={index} className="solution-step">
+                <div className="step-header">
+                  <span className="step-label">Step {step.step_number}</span>
+                  <h5><MathText text={step.heading} /></h5>
+                </div>
+                <div className="step-content">
+                  <p><MathText text={step.content} /></p>
+                  {step.calculation && (
+                    <div className="step-calculation">
+                      <strong>Calculation:</strong>
+                      <div className="math-calculation">
+                        <MathText text={step.calculation} />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {markScheme.solutionData.learning_tip && (
+            <div className="learning-tip">
+              <strong>💡 Learning Tip:</strong> <MathText text={markScheme.solutionData.learning_tip} />
+            </div>
+          )}
+
+          {markScheme.solutionData.related_concepts && markScheme.solutionData.related_concepts.length > 0 && (
+            <div className="related-concepts">
+              <strong>Related Concepts:</strong>
+              <ul>
+                {markScheme.solutionData.related_concepts.map((concept, index) => (
+                  <li key={index}>{concept}</li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
-      </div>
+      )}
+
+      {/* Display marking criteria for other question types */}
+      {markScheme.markingCriteria && (
+        <div className="marking-criteria-section">
+          <h4>Marking Criteria</h4>
+          <div className="criteria-list">
+            {markScheme.markingCriteria.map((criteria, index) => (
+              <div key={index} className="criteria-item">
+                <div className="criteria-header">
+                  <span className="step-label">Step {criteria.step}</span>
+                  <span className="marks-badge">{criteria.marks} mark{criteria.marks > 1 ? 's' : ''}</span>
+                </div>
+                <h5><MathText text={criteria.description} /></h5>
+                <p className="criteria-details"><MathText text={criteria.details} /></p>
+                <div className="acceptable-answers">
+                  <strong>Acceptable answers:</strong>
+                  <ul>
+                    {criteria.acceptableAnswers.map((answer, answerIndex) => (
+                      <li key={answerIndex}><MathText text={answer} /></li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="common-mistakes-section">
         <h4>Common Mistakes</h4>
         <div className="mistakes-list">
           {markScheme.commonMistakes.map((mistake, index) => (
             <div key={index} className="mistake-item">
-              <h5>{mistake.mistake}</h5>
-              <p>{mistake.description}</p>
-              <div className="deduction-note">{mistake.deduction}</div>
+              <h5><MathText text={mistake.mistake} /></h5>
+              <p><MathText text={mistake.description} /></p>
+              <div className="deduction-note"><MathText text={mistake.deduction} /></div>
             </div>
           ))}
         </div>
@@ -129,7 +194,7 @@ const MarkScheme = ({ question, onClose, onNextQuestion }) => {
         <h4>Teacher Notes</h4>
         <ul className="teacher-notes-list">
           {markScheme.teacherNotes.map((note, index) => (
-            <li key={index}>{note}</li>
+            <li key={index}><MathText text={note} /></li>
           ))}
         </ul>
       </div>

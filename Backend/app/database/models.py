@@ -50,8 +50,10 @@ class NcertExamples(Base):
     question_text = Column(Text, nullable=True)
     answer = Column(Text, nullable=True)
     
-    # Mark scheme information (stored as JSON)
-    marking_criteria = Column(JSON, nullable=True)  # Array of marking criteria
+    # Solution information (stored as JSON)
+    solution = Column(JSON, nullable=True)  # Object with introduction, steps array, learning_tip, related_concepts
+    
+    # Additional information (stored as JSON)
     common_mistakes = Column(JSON, nullable=True)  # Array of common mistakes
     teacher_notes = Column(JSON, nullable=True)  # Array of teacher notes
 

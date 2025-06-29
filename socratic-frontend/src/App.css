@@ -36,3 +36,29 @@
     transform: rotate(360deg);
   }
 }
+
+/* KaTeX Math Rendering Styles */
+.katex {
+  font-size: 1.1em;
+}
+
+.katex-display {
+  margin: 1em 0;
+  text-align: center;
+}
+
+/* Ensure inline math aligns properly with text */
+.katex-inline {
+  vertical-align: baseline;
+}
+
+/* Style for math in questions */
+.question-text .katex,
+.solution-text .katex {
+  font-size: 1.15em;
+}
+
+/* Style for math in mark scheme */
+.mark-scheme-content .katex {
+  font-size: 1.05em;
+}
