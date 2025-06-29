@@ -336,4 +336,188 @@
 .subject-section.loading {
   opacity: 0.6;
   pointer-events: none;
+}
+
+/* Premium Subject Styling */
+.subject-section.premium {
+  opacity: 0.7;
+}
+
+.subject-section.premium .subject-header {
+  cursor: pointer;
+  position: relative;
+}
+
+.subject-section.premium .subject-header:hover {
+  transform: translateX(4px);
+}
+
+.subject-section.premium .subject-header .premium-badge {
+  position: absolute;
+  top: 12px;
+  right: 60px;
+  background: #f59e0b;
+  color: white;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Premium Modal Styling */
+.premium-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(4px);
+}
+
+.premium-modal {
+  background: white;
+  border-radius: 12px;
+  padding: 32px;
+  max-width: 480px;
+  width: 90%;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  animation: modalSlideIn 0.3s ease-out;
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.premium-modal h3 {
+  margin: 0 0 16px 0;
+  color: #1f2937;
+  font-size: 24px;
+  font-weight: 600;
+}
+
+.premium-modal p {
+  margin: 12px 0;
+  color: #4b5563;
+  line-height: 1.6;
+  font-size: 16px;
+}
+
+.premium-modal a {
+  color: #3b82f6;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.premium-modal a:hover {
+  color: #2563eb;
+  text-decoration: underline;
+}
+
+.premium-modal-close {
+  margin-top: 24px;
+  padding: 10px 24px;
+  background: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.premium-modal-close:hover {
+  background: #2563eb;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.premium-modal-close:active {
+  transform: translateY(0);
+}
+
+/* Responsive design for modal */
+@media (max-width: 600px) {
+  .premium-modal {
+    padding: 24px;
+    width: 95%;
+  }
+  
+  .premium-modal h3 {
+    font-size: 20px;
+  }
+  
+  .premium-modal p {
+    font-size: 14px;
+  }
+  
+  .subject-section.premium .subject-header .premium-badge {
+    right: 50px;
+    font-size: 11px;
+    padding: 3px 10px;
+  }
+}
+
+/* For mobile devices, adjust premium badge position */
+@media (max-width: 768px) {
+  .subject-section.premium .subject-header .premium-badge {
+    position: static;
+    margin-left: auto;
+    margin-right: 10px;
+  }
+}
+
+/* Premium Options within expanded subjects */
+.option-item.premium-option {
+  opacity: 0.6;
+  cursor: not-allowed;
+  position: relative;
+}
+
+.option-item.premium-option:hover {
+  background-color: #f5f5f5;
+  transform: none;
+}
+
+.option-item.premium-option .option-content h4 {
+  color: #9ca3af;
+}
+
+.option-item.premium-option .option-content p {
+  color: #b8b8b8;
+}
+
+.option-item.premium-option .arrow-icon {
+  color: #d1d5db;
+}
+
+.option-item.premium-option::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.3);
+  pointer-events: none;
+}
+
+/* Premium card icons */
+.subject-card .card-icon {
+  transition: background-color 0.3s ease;
 } 
