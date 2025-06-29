@@ -86,6 +86,160 @@
   font-family: inherit;
 }
 
+.final-answer {
+  margin-top: 12px;
+  padding: 12px;
+  background-color: #e8f5e9;
+  border-radius: 6px;
+  border-left: 3px solid #4caf50;
+}
+
+.final-answer strong {
+  color: #2e7d32;
+  font-weight: 600;
+}
+
+/* Solution Section Styles */
+.solution-section {
+  margin-bottom: 32px;
+}
+
+.solution-section h4 {
+  margin: 0 0 20px 0;
+  color: #000000;
+  font-size: 1.25rem;
+  font-weight: 600;
+  border-bottom: 2px solid #e5e7eb;
+  padding-bottom: 8px;
+  font-family: inherit;
+}
+
+.solution-introduction {
+  margin-bottom: 24px;
+  padding: 16px;
+  background-color: #f0f9ff;
+  border-radius: 8px;
+  border-left: 3px solid #0ea5e9;
+}
+
+.solution-introduction p {
+  margin: 0;
+  color: #000000;
+  line-height: 1.6;
+  font-size: 0.95rem;
+}
+
+.solution-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.solution-step {
+  padding: 20px 0;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.solution-step:last-child {
+  border-bottom: none;
+}
+
+.step-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.step-header h5 {
+  margin: 0;
+  color: #000000;
+  font-size: 1rem;
+  font-weight: 600;
+  font-family: inherit;
+}
+
+.step-content {
+  margin-left: 0;
+}
+
+.step-content p {
+  margin: 0 0 12px 0;
+  color: #000000;
+  line-height: 1.6;
+  font-size: 0.95rem;
+}
+
+.step-calculation {
+  margin-top: 12px;
+  padding: 16px;
+  background-color: #f8fafc;
+  border-radius: 6px;
+  border: 1px solid #e5e7eb;
+}
+
+.step-calculation strong {
+  display: block;
+  margin-bottom: 8px;
+  color: #000000;
+  font-weight: 600;
+}
+
+.step-calculation .math-calculation {
+  margin: 0;
+  padding: 12px;
+  background-color: #f8fafc;
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  overflow-x: auto;
+  font-size: 1rem;
+  line-height: 1.8;
+  text-align: center;
+}
+
+.step-calculation .math-calculation .katex-display {
+  margin: 0.5em 0;
+}
+
+.learning-tip {
+  margin-top: 24px;
+  padding: 16px;
+  background-color: #fef3c7;
+  border-radius: 8px;
+  border-left: 3px solid #f59e0b;
+}
+
+.learning-tip strong {
+  color: #92400e;
+  font-weight: 600;
+  margin-right: 8px;
+}
+
+.related-concepts {
+  margin-top: 20px;
+  padding: 16px;
+  background-color: #f3f4f6;
+  border-radius: 8px;
+}
+
+.related-concepts strong {
+  display: block;
+  margin-bottom: 12px;
+  color: #000000;
+  font-weight: 600;
+}
+
+.related-concepts ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.related-concepts li {
+  margin-bottom: 6px;
+  color: #000000;
+  font-size: 0.95rem;
+}
+
 .marking-criteria-section,
 .common-mistakes-section,
 .teacher-notes-section {

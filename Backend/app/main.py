@@ -483,7 +483,9 @@ class QuestionResponse(OrmBaseModel):
     max_marks: Optional[int] = 3  # Default marks
     difficulty: Optional[str] = None
     year: Optional[int] = None
-    # Mark scheme fields
+    # Solution data for NCERT Examples (contains steps, introduction, etc.)
+    solution_data: Optional[Dict[str, Any]] = None
+    # Mark scheme fields (for exercises and PYQs)
     marking_criteria: Optional[List[Dict[str, Any]]] = None
     common_mistakes: Optional[List[Dict[str, Any]]] = None
     teacher_notes: Optional[List[str]] = None
@@ -516,12 +518,13 @@ async def get_questions(
             for i, q in enumerate(db_questions):
                 questions.append(QuestionResponse(
                     id=q.id,
-                    question_text=q.question_text or q.example,  # Use new field if available
-                    solution=q.answer or q.solution,  # Use new field if available
+                    question_text=q.question_text,
+                    solution=q.answer,  # The answer field contains the final answer
                     topic=q.topic or "",
-                    question_number=q.source_example_number or q.example_number,
+                    question_number=q.source_example_number,
                     max_marks=3,  # Default for examples
-                    marking_criteria=q.marking_criteria,
+                    solution_data=q.solution,  # The new solution field with steps
+                    marking_criteria=None,  # NCERT Examples don't have marking criteria
                     common_mistakes=q.common_mistakes,
                     teacher_notes=q.teacher_notes
                 ))

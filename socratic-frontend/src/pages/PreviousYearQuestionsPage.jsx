@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useContext } from 'react';
 import MarkScheme from '../components/MarkScheme';
+import MathText from '../components/MathText';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { AuthContext } from '../contexts/AuthContext';
 import API_URL from '../config/api';
@@ -397,12 +398,16 @@ const PreviousYearQuestionsPage = () => {
                     </div>
                   )}
                 </div>
-                                 <p className="question-text">{currentQuestion.question_text}</p>
+                <div className="question-text">
+                  <MathText text={currentQuestion.question_text} />
+                </div>
                  
                  {showSolution && currentQuestion.solution && (
                    <div className="solution-container">
                      <h4>Solution:</h4>
-                     <div className="solution-text">{currentQuestion.solution}</div>
+                     <div className="solution-text">
+                       <MathText text={currentQuestion.solution} />
+                     </div>
                    </div>
                  )}
                  

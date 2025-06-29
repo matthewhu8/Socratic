@@ -12,7 +12,7 @@ DB_PATH = os.path.join(BASE_DIR, "socratic.db")
 DEFAULT_SQLITE_URL = f"sqlite:///{DB_PATH}"
 
 # PostgreSQL configuration - Fixed
-DEFAULT_POSTGRES_URL = "postgresql://postgres:postgres@localhost:5432/postgres"
+DEFAULT_POSTGRES_URL = "postgresql://postgres:ymCIpwSPBraGkdaGRFjACfGJOojfzpOz@shinkansen.proxy.rlwy.net:25660/railway"
 
 # Use DATABASE_URL from environment if provided, otherwise use default PostgreSQL
 DATABASE_URL = os.getenv("DATABASE_URL", DEFAULT_POSTGRES_URL)
