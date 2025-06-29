@@ -157,7 +157,7 @@ function StudentHomePage() {
           <div className="nav-option-icon"><MdDashboard /></div>
           <h2>Dashboard</h2>
           <p>View your progress, knowledge map, and performance analytics</p>
-          <span className="premium-badge">Premium</span>
+          <span className="premium-badge">Beta</span>
         </div>
 
         <Link to="/student/learning-modules" className="nav-option">
@@ -182,9 +182,9 @@ function StudentHomePage() {
       {showPremiumMessage && (
         <div className="premium-modal-overlay" onClick={() => setShowPremiumMessage(false)}>
           <div className="premium-modal" onClick={(e) => e.stopPropagation()}>
-            <h3>Premium Feature</h3>
-            <p>This option is currently unavailable on our free tier.</p>
-            <p>Email <a href="mailto:learnsocratic@gmail.com">learnsocratic@gmail.com</a> for more information regarding our premium options.</p>
+            <h3>Beta Testing Feature</h3>
+            <p>This feature is currently in beta testing.</p>
+            <p>Email <a href="mailto:learnsocratic@gmail.com">learnsocratic@gmail.com</a> to gain beta access.</p>
             <button className="premium-modal-close" onClick={() => setShowPremiumMessage(false)}>
               Close
             </button>

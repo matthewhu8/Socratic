@@ -358,7 +358,7 @@ function DynamicLearningPage() {
             {subject.icon}
           </div>
           <h2 style={{ color: isPremium ? '#9ca3af' : subject.color }}>{subject.name}</h2>
-          {isPremium && <span className="premium-badge">Premium</span>}
+          {isPremium && <span className="premium-badge">Beta</span>}
           <div className={`expand-icon ${isExpanded ? 'expanded' : ''}`}>
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
               <path d="M6 9L12 15L18 9" stroke={isPremium ? '#9ca3af' : subject.color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -472,9 +472,9 @@ function DynamicLearningPage() {
       {showPremiumMessage && (
         <div className="premium-modal-overlay" onClick={() => setShowPremiumMessage(false)}>
           <div className="premium-modal" onClick={(e) => e.stopPropagation()}>
-            <h3>Premium Feature</h3>
-            <p>This option is currently unavailable on our free tier.</p>
-            <p>Email <a href="mailto:learnsocratic@gmail.com">learnsocratic@gmail.com</a> for more information regarding our premium options.</p>
+            <h3>Beta Testing Feature</h3>
+            <p>This feature is currently in beta testing.</p>
+            <p>Email <a href="mailto:learnsocratic@gmail.com">learnsocratic@gmail.com</a> to gain beta access.</p>
             <button className="premium-modal-close" onClick={() => setShowPremiumMessage(false)}>
               Close
             </button>
