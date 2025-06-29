@@ -20,6 +20,7 @@ function DynamicLearningPage() {
   const navigate = useNavigate();
   const { currentUser } = useContext(AuthContext);
   const [expandedSubject, setExpandedSubject] = useState('mathematics'); // Mathematics open by default
+  const [showPremiumMessage, setShowPremiumMessage] = useState(false);
 
   // Get dynamic class title based on user's grade
   const getClassTitle = () => {
@@ -332,27 +333,35 @@ function DynamicLearningPage() {
   };
 
   const handleOptionClick = (subject, subSubject, option) => {
+    // Check if this is a premium subject
+    if (subject.id !== 'mathematics') {
+      setShowPremiumMessage(true);
+      return;
+    }
+    
     const subjectPath = subSubject ? `${subject.id}/${subSubject.id}` : subject.id;
     navigate(`/student/dynamic-learning/${subjectPath}/${option.id}/topics`);
   };
 
   const renderSubjectCard = (subject) => {
     const isExpanded = expandedSubject === subject.id;
+    const isPremium = subject.id !== 'mathematics';
 
     return (
-      <div key={subject.id} className={`subject-section ${isExpanded ? 'expanded' : ''}`}>
+      <div key={subject.id} className={`subject-section ${isExpanded ? 'expanded' : ''} ${isPremium ? 'premium' : ''}`}>
         <div 
           className="subject-header"
-          style={{ backgroundColor: subject.bgColor }}
+          style={{ backgroundColor: isPremium ? '#f3f4f6' : subject.bgColor }}
           onClick={() => toggleSubject(subject.id)}
         >
-          <div className="subject-icon" style={{ color: subject.color }}>
+          <div className="subject-icon" style={{ color: isPremium ? '#9ca3af' : subject.color }}>
             {subject.icon}
           </div>
-          <h2 style={{ color: subject.color }}>{subject.name}</h2>
+          <h2 style={{ color: isPremium ? '#9ca3af' : subject.color }}>{subject.name}</h2>
+          {isPremium && <span className="premium-badge">Premium</span>}
           <div className={`expand-icon ${isExpanded ? 'expanded' : ''}`}>
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-              <path d="M6 9L12 15L18 9" stroke={subject.color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M6 9L12 15L18 9" stroke={isPremium ? '#9ca3af' : subject.color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
           </div>
         </div>
@@ -363,7 +372,7 @@ function DynamicLearningPage() {
             {!subject.subSubjects && (
               <div className="subject-card">
                 <div className="card-header">
-                  <div className="card-icon" style={{ backgroundColor: subject.color }}>
+                  <div className="card-icon" style={{ backgroundColor: isPremium ? '#9ca3af' : subject.color }}>
                     {subject.icon}
                   </div>
                   <h3>{subject.name}</h3>
@@ -372,7 +381,7 @@ function DynamicLearningPage() {
                   {subject.options.map(option => (
                     <div 
                       key={option.id} 
-                      className="option-item"
+                      className={`option-item ${isPremium ? 'premium-option' : ''}`}
                       onClick={() => handleOptionClick(subject, null, option)}
                     >
                       <div className="option-content">
@@ -392,7 +401,7 @@ function DynamicLearningPage() {
             {subject.subSubjects && subject.subSubjects.map(subSubject => (
               <div key={subSubject.id} className="subject-card">
                 <div className="card-header">
-                  <div className="card-icon" style={{ backgroundColor: subject.color }}>
+                  <div className="card-icon" style={{ backgroundColor: isPremium ? '#9ca3af' : subject.color }}>
                     {subSubject.icon}
                   </div>
                   <h3>{subSubject.name}</h3>
@@ -401,7 +410,7 @@ function DynamicLearningPage() {
                   {subSubject.options.map(option => (
                     <div 
                       key={option.id} 
-                      className="option-item"
+                      className={`option-item ${isPremium ? 'premium-option' : ''}`}
                       onClick={() => handleOptionClick(subject, subSubject, option)}
                     >
                       <div className="option-content">
@@ -458,6 +467,20 @@ function DynamicLearningPage() {
           {subjects.map(subject => renderSubjectCard(subject))}
         </div>
       </div>
+
+      {/* Premium Message Modal */}
+      {showPremiumMessage && (
+        <div className="premium-modal-overlay" onClick={() => setShowPremiumMessage(false)}>
+          <div className="premium-modal" onClick={(e) => e.stopPropagation()}>
+            <h3>Premium Feature</h3>
+            <p>This option is currently unavailable on our free tier.</p>
+            <p>Email <a href="mailto:learnsocratic@gmail.com">learnsocratic@gmail.com</a> for more information regarding our premium options.</p>
+            <button className="premium-modal-close" onClick={() => setShowPremiumMessage(false)}>
+              Close
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

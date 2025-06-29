@@ -11,10 +11,26 @@ function StudentHomePage() {
   const { currentUser, logout, setCurrentUser } = useContext(AuthContext);
   const [isUpdatingGrade, setIsUpdatingGrade] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [showPremiumMessage, setShowPremiumMessage] = useState(false);
+  const [showGradeRestrictionMessage, setShowGradeRestrictionMessage] = useState(false);
   const profileMenuRef = useRef(null);
 
   const handleLogout = () => {
     logout();
+  };
+
+  const handleDashboardClick = (e) => {
+    e.preventDefault();
+    setShowPremiumMessage(true);
+  };
+
+  const handleDynamicLearningClick = (e) => {
+    // Check if user is in grade 10
+    if (currentUser?.grade !== '10') {
+      e.preventDefault();
+      setShowGradeRestrictionMessage(true);
+    }
+    // If grade is 10, the Link will handle navigation normally
   };
 
   const handleGradeUpdate = async (newGrade) => {
@@ -137,11 +153,12 @@ function StudentHomePage() {
 
       {/* Main Navigation Options */}
       <div className="navigation-options">
-        <Link to="/student/dashboard" className="nav-option">
+        <div className="nav-option disabled" onClick={handleDashboardClick}>
           <div className="nav-option-icon"><MdDashboard /></div>
           <h2>Dashboard</h2>
           <p>View your progress, knowledge map, and performance analytics</p>
-        </Link>
+          <span className="premium-badge">Premium</span>
+        </div>
 
         <Link to="/student/learning-modules" className="nav-option">
           <div className="nav-option-icon"><TfiYoutube /></div>
@@ -149,14 +166,57 @@ function StudentHomePage() {
           <p>Watch YouTube videos with AI-powered assistance and interactive learning</p>
         </Link>
 
-        <Link to="/student/dynamic-learning" className="nav-option">
+        <Link 
+          to="/student/dynamic-learning" 
+          className="nav-option"
+          onClick={handleDynamicLearningClick}
+        >
           <div className="nav-option-icon"><GiBrain /></div>
           <h2>Dynamic Learning</h2>
           <p>Adaptive AI-powered learning experiences tailored to your progress</p>
+          {currentUser?.grade !== '10' && <span className="grade-badge">Grade 10 Only</span>}
         </Link>
-
-
       </div>
+
+      {/* Premium Message Modal */}
+      {showPremiumMessage && (
+        <div className="premium-modal-overlay" onClick={() => setShowPremiumMessage(false)}>
+          <div className="premium-modal" onClick={(e) => e.stopPropagation()}>
+            <h3>Premium Feature</h3>
+            <p>This option is currently unavailable on our free tier.</p>
+            <p>Email <a href="mailto:learnsocratic@gmail.com">learnsocratic@gmail.com</a> for more information regarding our premium options.</p>
+            <button className="premium-modal-close" onClick={() => setShowPremiumMessage(false)}>
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Grade Restriction Message Modal */}
+      {showGradeRestrictionMessage && (
+        <div className="premium-modal-overlay" onClick={() => setShowGradeRestrictionMessage(false)}>
+          <div className="premium-modal" onClick={(e) => e.stopPropagation()}>
+            <h3>Grade Restriction</h3>
+            <p>Socratic currently only allows access for 10th grade students.</p>
+            <p>Email us at <a href="mailto:learnsocratic@gmail.com">learnsocratic@gmail.com</a> to gain access to other grade resources.</p>
+            <div className="modal-action-section">
+              <p className="modal-action-text">To access Dynamic Learning, please update your profile to Grade 10:</p>
+              <button 
+                className="grade-update-button"
+                onClick={() => {
+                  setShowGradeRestrictionMessage(false);
+                  setShowProfileMenu(true);
+                }}
+              >
+                Go to Profile Settings
+              </button>
+            </div>
+            <button className="premium-modal-close" onClick={() => setShowGradeRestrictionMessage(false)}>
+              Close
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
