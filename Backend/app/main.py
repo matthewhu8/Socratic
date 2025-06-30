@@ -869,7 +869,9 @@ async def submit_grading_image(
             raise HTTPException(status_code=400, detail="File too large")
         
         # Create uploads directory if it doesn't exist
-        upload_dir = "temp_uploads"
+        # Use absolute path relative to the app directory
+        app_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        upload_dir = os.path.join(app_dir, "temp_uploads")
         os.makedirs(upload_dir, exist_ok=True)
         
         # Save image with unique filename
@@ -901,22 +903,27 @@ async def submit_grading_image(
                 })
             )
         
-        # TODO: Trigger grading process (async task)
-        # For now, we'll just simulate grading
-        grading_result = {
-            "grade": "8/10",
-            "feedback": "Good work! Your approach is correct. Minor calculation error in step 3.",
-            "corrections": ["Line 3: 15 × 2 = 30, not 25"],
-            "strengths": ["Good understanding of the quadratic formula", "Clear step-by-step work"]
-        }
+        # Trigger grading process
+        grading_result = await convo_service.gemini_service.generate_photo_grading(
+            db_session.question_text, 
+            db_session.correct_solution, 
+            file_path
+        )
         
         # Update with grading result
         db_session.grading_result = grading_result
         db_session.status = "completed"
         db.commit()
         
-        # TODO: Notify computer via WebSocket with results
-        
+        # Clean up the uploaded image file after grading
+        try:
+            if os.path.exists(file_path):
+                os.remove(file_path)
+                print(f"Cleaned up image file: {file_path}")
+        except Exception as cleanup_error:
+            print(f"Warning: Failed to clean up image file {file_path}: {cleanup_error}")
+            # Don't fail the request if cleanup fails
+                
         return {
             "status": "success",
             "message": "Image uploaded and graded successfully",

@@ -73,12 +73,12 @@ const MarkScheme = ({ question, onClose, onNextQuestion }) => {
     setCurrentMessage('');
     setIsLoading(true);
 
-    // Mock AI response
+    // Beta testing response
     setTimeout(() => {
       const aiResponse = {
         id: Date.now() + 1,
         sender: 'ai',
-        content: `I understand you're asking about "${currentMessage}". This mark scheme shows the step-by-step approach for solving arithmetic progression problems. Each step has specific criteria and acceptable answers. Would you like me to explain any particular step in more detail?`,
+        content: 'Mark Scheme discussion is currently in Beta Testing, email learnsocratic@gmail.com for exclusive invite only access.',
         timestamp: new Date()
       };
       setChatMessages(prev => [...prev, aiResponse]);

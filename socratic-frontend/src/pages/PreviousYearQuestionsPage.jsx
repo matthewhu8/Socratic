@@ -103,7 +103,9 @@ const PreviousYearQuestionsPage = () => {
   // State for QR grading modal
   const [showQRModal, setShowQRModal] = useState(false);
   const [gradingSession, setGradingSession] = useState(null);
- 
+  
+  // State for video solution beta popup
+  const [showVideoSolutionBeta, setShowVideoSolutionBeta] = useState(false);
 
   const handleChatSubmit = (e) => {
     e.preventDefault();
@@ -428,7 +430,12 @@ const PreviousYearQuestionsPage = () => {
               Mark Scheme
             </button>
             
-            <button className="action-btn secondary">Video Solution</button>
+            <button 
+              className="action-btn secondary beta-btn"
+              onClick={() => setShowVideoSolutionBeta(true)}
+            >
+              Video Solution
+            </button>
             <button 
               className="action-btn primary" 
               onClick={handleSubmitForGrading}
@@ -496,6 +503,59 @@ const PreviousYearQuestionsPage = () => {
           expiresIn={gradingSession.expiresIn}
           onGradingComplete={handleGradingComplete}
         />
+      )}
+
+      {/* Video Solution Beta Popup */}
+      {showVideoSolutionBeta && (
+        <div className="beta-popup-overlay" onClick={() => setShowVideoSolutionBeta(false)}>
+          <div className="beta-popup" onClick={(e) => e.stopPropagation()}>
+            <div className="beta-popup-header">
+              <h2>Beta Testing Feature</h2>
+              <button 
+                className="beta-popup-close" 
+                onClick={() => setShowVideoSolutionBeta(false)}
+              >
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                  <path d="M18 6L6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </button>
+            </div>
+            
+            <div className="beta-popup-content">
+              <div className="beta-popup-icon">
+                <svg width="64" height="64" viewBox="0 0 24 24" fill="none">
+                  <path d="M8 5v14l11-7z" fill="#4285f4"/>
+                </svg>
+              </div>
+              
+              <h3>Video Solutions Coming Soon</h3>
+              <p>
+                Video solutions are currently in beta testing. We're working to provide 
+                comprehensive video explanations for all questions.
+              </p>
+              
+              <p className="beta-access-text">
+                Email <strong>learnsocratic@gmail.com</strong> for exclusive preview
+              </p>
+              
+              <div className="beta-popup-actions">
+                <a 
+                  href="mailto:learnsocratic@gmail.com?subject=Video Solution Beta Access&body=Hi! I would like early access to video solutions. My email is: "
+                  className="beta-email-btn"
+                >
+                  📧 Email for Access
+                </a>
+                <button 
+                  className="beta-close-btn" 
+                  onClick={() => setShowVideoSolutionBeta(false)}
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
