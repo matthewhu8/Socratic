@@ -507,17 +507,33 @@
 }
 
 .option-item.premium-option::after {
-  content: '';
+  content: "Coming Soon";
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(255, 255, 255, 0.3);
-  pointer-events: none;
+  top: 50%;
+  right: 16px;
+  transform: translateY(-50%);
+  background: #f59e0b;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
 }
 
-/* Premium card icons */
+/* Beta tag styling for Smart Learning */
+.beta-tag {
+  background: linear-gradient(135deg, #4285f4, #34a853);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 8px;
+}
+
 .subject-card .card-icon {
-  transition: background-color 0.3s ease;
+  background: #f59e0b !important;
 } 

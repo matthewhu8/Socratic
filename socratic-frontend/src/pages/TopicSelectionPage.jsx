@@ -1,4 +1,4 @@
-import React, { useContext } from 'react';
+import React, { useContext, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../contexts/AuthContext';
 import '../styles/TopicSelectionPage.css';
@@ -7,6 +7,25 @@ function TopicSelectionPage() {
   const { subject, subSubject, optionType } = useParams();
   const navigate = useNavigate();
   const { currentUser } = useContext(AuthContext);
+  
+  // State for beta access popup
+  const [showBetaPopup, setShowBetaPopup] = useState(false);
+
+  // Function to check if a chapter is in beta (chapters 4-14 or Smart Learning)
+  const isChapterInBeta = (chapterName) => {
+    // Check if it's Smart Learning
+    if (optionType === 'smart-learning') {
+      return true;
+    }
+    
+    // Check if it's chapters 4-14
+    const chapterMatch = chapterName.match(/Chapter (\d+):/);
+    if (chapterMatch) {
+      const chapterNumber = parseInt(chapterMatch[1]);
+      return chapterNumber >= 4 && chapterNumber <= 14;
+    }
+    return false;
+  };
 
   // Topic data for different subjects
   const topicsData = {
@@ -110,6 +129,12 @@ function TopicSelectionPage() {
   const topics = getTopics();
 
   const handleTopicClick = (topicId, topicName) => {
+    // Check if this chapter is in beta
+    if (isChapterInBeta(topicName)) {
+      setShowBetaPopup(true);
+      return;
+    }
+
     const userGrade = currentUser?.grade || '10'; // Fallback to grade 10 if not set
     const practiceMode = optionType; // Use the actual practice mode selected
     
@@ -181,29 +206,90 @@ function TopicSelectionPage() {
         <p className="topic-subtitle">Choose a chapter or topic to start practicing</p>
 
         <div className="topics-grid">
-          {topics.map((topic) => (
-            <div 
-              key={topic.id} 
-              className="topic-card"
-              onClick={() => handleTopicClick(topic.id, topic.name)}
-            >
-              <div className="topic-info">
-                <h3>{topic.name}</h3>
-                <p className="question-count">
-                  {typeof topic.questionCount === 'number' 
-                    ? `${topic.questionCount} questions` 
-                    : topic.questionCount
-                  }
-                </p>
+          {topics.map((topic) => {
+            const isBeta = isChapterInBeta(topic.name);
+            return (
+              <div 
+                key={topic.id} 
+                className={`topic-card ${isBeta ? 'topic-card-beta' : ''}`}
+                onClick={() => handleTopicClick(topic.id, topic.name)}
+              >
+                <div className="topic-info">
+                  <h3>{topic.name}</h3>
+                  <p className="question-count">
+                    {typeof topic.questionCount === 'number' 
+                      ? `${topic.questionCount} questions` 
+                      : topic.questionCount
+                    }
+                  </p>
+                  {isBeta && (
+                    <div className="beta-badge">
+                      <span>🔒 Beta Access</span>
+                    </div>
+                  )}
+                </div>
+                <div className="topic-arrow">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                    <path d="M9 18L15 12L9 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </div>
               </div>
-              <div className="topic-arrow">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                  <path d="M9 18L15 12L9 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
+            );
+          })}
+        </div>
+
+        {/* Beta Access Popup */}
+        {showBetaPopup && (
+          <div className="beta-popup-overlay" onClick={() => setShowBetaPopup(false)}>
+            <div className="beta-popup" onClick={(e) => e.stopPropagation()}>
+              <div className="beta-popup-header">
+                <h2>Beta Private Access</h2>
+                <button 
+                  className="beta-popup-close" 
+                  onClick={() => setShowBetaPopup(false)}
+                >
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                    <path d="M18 6L6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </button>
+              </div>
+              
+              <div className="beta-popup-content">
+                <div className="beta-popup-icon">
+                  <svg width="64" height="64" viewBox="0 0 24 24" fill="none">
+                    <path d="M12 2L15.09 8.26L22 9L17 14L18.18 21L12 17.77L5.82 21L7 14L2 9L8.91 8.26L12 2Z" fill="#4285f4"/>
+                  </svg>
+                </div>
+                
+                <h3>Exclusive Early Access</h3>
+                <p>
+                  This chapter is currently in private beta testing. We're working hard to bring you 
+                  the best learning experience with advanced features and comprehensive content.
+                </p>
+                
+                <p className="beta-access-text">
+                  Email <strong>learnsocratic@gmail.com</strong> for exclusive beta access
+                </p>
+                
+                <div className="beta-popup-actions">
+                  <a 
+                    href="mailto:learnsocratic@gmail.com?subject=Beta Access Request&body=Hi! I would like early access to the beta chapters. My email is: "
+                    className="beta-email-btn"
+                  >
+                    📧 Email for Access
+                  </a>
+                  <button 
+                    className="beta-close-btn" 
+                    onClick={() => setShowBetaPopup(false)}
+                  >
+                    Close
+                  </button>
+                </div>
               </div>
             </div>
-          ))}
-        </div>
+          </div>
+        )}
       </main>
     </div>
   );
