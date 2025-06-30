@@ -333,8 +333,8 @@ function DynamicLearningPage() {
   };
 
   const handleOptionClick = (subject, subSubject, option) => {
-    // Check if this is a premium subject
-    if (subject.id !== 'mathematics') {
+    // Check if this is a premium subject or Smart Learning
+    if (subject.id !== 'mathematics' || option.id === 'smart-learning') {
       setShowPremiumMessage(true);
       return;
     }
@@ -378,21 +378,27 @@ function DynamicLearningPage() {
                   <h3>{subject.name}</h3>
                 </div>
                 <div className="options-list">
-                  {subject.options.map(option => (
-                    <div 
-                      key={option.id} 
-                      className={`option-item ${isPremium ? 'premium-option' : ''}`}
-                      onClick={() => handleOptionClick(subject, null, option)}
-                    >
-                      <div className="option-content">
-                        <h4>{option.name}</h4>
-                        <p>{option.description}</p>
+                  {subject.options.map(option => {
+                    const isOptionBeta = option.id === 'smart-learning' || isPremium;
+                    return (
+                      <div 
+                        key={option.id} 
+                        className={`option-item ${isOptionBeta ? 'premium-option' : ''}`}
+                        onClick={() => handleOptionClick(subject, null, option)}
+                      >
+                        <div className="option-content">
+                          <h4>{option.name}</h4>
+                          <p>{option.description}</p>
+                          {option.id === 'smart-learning' && subject.id === 'mathematics' && (
+                            <span className="beta-tag">🔒 Beta Access</span>
+                          )}
+                        </div>
+                        <svg className="arrow-icon" width="20" height="20" viewBox="0 0 24 24" fill="none">
+                          <path d="M9 18L15 12L9 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
                       </div>
-                      <svg className="arrow-icon" width="20" height="20" viewBox="0 0 24 24" fill="none">
-                        <path d="M9 18L15 12L9 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                      </svg>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             )}
@@ -407,21 +413,27 @@ function DynamicLearningPage() {
                   <h3>{subSubject.name}</h3>
                 </div>
                 <div className="options-list">
-                  {subSubject.options.map(option => (
-                    <div 
-                      key={option.id} 
-                      className={`option-item ${isPremium ? 'premium-option' : ''}`}
-                      onClick={() => handleOptionClick(subject, subSubject, option)}
-                    >
-                      <div className="option-content">
-                        <h4>{option.name}</h4>
-                        <p>{option.description}</p>
+                  {subSubject.options.map(option => {
+                    const isOptionBeta = option.id === 'smart-learning' || isPremium;
+                    return (
+                      <div 
+                        key={option.id} 
+                        className={`option-item ${isOptionBeta ? 'premium-option' : ''}`}
+                        onClick={() => handleOptionClick(subject, subSubject, option)}
+                      >
+                        <div className="option-content">
+                          <h4>{option.name}</h4>
+                          <p>{option.description}</p>
+                          {option.id === 'smart-learning' && !isPremium && (
+                            <span className="beta-tag">🔒 Beta Access</span>
+                          )}
+                        </div>
+                        <svg className="arrow-icon" width="20" height="20" viewBox="0 0 24 24" fill="none">
+                          <path d="M9 18L15 12L9 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
                       </div>
-                      <svg className="arrow-icon" width="20" height="20" viewBox="0 0 24 24" fill="none">
-                        <path d="M9 18L15 12L9 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                      </svg>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             ))}
