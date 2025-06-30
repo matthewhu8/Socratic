@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 import base64
 from PIL import Image
 import io
+import json
 
 load_dotenv()
 
@@ -18,7 +19,7 @@ class GeminiService:
         genai.configure(api_key=self.api_key)
         self.model = genai.GenerativeModel('gemini-2.5-flash-preview-05-20', system_instruction="You are a helpful English AI assistant to answer students' questions about this YouTube video. Please answer in English. The student may also be referencing a specific part from the video transcript around their current video timestamp. The image attached shows the video at the point where the student is currently watching the video. When necessary, you can use the image to help you answer their question.")
         self.video_quiz_model = genai.GenerativeModel('gemini-2.5-flash-preview-05-20', system_instruction="You are quiz maker that will test the student's retention of the video. The query will contain a video transcript and a list of their previous messages, create questions in JSON format that tests the user on general subject matter related concepts discussed in the transcript, and place a particular emphasis on the topics the student seemed to be confused about based on the chatlog. Make 5 total questions.")
-        self.photo_grading_model = genai.GenerativeModel('gemini-2.5-flash-preview-05-20', system_instruction="You are a detailed oriented CBSE style grader for 10th grade math questions. ")
+        self.photo_grading_model = genai.GenerativeModel('gemini-2.5-flash-preview-05-20', system_instruction="You are a detailed oriented CBSE style grader for 10th grade math questions. Utilize the attached question and 'solution' to ensure the student's work is fully correct. The student's work will be provided in the query as a photo. Please provide your response in the JSON format shown in the prompt. Do no hesitate to leave fields blank if there are no comments needed. ")
         print(f"GEMINI MODEL: {self.model}")
     
     def format_chat_history(self, chat_history: List[Dict]) -> List[Dict]:
@@ -33,6 +34,98 @@ class GeminiService:
                     "parts": [msg["content"]]
                 })
         return formatted_history
+    
+    async def generate_photo_grading(self, question_text: str, correct_solution: str, image_path: str) -> Dict:
+        '''
+        Grades a photo of a student's work against the correct solution.
+        Returns a dictionary with grade, feedback, corrections, and strengths.
+        '''
+        try:
+            # Load the image from file path
+            pil_image = Image.open(image_path)
+            
+            # Create a structured prompt that will get us the desired output
+            prompt = f"""
+You are grading a student's handwritten solution to this math problem.
+
+QUESTION: {question_text}
+
+CORRECT SOLUTION: {correct_solution}
+
+Please analyze the student's work in the attached image and provide your assessment in the following JSON format. All field are optional meaning if there are no strengths or no corrections needed, do no hesitate to leave those blank. It is very possible the student's work is completely wrong or completely correct:
+
+{{
+  "grade": "[score]/10",
+  "feedback": "[A detailed paragraph about their work, max 100 words]",
+  "corrections": [
+    "[Specific error 1 with line/step reference]",
+    "[Specific error 2 with line/step reference]"
+  ],
+  "strengths": [
+    "[Positive aspect 1 of their work]",
+    "[Positive aspect 2 of their work]"
+  ]
+}}
+
+IMPORTANT:
+- Give a numerical grade out of 10
+- Feedback should be encouraging but honest
+- List specific corrections if there are errors (empty list if perfect)
+- Always find at least 2 strengths to highlight
+- Reference specific steps or lines when pointing out errors
+- Focus on mathematical accuracy and problem-solving approach
+
+Respond with ONLY the JSON, no additional text.
+"""
+            
+            # Send to Gemini with the image
+            response = self.photo_grading_model.generate_content([prompt, pil_image])
+            
+            # Parse the JSON response
+            response_text = response.text.strip()
+            
+            # Clean up response if it has markdown code blocks
+            if response_text.startswith('```'):
+                response_text = response_text.split('```')[1]
+                if response_text.startswith('json'):
+                    response_text = response_text[4:]
+                response_text = response_text.strip()
+            
+            # Parse JSON to dictionary
+            grading_result = json.loads(response_text)
+            
+            # Ensure all required fields are present with defaults
+            if 'grade' not in grading_result:
+                grading_result['grade'] = '0/10'
+            if 'feedback' not in grading_result:
+                grading_result['feedback'] = 'Unable to assess the work properly.'
+            if 'corrections' not in grading_result:
+                grading_result['corrections'] = []
+            if 'strengths' not in grading_result:
+                grading_result['strengths'] = []
+            
+            return grading_result
+            
+        except json.JSONDecodeError as e:
+            print(f"Error parsing Gemini response as JSON: {e}")
+            print(f"Raw response: {response_text if 'response_text' in locals() else 'No response'}")
+            # Return a default grading result
+            return {
+                "grade": "0/10",
+                "feedback": "Error processing the grading. Please try again.",
+                "corrections": ["Unable to process the image properly"],
+                "strengths": ["Attempted the problem"]
+            }
+        except Exception as e:
+            print(f"Error in generate_photo_grading: {e}")
+            import traceback
+            traceback.print_exc()
+            return {
+                "grade": "0/10",
+                "feedback": f"Error grading the work: {str(e)}",
+                "corrections": ["Technical error occurred"],
+                "strengths": ["Submitted work for grading"]
+            }
     
     async def generate_chat_session(self):
         '''
@@ -230,3 +323,16 @@ RULES:
   ]
 }'''
 
+if __name__ == "__main__":
+    import asyncio
+    
+    async def main():
+        gemini_service = GeminiService()
+        # Get the path to the image relative to this script
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        image_path = os.path.join(script_dir, "testimage.png")
+        
+        result = await gemini_service.generate_photo_grading("What is the square root of 16?", "The square root of 16 is 4.", image_path)
+        print(result)
+    
+    asyncio.run(main())
