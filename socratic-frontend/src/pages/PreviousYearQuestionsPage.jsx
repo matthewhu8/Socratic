@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useContext } from 'react';
+import React, { useState, useEffect, useCallback, useContext, useRef } from 'react';
 import MarkScheme from '../components/MarkScheme';
 import MathText from '../components/MathText';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
@@ -100,6 +100,11 @@ const PreviousYearQuestionsPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   
+  // State for chat functionality
+  const [chatHistory, setChatHistory] = useState([]);
+  const [isChatLoading, setIsChatLoading] = useState(false);
+  const chatAreaRef = useRef(null);
+  
   // State for QR grading modal
   const [showQRModal, setShowQRModal] = useState(false);
   const [gradingSession, setGradingSession] = useState(null);
@@ -107,10 +112,62 @@ const PreviousYearQuestionsPage = () => {
   // State for video solution beta popup
   const [showVideoSolutionBeta, setShowVideoSolutionBeta] = useState(false);
 
-  const handleChatSubmit = (e) => {
+  const handleChatSubmit = async (e) => {
     e.preventDefault();
-    console.log('Chat message:', chatMessage);
+    
+    if (!chatMessage.trim() || !currentQuestion) return;
+    
+    const userMessage = chatMessage.trim();
     setChatMessage('');
+    
+    // Add user message to chat history
+    setChatHistory(prev => [...prev, {
+      role: 'user',
+      content: userMessage,
+      timestamp: new Date().toISOString()
+    }]);
+    
+    setIsChatLoading(true);
+    
+    try {
+      const response = await fetch(`${API_URL}/api/question-chat`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          question_text: currentQuestion.question_text,
+          question_solution: currentQuestion.solution,
+          student_query: userMessage,
+          practice_mode: currentPracticeMode,
+          subject: subject
+        })
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to get response');
+      }
+      
+      const data = await response.json();
+      
+      // Add AI response to chat history
+      setChatHistory(prev => [...prev, {
+        role: 'assistant',
+        content: data.response,
+        timestamp: data.timestamp
+      }]);
+      
+    } catch (error) {
+      console.error('Error sending chat message:', error);
+      setChatHistory(prev => [...prev, {
+        role: 'assistant',
+        content: 'Sorry, I encountered an error. Please try again.',
+        timestamp: new Date().toISOString()
+      }]);
+    } finally {
+      setIsChatLoading(false);
+    }
   };
 
   const handleSkip = () => {
@@ -118,6 +175,7 @@ const PreviousYearQuestionsPage = () => {
     if (questions.length > 0) {
       setQuestionIndex((prevIndex) => (prevIndex + 1) % questions.length);
       setShowSolution(false); // Reset solution display for new question
+      setChatHistory([]); // Clear chat history for new question
     }
   };
 
@@ -257,6 +315,7 @@ const PreviousYearQuestionsPage = () => {
     // Close mark scheme and solution when moving to next question
     setShowMarkScheme(false);
     setShowSolution(false);
+    setChatHistory([]); // Clear chat history for new question
   };
 
   const handleMarkSchemeClick = () => {
@@ -280,6 +339,16 @@ const PreviousYearQuestionsPage = () => {
     setQuestionIndex(0);
     setShowSolution(false);
   }, [questions]);
+  
+  // Auto-scroll chat to bottom when new messages arrive
+  useEffect(() => {
+    if (chatAreaRef.current) {
+      const chatMessages = chatAreaRef.current.querySelector('.chat-messages');
+      if (chatMessages) {
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+      }
+    }
+  }, [chatHistory, isChatLoading]);
 
   // Determine the practice mode and format the title
   const practiceModeFromUrl = getPracticeModeFromUrl(location.pathname);
@@ -462,11 +531,38 @@ const PreviousYearQuestionsPage = () => {
               </div>
               <h3>Ask a Doubt</h3>
             </header>
-            <div className="chat-area">
-              <div className="placeholder-icon">
-                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M20 2H4C2.9 2 2 2.9 2 4V22L6 18H20C21.1 18 22 17.1 22 16V4C22 2.9 21.1 2 20 2ZM20 16H5.2L4 17.2V4H20V16Z" fill="#CBD5E0"/></svg>
-              </div>
-              <span>Chat functionality coming soon...</span>
+            <div className="chat-area" ref={chatAreaRef}>
+              {chatHistory.length === 0 && !isChatLoading ? (
+                <div className="chat-welcome">
+                  <div className="welcome-icon">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z" fill="#4285F4"/>
+                    </svg>
+                  </div>
+                  <p className="welcome-text">Hi! I'm here to help you with this problem. Ask me anything!</p>
+                </div>
+              ) : (
+                <div className="chat-messages">
+                  {chatHistory.map((msg, idx) => (
+                    <div key={idx} className={`chat-message ${msg.role}`}>
+                      <div className="message-content">
+                        <MathText text={msg.content} />
+                      </div>
+                    </div>
+                  ))}
+                  {isChatLoading && (
+                    <div className="chat-message assistant">
+                      <div className="message-content">
+                        <div className="typing-indicator">
+                          <span></span>
+                          <span></span>
+                          <span></span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
             <form onSubmit={handleChatSubmit} className="doubt-chat-form">
               <input
@@ -476,7 +572,11 @@ const PreviousYearQuestionsPage = () => {
                 placeholder="Type your question..."
                 className="doubt-chat-input"
               />
-              <button type="submit" className="doubt-send-btn">
+              <button 
+                type="submit" 
+                className="doubt-send-btn"
+                disabled={isChatLoading || !chatMessage.trim()}
+              >
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M2.01 21L23 12L2.01 3L2 10L17 12L2 14L2.01 21Z" fill="white"/></svg>
               </button>
             </form>

@@ -972,3 +972,43 @@ async def get_grading_result(
     except Exception as e:
         print(f"Error getting result: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+# Pydantic model for question chat
+class QuestionChatRequest(BaseModel):
+    question_text: str
+    question_solution: str
+    student_query: str
+    practice_mode: Optional[str] = None
+    subject: Optional[str] = None
+
+@app.post("/api/question-chat")
+async def question_chat(
+    request: QuestionChatRequest,
+    current_user = Depends(get_current_user)
+):
+    """Handle student questions about a problem they're solving."""
+    try:
+        # Log the request for debugging
+        print(f"Question chat request from user {current_user.id}")
+        print(f"Student query: {request.student_query}")
+        
+        # Generate response using Gemini
+        response = await convo_service.gemini_service.generate_question_chat_response(
+            question_text=request.question_text,
+            question_solution=request.question_solution,
+            student_query=request.student_query,
+            practice_mode=request.practice_mode,
+            subject=request.subject
+        )
+        
+        return {
+            "response": response,
+            "timestamp": datetime.utcnow().isoformat()
+        }
+        
+    except Exception as e:
+        print(f"Error in question_chat endpoint: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to process question: {str(e)}"
+        )
