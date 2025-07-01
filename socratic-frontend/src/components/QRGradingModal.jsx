@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import QRCode from 'qrcode';
 import API_URL from '../config/api';
+import MathText from './MathText';
 import './QRGradingModal.css';
 
 const QRGradingModal = ({ 
@@ -98,14 +99,14 @@ const QRGradingModal = ({
             </div>
             <div className="feedback-section">
               <h3>Feedback</h3>
-              <p>{gradingResult.feedback}</p>
+              <MathText text={gradingResult.feedback} />
             </div>
             {gradingResult.corrections && gradingResult.corrections.length > 0 && (
               <div className="corrections-section">
                 <h3>Corrections</h3>
                 <ul>
                   {gradingResult.corrections.map((correction, index) => (
-                    <li key={index}>{correction}</li>
+                    <li key={index}><MathText text={correction} /></li>
                   ))}
                 </ul>
               </div>
@@ -115,7 +116,7 @@ const QRGradingModal = ({
                 <h3>Strengths</h3>
                 <ul>
                   {gradingResult.strengths.map((strength, index) => (
-                    <li key={index}>{strength}</li>
+                    <li key={index}><MathText text={strength} /></li>
                   ))}
                 </ul>
               </div>
