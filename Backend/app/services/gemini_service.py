@@ -20,6 +20,7 @@ class GeminiService:
         self.model = genai.GenerativeModel('gemini-2.5-flash-preview-05-20', system_instruction="You are a helpful English AI assistant to answer students' questions about this YouTube video. Please answer in English. The student may also be referencing a specific part from the video transcript around their current video timestamp. The image attached shows the video at the point where the student is currently watching the video. When necessary, you can use the image to help you answer their question.")
         self.video_quiz_model = genai.GenerativeModel('gemini-2.5-flash-preview-05-20', system_instruction="You are quiz maker that will test the student's retention of the video. The query will contain a video transcript and a list of their previous messages, create questions in JSON format that tests the user on general subject matter related concepts discussed in the transcript, and place a particular emphasis on the topics the student seemed to be confused about based on the chatlog. Make 5 total questions.")
         self.photo_grading_model = genai.GenerativeModel('gemini-2.5-flash-preview-05-20', system_instruction="You are a detailed oriented CBSE style grader for 10th grade math questions. Utilize the attached question and 'solution' to ensure the student's work is fully correct. The student's work will be provided in the query as a photo. Please provide your response in the JSON format shown in the prompt. Do no hesitate to leave fields blank if there are no comments needed. ")
+        self.question_chat_model = genai.GenerativeModel('gemini-2.5-flash-preview-05-20', system_instruction="The student is asking a question about a math problem. Return a short response to the question, addressing the student's concerns and explaining the concept in a simple, understandable way if possible. The student's question will be provided in the query. The math problem will be provided in the query. We will provide the step-by-step solution to the problem in the query but blatantly reveal the solution, it is only so you don't give out incorrect information and guide the student towards the correct path.")
         print(f"GEMINI MODEL: {self.model}")
     
     def format_chat_history(self, chat_history: List[Dict]) -> List[Dict]:
@@ -323,16 +324,52 @@ RULES:
   ]
 }'''
 
-if __name__ == "__main__":
-    import asyncio
-    
-    async def main():
-        gemini_service = GeminiService()
-        # Get the path to the image relative to this script
-        script_dir = os.path.dirname(os.path.abspath(__file__))
-        image_path = os.path.join(script_dir, "testimage.png")
-        
-        result = await gemini_service.generate_photo_grading("What is the square root of 16?", "The square root of 16 is 4.", image_path)
-        print(result)
-    
-    asyncio.run(main())
+    async def generate_question_chat_response(
+        self, 
+        question_text: str, 
+        question_solution: str, 
+        student_query: str,
+        practice_mode: Optional[str] = None,
+        subject: Optional[str] = None
+    ) -> str:
+        """Generate a response to a student's question about a math problem."""
+        try:
+            # Build the prompt with all the context
+            prompt = f"""
+A student is working on this math problem and has a question.
+
+PROBLEM:
+{question_text}
+
+STEP-BY-STEP SOLUTION (for your reference only - don't reveal this directly):
+{question_solution}
+
+STUDENT'S QUESTION:
+{student_query}
+
+Please provide a helpful, educational response that:
+1. Addresses the student's specific question
+2. Guides them towards understanding without giving away the answer
+3. Uses simple, clear language appropriate for a 10th grade student
+4. If they're stuck, provide a hint or ask a guiding question
+5. If they're asking about a concept, explain it clearly with examples
+6. Keep the response concise (1-2 paragraphs maximum)
+
+Remember: You're a tutor helping them learn, not just giving answers.
+"""
+
+            # Add context about practice mode and subject if available
+            if practice_mode:
+                prompt += f"\nContext: This is a {practice_mode} problem"
+            if subject:
+                prompt += f" in {subject}."
+            
+            print(f"Sending question chat prompt to Gemini")
+            response = self.question_chat_model.generate_content(prompt)
+            
+            return response.text.strip()
+            
+        except Exception as e:
+            print(f"Error generating question chat response: {e}")
+            return "I'm sorry, I encountered an error while processing your question. Please try again or rephrase your question."
+
