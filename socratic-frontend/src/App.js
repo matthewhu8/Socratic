@@ -21,6 +21,7 @@ import PreviousYearQuestionsPage from './pages/PreviousYearQuestionsPage';
 import TopicSelectionPage from './pages/TopicSelectionPage';
 import SubtopicSelectionPage from './pages/SubtopicSelectionPage';
 import MobileGradingPage from './pages/MobileGradingPage';
+import AITutorPage from './pages/AITutorPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import SubjectPageRouter from './components/SubjectPageRouter';
 import { AuthProvider } from './contexts/AuthContext';
@@ -56,6 +57,11 @@ function App() {
             <Route path="/student/dynamic-learning" element={
               <ProtectedRoute userType="student">
                 <DynamicLearningPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/student/ai-tutor" element={
+              <ProtectedRoute userType="student">
+                <AITutorPage />
               </ProtectedRoute>
             } />
             
