@@ -24,18 +24,12 @@ class GeminiService:
         # Create a specialized tutor model
         self.tutor_model = genai.GenerativeModel(
                 'gemini-2.5-flash-preview-05-20',
-                system_instruction="""You are an expert AI math tutor helping students learn through a shared interactive whiteboard.
+                system_instruction="""You are an expert, empathetic, and patient AI tutor helping students learn through a shared interactive whiteboard. You have to be ready to analyze handwritten work on the whiteboard and provide feedback as well as draw visualizations to help the student understand the concept.
 
                 CRITICAL RULES:
-                1. When a canvas image is provided, you MUST ALWAYS analyze it first and acknowledge what you see
-                2. Never say "I don't see anything on the whiteboard" if an image is provided
-                3. Be specific and helpful - avoid generic responses like "I understand your question"
-                
-                UNDERSTANDING STUDENT INTENT:
-                - If they something similar to "solve this", "what's the answer", "just tell me" → Provide step-by-step solution
-                - If they say something similar to "help me", "guide me", "how do I", "I'm stuck" → Guide them with hints
-                - If they ask something similar to "is this correct", "check my work" → Analyze their work and provide feedback
-                - If they ask something similar to "conceptual questions" → Explain the concept clearly
+                1. When a canvas image is provided, the student may or may not be referring to it in their query. Be ready to analyze it and use it to craft your response. 
+                2. If no canvas image is provided, there is no image to analyze. But be ready to draw on the whiteboard if the student asks for it.
+                3. The overall intent of each new response will be provided in the query.
                 
                 WHITEBOARD USAGE:
                 - Use drawing commands to illustrate solutions, concepts, and corrections
@@ -53,9 +47,7 @@ class GeminiService:
                 - {"type": "path", "points": [...], "options": {"color": "#000000", "width": 2}}
                 - {"type": "clear"} - to clear the board
 
-                You MUST respond with ONLY a valid JSON object. Be specific and helpful in your response!
-
-Example response for a student asking about solving x + y = 10, y = x + 4:
+                Example response for a student asking about solving x + y = 10, y = x + 4:
 {{
     "response": "I see you're working with a system of linear equations! Let me help you solve this step by step. We have x + y = 10 and y = x + 4. The best approach is substitution since the second equation already gives us y in terms of x.",
     "drawing_commands": [
@@ -75,7 +67,7 @@ Example response for a student asking about solving x + y = 10, y = x + 4:
         {{"type": "text", "text": "Answer: x = 3, y = 7", "position": {{"x": 50, "y": 640}}}},
         {{"type": "shape", "shape": "rectangle", "options": {{"x": 40, "y": 630, "width": 200, "height": 40, "color": "#00FF00"}}}}
     ]
-}}      
+}}
                 """
             )
         print(f"GEMINI MODEL: {self.model}")
@@ -450,15 +442,7 @@ Remember: You're a tutor helping them learn, not just giving answers.
             elif any(phrase in query_lower for phrase in ["check my", "is this correct", "did i do", "analyze my"]):
                 intent = "Analyze their work and provide specific feedback"
             elif any(phrase in query_lower for phrase in ["what is", "explain", "why", "how does", "what does"]):
-                intent = "Explain the concept clearly with examples"
-            
-            # Add context about canvas if image is provided
-            canvas_instruction = ""
-            if canvas_image:
-                canvas_instruction = """
-The student has shared their whiteboard work with you. 
-You MUST analyze the image and acknowledge what you see.
-Address their specific work in your response."""
+                intent = "Explain the concept clearly with examples"            
             
             # Create the prompt
             prompt = f"""
@@ -466,11 +450,9 @@ Address their specific work in your response."""
 
 STUDENT: {query}
 
-{intent}
+Intent:{intent}
 
-{canvas_instruction}
-
-Remember: Be specific, helpful, and always acknowledge the student's work when they share their whiteboard!
+You MUST respond with ONLY a valid JSON object as noted in the system instructions. Be specific and helpful in your response!
 """
             
             content_parts.append(prompt)

@@ -229,30 +229,41 @@ function AITutorPage() {
     return null;
   };
 
+  const isCanvasEmpty = () => {
+    if (!canvasRef.current || !context) return true;
+    
+    const canvas = canvasRef.current;
+    const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+    const pixels = imageData.data;
+    
+    // Check if all pixels are white (255, 255, 255)
+    for (let i = 0; i < pixels.length; i += 4) {
+      const r = pixels[i];
+      const g = pixels[i + 1];
+      const b = pixels[i + 2];
+      const a = pixels[i + 3];
+      
+      // If we find any non-white pixel (considering alpha), canvas has content
+      if (a > 0 && (r !== 255 || g !== 255 || b !== 255)) {
+        return false;
+      }
+    }
+    
+    return true;
+  };
+
   const handleSubmit = async (text = userInput, includeCanvas = false) => {
     if (!text.trim() || isProcessing) return;
 
-    // Auto-include canvas if student asks about their work
-    const shouldIncludeCanvas = includeCanvas || 
-      text.toLowerCase().includes('my work') ||
-      text.toLowerCase().includes('what i drew') ||
-      text.toLowerCase().includes('what i wrote') ||
-      text.toLowerCase().includes('whiteboard') ||
-      text.toLowerCase().includes('drawing') ||
-      text.toLowerCase().includes('solution') ||
-      text.toLowerCase().includes('check my') ||
-      text.toLowerCase().includes('analyze') ||
-      text.toLowerCase().includes('correct') ||
-      text.toLowerCase().includes('wrong') ||
-      text.toLowerCase().includes('this right') ||
-      text.toLowerCase().includes('help me') ||
-      text.toLowerCase().includes('stuck') ||
-      text.toLowerCase().includes('how do i');
+    // Always include canvas if there's any content on it OR if explicitly requested
+    const hasCanvasContent = !isCanvasEmpty();
+    const shouldIncludeCanvas = includeCanvas || hasCanvasContent;
 
     const canvasData = shouldIncludeCanvas ? captureCanvas() : null;
     
     if (shouldIncludeCanvas) {
       console.log('Including canvas in request');
+      console.log('Canvas has content:', hasCanvasContent);
       console.log('Canvas data exists:', canvasData !== null);
       console.log('Canvas data length:', canvasData ? canvasData.length : 0);
     }
@@ -587,13 +598,6 @@ function AITutorPage() {
           <div className="whiteboard-controls">
             <button onClick={clearCanvas} className="control-button">
               Clear Board
-            </button>
-            <button 
-              onClick={() => handleSubmit("Please analyze my work on the whiteboard and provide feedback", true)}
-              className="control-button analyze-button"
-              disabled={isProcessing}
-            >
-              🔍 Analyze My Work
             </button>
           </div>
           <div className="whiteboard-scroll-container">
