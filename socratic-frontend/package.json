@@ -3,6 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@netless/fastboard": "^1.0.7",
+    "@netless/fastboard-react": "^1.0.7",
+    "@netless/window-manager": "^1.0.5",
     "@react-oauth/google": "^0.12.1",
     "@testing-library/dom": "^10.4.0",
     "@testing-library/jest-dom": "^6.6.3",

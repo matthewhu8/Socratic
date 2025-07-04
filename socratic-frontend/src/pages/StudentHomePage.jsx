@@ -2,6 +2,7 @@ import React, { useContext, useState, useEffect, useRef } from 'react';
 import { TfiYoutube } from "react-icons/tfi";
 import { MdDashboard } from "react-icons/md";
 import { GiBrain } from "react-icons/gi";
+import { FaChalkboardTeacher } from "react-icons/fa";
 import { Link } from 'react-router-dom';
 import { AuthContext } from '../contexts/AuthContext';
 import API_URL from '../config/api';
@@ -175,6 +176,12 @@ function StudentHomePage() {
           <h2>Dynamic Learning</h2>
           <p>Adaptive AI-powered learning experiences tailored to your progress</p>
           {currentUser?.grade !== '10' && <span className="grade-badge">Grade 10 Only</span>}
+        </Link>
+
+        <Link to="/student/ai-tutor" className="nav-option">
+          <div className="nav-option-icon"><FaChalkboardTeacher /></div>
+          <h2>AI Tutor</h2>
+          <p>Interactive whiteboard sessions with an AI tutor for personalized learning</p>
         </Link>
       </div>
 

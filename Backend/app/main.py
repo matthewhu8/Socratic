@@ -12,7 +12,7 @@ import json
 
 # Import our modules
 from .database.database import get_db, engine
-from .database.models import Base, YouTubeQuizResults, StudentUser, TeacherUser, NcertExamples, NcertExercises, PYQs, GradingSession
+from .database.models import Base, YouTubeQuizResults, StudentUser, TeacherUser, NcertExamples, NcertExercises, PYQs, GradingSession, AITutorSession
 from .auth.utils import verify_password, get_password_hash, create_access_token, create_refresh_token, SECRET_KEY, ALGORITHM
 from .auth.schemas import TokenResponse, UserLogin, StudentCreate, TeacherCreate, StudentResponse, TeacherResponse, RefreshToken
 from .auth.dependencies import get_current_user, get_current_student, get_current_teacher
@@ -508,6 +508,7 @@ async def get_questions(
         questions = []
         
         if practice_mode == "ncert-examples":
+            print(grade, chapter_name)
             # Query NCERT Examples table by chapter
             db_questions = db.query(NcertExamples).filter(
                 NcertExamples.grade == grade,
@@ -531,17 +532,14 @@ async def get_questions(
                 
         elif practice_mode == "ncert-exercises":
             # Query NCERT Exercises table by chapter
+            print(grade, chapter_name)
             db_questions = db.query(NcertExercises).filter(
                 NcertExercises.grade == grade,
                 NcertExercises.chapter == chapter_name
             ).all()
             
             print(f"Found {len(db_questions)} exercises for grade={grade}, chapter={chapter_name}")
-            if db_questions:
-                first_q = db_questions[0]
-                print(f"First question has marking_criteria: {first_q.marking_criteria is not None}")
-                print(f"First question has common_mistakes: {first_q.common_mistakes is not None}")
-                print(f"First question has teacher_notes: {first_q.teacher_notes is not None}")
+    
             
             # Convert to standard format
             for i, q in enumerate(db_questions):
@@ -552,7 +550,8 @@ async def get_questions(
                     topic=q.topic or "",
                     question_number=q.source_question_number or q.exercise_number,
                     max_marks=5,  # Default for exercises
-                    marking_criteria=q.marking_criteria,
+                    solution_data=q.solution,
+                    marking_criteria=None,
                     common_mistakes=q.common_mistakes,
                     teacher_notes=q.teacher_notes
                 ))
@@ -1012,3 +1011,156 @@ async def question_chat(
             status_code=500,
             detail=f"Failed to process question: {str(e)}"
         )
+
+# AI Tutor Endpoints
+class AITutorSessionCreate(BaseModel):
+    userId: int
+    userName: str
+
+class AITutorSessionResponse(BaseModel):
+    sessionId: str
+    roomUUID: str
+    roomToken: str
+    appIdentifier: str
+
+class AITutorQueryRequest(BaseModel):
+    sessionId: str
+    query: str
+    messages: List[Dict[str, str]]
+    canvasImage: Optional[str] = None  # Base64 encoded image
+
+@app.post("/api/ai-tutor/create-session", response_model=AITutorSessionResponse)
+async def create_ai_tutor_session(
+    session_data: AITutorSessionCreate,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    """Create a new AI tutor whiteboard session."""
+    try:
+        import requests as req
+        
+        # Generate session ID
+        session_id = f"tutor_{int(time.time())}_{uuid.uuid4().hex[:8]}"
+        
+        # Get Agora credentials from environment
+        app_identifier = os.getenv("AGORA_APP_IDENTIFIER", "your-app-identifier")
+        sdk_token = os.getenv("AGORA_SDK_TOKEN", "your-sdk-token")
+        
+        # Create room via Agora API
+        headers = {
+            "token": sdk_token,
+            "Content-Type": "application/json",
+            "region": "us-sv"
+        }
+        
+        # For development, we'll mock the response
+        # In production, you would make actual API calls to Agora
+        room_uuid = f"room_{uuid.uuid4().hex}"
+        room_token = f"token_{uuid.uuid4().hex}"
+        
+        # Store session in database
+        session_info = {
+            "session_id": session_id,
+            "user_id": current_user.id,
+            "room_uuid": room_uuid,
+            "created_at": datetime.utcnow().isoformat(),
+            "messages": []
+        }
+        
+        # Store in Redis for quick access
+        convo_service.redis_client.setex(
+            f"ai_tutor:{session_id}",
+            3600,  # 1 hour TTL
+            json.dumps(session_info)
+        )
+        
+        return {
+            "sessionId": session_id,
+            "roomUUID": room_uuid,
+            "roomToken": room_token,
+            "appIdentifier": app_identifier
+        }
+        
+    except Exception as e:
+        print(f"Error creating AI tutor session: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to create session: {str(e)}")
+
+@app.post("/api/ai-tutor/process-query")
+async def process_ai_tutor_query(
+    request: AITutorQueryRequest,
+    current_user = Depends(get_current_user)
+):
+    """Process a query from the AI tutor interface."""
+    try:
+        # Get session from Redis
+        session_data = convo_service.redis_client.get(f"ai_tutor:{request.sessionId}")
+        if not session_data:
+            raise HTTPException(status_code=404, detail="Session not found")
+        
+        session_info = json.loads(session_data)
+        
+        # Verify user owns this session
+        if session_info["user_id"] != current_user.id:
+            raise HTTPException(status_code=403, detail="Unauthorized")
+        
+        # Build complete message history
+        messages = request.messages.copy() if request.messages else []
+        
+        # Generate AI response with drawing commands
+        response_data = await convo_service.gemini_service.generate_tutor_response(
+            query=request.query,
+            messages=messages,
+            include_drawing_commands=True,
+            canvas_image=request.canvasImage
+        )
+        
+        print(f"Response from Gemini service: {response_data}")
+        print(f"Drawing commands: {response_data.get('drawing_commands', [])}")
+        
+        # Update session with new messages
+        session_info["messages"] = messages + [{"role": "assistant", "content": response_data["response"]}]
+        convo_service.redis_client.setex(
+            f"ai_tutor:{request.sessionId}",
+            3600,
+            json.dumps(session_info)
+        )
+        
+        return {
+            "response": response_data["response"],
+            "drawingCommands": response_data.get("drawing_commands", [])
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error processing AI tutor query: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to process query: {str(e)}")
+
+@app.get("/api/ai-tutor/session/{session_id}")
+async def get_ai_tutor_session(
+    session_id: str,
+    current_user = Depends(get_current_user)
+):
+    """Get AI tutor session details."""
+    try:
+        session_data = convo_service.redis_client.get(f"ai_tutor:{session_id}")
+        if not session_data:
+            raise HTTPException(status_code=404, detail="Session not found")
+        
+        session_info = json.loads(session_data)
+        
+        # Verify user owns this session
+        if session_info["user_id"] != current_user.id:
+            raise HTTPException(status_code=403, detail="Unauthorized")
+        
+        return {
+            "sessionId": session_id,
+            "messages": session_info.get("messages", []),
+            "createdAt": session_info.get("created_at")
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error getting AI tutor session: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get session: {str(e)}")

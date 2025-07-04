@@ -78,9 +78,11 @@ class NcertExercises(Base):
     # Question and answer
     question_text = Column(Text, nullable=True)
     answer = Column(Text, nullable=True)
+
+    # Solution information (stored as JSON)
+    solution = Column(JSON, nullable=True)  # Object with introduction, steps array, learning_tip, related_concepts
     
     # Mark scheme information (stored as JSON)
-    marking_criteria = Column(JSON, nullable=True)  # Array of marking criteria
     common_mistakes = Column(JSON, nullable=True)  # Array of common mistakes
     teacher_notes = Column(JSON, nullable=True)  # Array of teacher notes
 
@@ -156,4 +158,24 @@ class YouTubeQuizResults(Base):
     difficulty_rating = Column(String, nullable=True)
     
     # Relationships
-    student = relationship("StudentUser", foreign_keys=[student_id]) 
+    student = relationship("StudentUser", foreign_keys=[student_id])
+
+class AITutorSession(Base):
+    __tablename__ = "ai_tutor_sessions"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    session_id = Column(String, unique=True, index=True, nullable=False)
+    user_id = Column(Integer, ForeignKey("student_users.id"), nullable=False)
+    room_uuid = Column(String, nullable=False)
+    whiteboard_data = Column(JSON, nullable=True)  # Store whiteboard state
+    chat_history = Column(JSON, nullable=True)  # Store conversation history
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    ended_at = Column(DateTime, nullable=True)
+    
+    # Relationship
+    student = relationship("StudentUser", back_populates="ai_tutor_sessions")
+
+
+# Add the relationship to StudentUser
+StudentUser.ai_tutor_sessions = relationship("AITutorSession", back_populates="student") 
