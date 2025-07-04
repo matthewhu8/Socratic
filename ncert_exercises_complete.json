@@ -1,0 +1,1528 @@
+{
+  "questions": [
+    {
+      "id": "q_math_ch1_ex1.1_q1_part1",
+      "subject": "mathematics",
+      "chapter": "Chapter 1: Real Numbers",
+      "topic": "real-numbers",
+      "questionType": "ncert-exercises",
+      "source": {
+        "exerciseNumber": "1.1",
+        "questionNumber": 1,
+        "partNumber": 1
+      },
+      "questionText": "Express each number as a product of its prime factors: (i) 140",
+      "answer": "$140 = 2^2 \\times 5 \\times 7$",
+      "solution": {
+        "introduction": "To express a number as a product of its prime factors, we use the method of prime factorization. This involves dividing the number by the smallest possible prime numbers until the quotient becomes 1. The Fundamental Theorem of Arithmetic states that every composite number can be uniquely expressed as a product of primes, irrespective of the order of the prime factors.",
+        "steps": [
+          {
+            "step_number": 1,
+            "heading": "Divide 140 by the smallest prime factor (2)",
+            "content": "Start by dividing 140 by the smallest prime number, which is 2.",
+            "calculation": "$140 \\div 2 = 70$"
+          },
+          {
+            "step_number": 2,
+            "heading": "Continue dividing the quotient by 2",
+            "content": "The quotient is 70, which is still divisible by 2.",
+            "calculation": "$70 \\div 2 = 35$"
+          },
+          {
+            "step_number": 3,
+            "heading": "Divide by the next smallest prime factor (5)",
+            "content": "The quotient is 35. It is not divisible by 2 or 3, so we move to the next prime number, 5.",
+            "calculation": "$35 \\div 5 = 7$"
+          },
+          {
+            "step_number": 4,
+            "heading": "Divide by the last prime factor (7)",
+            "content": "The quotient is 7, which is a prime number itself. Divide 7 by 7.",
+            "calculation": "$7 \\div 7 = 1$"
+          },
+          {
+            "step_number": 5,
+            "heading": "Write the prime factorization",
+            "content": "Collect all the prime divisors used in the process.",
+            "calculation": "$140 = 2 \\times 2 \\times 5 \\times 7 = 2^2 \\times 5 \\times 7$"
+          }
+        ],
+        "learning_tip": "Always start with the smallest prime number (2) and keep dividing until it's no longer divisible. Then move to the next prime (3, 5, 7, etc.). This systematic approach helps ensure you find all prime factors.",
+        "related_concepts": [
+          "Prime Numbers",
+          "Composite Numbers",
+          "Prime Factorization",
+          "Fundamental Theorem of Arithmetic",
+          "Divisibility Rules"
+        ]
+      },
+      "commonMistakes": [
+        {
+          "mistake": "Missing prime factors",
+          "description": "Students might stop dividing too early or miss a prime factor, especially if a number is divisible by the same prime multiple times."
+        },
+        {
+          "mistake": "Incorrectly identifying prime numbers",
+          "description": "Using a composite number (e.g., 4 or 6) as a divisor instead of a prime number during factorization."
+        },
+        {
+          "mistake": "Errors in division",
+          "description": "Simple arithmetic errors during the division steps can lead to an incorrect prime factorization."
+        }
+      ],
+      "teacherNotes": [
+        "Emphasize the uniqueness of prime factorization as stated by the Fundamental Theorem of Arithmetic.",
+        "Encourage students to use divisibility rules to quickly identify prime factors.",
+        "Suggest checking the answer by multiplying the prime factors to ensure it equals the original number."
+      ]
+    },
+    {
+      "id": "q_math_ch1_ex1.1_q1_part2",
+      "subject": "mathematics",
+      "chapter": "Chapter 1: Real Numbers",
+      "topic": "real-numbers",
+      "questionType": "ncert-exercises",
+      "source": {
+        "exerciseNumber": "1.1",
+        "questionNumber": 1,
+        "partNumber": 2
+      },
+      "questionText": "Express each number as a product of its prime factors: (ii) 156",
+      "answer": "$156 = 2^2 \\times 3 \\times 13$",
+      "solution": {
+        "introduction": "Prime factorization is the process of breaking down a composite number into its prime factors. This method relies on the Fundamental Theorem of Arithmetic, which guarantees that every composite number can be expressed as a unique product of prime numbers, regardless of the order.",
+        "steps": [
+          {
+            "step_number": 1,
+            "heading": "Divide 156 by the smallest prime factor (2)",
+            "content": "Begin by dividing 156 by 2, as it is an even number.",
+            "calculation": "$156 \\div 2 = 78$"
+          },
+          {
+            "step_number": 2,
+            "heading": "Continue dividing the quotient by 2",
+            "content": "The new quotient is 78, which is also divisible by 2.",
+            "calculation": "$78 \\div 2 = 39$"
+          },
+          {
+            "step_number": 3,
+            "heading": "Divide by the next smallest prime factor (3)",
+            "content": "The quotient is 39. Since it's not divisible by 2, check for divisibility by 3 (sum of digits $3+9=12$, which is divisible by 3).",
+            "calculation": "$39 \\div 3 = 13$"
+          },
+          {
+            "step_number": 4,
+            "heading": "Divide by the last prime factor (13)",
+            "content": "The quotient is 13, which is a prime number. Divide 13 by itself.",
+            "calculation": "$13 \\div 13 = 1$"
+          },
+          {
+            "step_number": 5,
+            "heading": "Write the prime factorization",
+            "content": "Combine all the prime numbers obtained as divisors.",
+            "calculation": "$156 = 2 \\times 2 \\times 3 \\times 13 = 2^2 \\times 3 \\times 13$"
+          }
+        ],
+        "learning_tip": "Remember your divisibility rules! They can significantly speed up the prime factorization process. For example, a number is divisible by 3 if the sum of its digits is divisible by 3.",
+        "related_concepts": [
+          "Prime Factorization",
+          "Prime Numbers",
+          "Composite Numbers",
+          "Fundamental Theorem of Arithmetic"
+        ]
+      },
+      "commonMistakes": [
+        {
+          "mistake": "Forgetting to continue dividing by the same prime",
+          "description": "Students might divide by 2 once and then immediately move to the next prime, even if the number is still divisible by 2."
+        },
+        {
+          "mistake": "Incorrectly applying divisibility rules",
+          "description": "Misapplying divisibility rules (e.g., thinking 39 is not divisible by 3) can lead to errors."
+        },
+        {
+          "mistake": "Treating a composite number as prime",
+          "description": "Incorrectly identifying a number like 9 as prime and using it as a factor instead of 3x3."
+        }
+      ],
+      "teacherNotes": [
+        "Reinforce the concept that prime factorization is unique for every composite number.",
+        "Encourage students to list prime numbers (2, 3, 5, 7, 11, 13...) to systematically test for divisibility.",
+        "Suggest using factor trees as a visual aid for students who struggle with the division method."
+      ]
+    },
+    {
+      "id": "q_math_ch1_ex1.1_q1_part3",
+      "subject": "mathematics",
+      "chapter": "Chapter 1: Real Numbers",
+      "topic": "real-numbers",
+      "questionType": "ncert-exercises",
+      "source": {
+        "exerciseNumber": "1.1",
+        "questionNumber": 1,
+        "partNumber": 3
+      },
+      "questionText": "Express each number as a product of its prime factors: (iii) 3825",
+      "answer": "$3825 = 3^2 \\times 5^2 \\times 17$",
+      "solution": {
+        "introduction": "Prime factorization involves breaking down a composite number into its constituent prime numbers. The Fundamental Theorem of Arithmetic ensures that this factorization is unique, regardless of the order in which the prime factors are found. We will systematically divide 3825 by prime numbers.",
+        "steps": [
+          {
+            "step_number": 1,
+            "heading": "Check divisibility by 2 and 3",
+            "content": "The number 3825 is not divisible by 2 (it's odd). To check divisibility by 3, sum its digits: $3+8+2+5 = 18$. Since 18 is divisible by 3, 3825 is divisible by 3.",
+            "calculation": "$3825 \\div 3 = 1275$"
+          },
+          {
+            "step_number": 2,
+            "heading": "Continue dividing by 3",
+            "content": "The new quotient is 1275. Sum its digits: $1+2+7+5 = 15$. Since 15 is divisible by 3, 1275 is divisible by 3.",
+            "calculation": "$1275 \\div 3 = 425$"
+          },
+          {
+            "step_number": 3,
+            "heading": "Divide by 5",
+            "content": "The quotient is 425. It ends in 5, so it is divisible by 5.",
+            "calculation": "$425 \\div 5 = 85$"
+          },
+          {
+            "step_number": 4,
+            "heading": "Continue dividing by 5",
+            "content": "The new quotient is 85. It also ends in 5, so it is divisible by 5.",
+            "calculation": "$85 \\div 5 = 17$"
+          },
+          {
+            "step_number": 5,
+            "heading": "Divide by the last prime factor (17)",
+            "content": "The quotient is 17, which is a prime number. Divide 17 by itself.",
+            "calculation": "$17 \\div 17 = 1$"
+          },
+          {
+            "step_number": 6,
+            "heading": "Write the prime factorization",
+            "content": "Compile all the prime divisors with their respective powers.",
+            "calculation": "$3825 = 3 \\times 3 \\times 5 \\times 5 \\times 17 = 3^2 \\times 5^2 \\times 17$"
+          }
+        ],
+        "learning_tip": "Always test for divisibility by smaller primes first (2, 3, 5). If a number isn't divisible by a smaller prime, it won't be divisible by its multiples. For example, if it's not divisible by 2, it won't be divisible by 4, 6, 8, etc.",
+        "related_concepts": [
+          "Prime Factorization",
+          "Prime Numbers",
+          "Divisibility Rules",
+          "Exponents"
+        ]
+      },
+      "commonMistakes": [
+        {
+          "mistake": "Overlooking repeated prime factors",
+          "description": "Students might forget to divide by the same prime number multiple times if the number is still divisible (e.g., dividing by 3 only once when it's divisible by 9)."
+        },
+        {
+          "mistake": "Errors in divisibility checks",
+          "description": "Miscalculations when summing digits or checking the last digit for divisibility can lead to incorrect steps."
+        },
+        {
+          "mistake": "Stopping before reaching prime factors only",
+          "description": "Leaving a composite number (e.g., 25 or 15) in the factorization instead of breaking it down further into primes."
+        }
+      ],
+      "teacherNotes": [
+        "Emphasize the importance of systematically checking prime factors in increasing order.",
+        "Encourage students to perform divisibility tests mentally or on scratch paper before performing the division.",
+        "Remind students that the prime factors should always be prime numbers."
+      ]
+    },
+    {
+      "id": "q_math_ch1_ex1.1_q1_part4",
+      "subject": "mathematics",
+      "chapter": "Chapter 1: Real Numbers",
+      "topic": "real-numbers",
+      "questionType": "ncert-exercises",
+      "source": {
+        "exerciseNumber": "1.1",
+        "questionNumber": 1,
+        "partNumber": 4
+      },
+      "questionText": "Express each number as a product of its prime factors: (iv) 5005",
+      "answer": "$5005 = 5 \\times 7 \\times 11 \\times 13$",
+      "solution": {
+        "introduction": "Prime factorization is the process of breaking down a composite number into its unique set of prime factors. This is based on the Fundamental Theorem of Arithmetic, which states that every composite number can be uniquely expressed as a product of prime numbers, disregarding the order of the factors. We will find the prime factors of 5005 by successive division.",
+        "steps": [
+          {
+            "step_number": 1,
+            "heading": "Divide 5005 by the smallest prime factor (5)",
+            "content": "Since 5005 ends in 5, it is divisible by 5.",
+            "calculation": "$5005 \\div 5 = 1001$"
+          },
+          {
+            "step_number": 2,
+            "heading": "Check divisibility by 7",
+            "content": "For 1001, it is not divisible by 2 or 3. Let's check for 7. $1001 = 7 \\times 143$.",
+            "calculation": "$1001 \\div 7 = 143$"
+          },
+          {
+            "step_number": 3,
+            "heading": "Check divisibility by 11",
+            "content": "For 143, it is not divisible by 2, 3, 5, or 7. Let's check for 11. An alternating sum of digits for 143 is $3 - 4 + 1 = 0$, so it is divisible by 11.",
+            "calculation": "$143 \\div 11 = 13$"
+          },
+          {
+            "step_number": 4,
+            "heading": "Divide by the last prime factor (13)",
+            "content": "The quotient is 13, which is a prime number. Divide 13 by itself.",
+            "calculation": "$13 \\div 13 = 1$"
+          },
+          {
+            "step_number": 5,
+            "heading": "Write the prime factorization",
+            "content": "List all the prime divisors to form the product.",
+            "calculation": "$5005 = 5 \\times 7 \\times 11 \\times 13$"
+          }
+        ],
+        "learning_tip": "For larger numbers, systematically trying prime numbers (2, 3, 5, 7, 11, 13, 17, ...) in ascending order is the most reliable method. Don't skip primes, as you might miss a factor!",
+        "related_concepts": [
+          "Prime Factorization",
+          "Prime Numbers",
+          "Divisibility Rules",
+          "Composite Numbers"
+        ]
+      },
+      "commonMistakes": [
+        {
+          "mistake": "Missing less obvious prime factors",
+          "description": "Students might correctly find 5 but then struggle to identify 7, 11, and 13 as factors if they are not systematically checking."
+        },
+        {
+          "mistake": "Incorrect long division",
+          "description": "Errors in performing the division, especially with larger prime divisors, can lead to incorrect quotients and subsequent factorization."
+        },
+        {
+          "mistake": "Assuming a number is prime too early",
+          "description": "Mistaking 143 for a prime number and stopping the factorization prematurely."
+        }
+      ],
+      "teacherNotes": [
+        "Encourage students to practice divisibility rules for primes beyond 2, 3, and 5, particularly 7 and 11, as these appear frequently in NCERT problems.",
+        "Suggest that students keep a list of common prime numbers handy.",
+        "Reinforce that the goal is to break down the number until all factors are prime."
+      ]
+    },
+    {
+      "id": "q_math_ch1_ex1.1_q1_part5",
+      "subject": "mathematics",
+      "chapter": "Chapter 1: Real Numbers",
+      "topic": "real-numbers",
+      "questionType": "ncert-exercises",
+      "source": {
+        "exerciseNumber": "1.1",
+        "questionNumber": 1,
+        "partNumber": 5
+      },
+      "questionText": "Express each number as a product of its prime factors: (v) 7429",
+      "answer": "$7429 = 17 \\times 19 \\times 23$",
+      "solution": {
+        "introduction": "To express a number as a product of its prime factors, we systematically divide the number by prime numbers until the quotient becomes 1. This process is guaranteed to yield a unique set of prime factors for any composite number, as per the Fundamental Theorem of Arithmetic. For larger numbers like 7429, it often involves checking higher prime numbers.",
+        "steps": [
+          {
+            "step_number": 1,
+            "heading": "Check divisibility by small prime numbers",
+            "content": "7429 is not divisible by 2 (odd). Sum of digits $7+4+2+9 = 22$, not divisible by 3. It does not end in 0 or 5, so not divisible by 5. Check for 7: $7429 = 7 \\times 1061 + 2$. So not divisible by 7. Check for 11: Alternating sum of digits $9-2+4-7 = 4$, not divisible by 11. Check for 13: $7429 = 13 \\times 571 + 6$. So not divisible by 13. Now, let's try 17.",
+            "calculation": ""
+          },
+          {
+            "step_number": 2,
+            "heading": "Divide by 17",
+            "content": "Performing the division of 7429 by 17.",
+            "calculation": "$7429 \\div 17 = 437$"
+          },
+          {
+            "step_number": 3,
+            "heading": "Check divisibility of 437 by prime numbers (starting from 17)",
+            "content": "437 is not divisible by 17 ($437 = 17 \\times 25 + 12$). Let's try the next prime, 19.",
+            "calculation": ""
+          },
+          {
+            "step_number": 4,
+            "heading": "Divide by 19",
+            "content": "Performing the division of 437 by 19.",
+            "calculation": "$437 \\div 19 = 23$"
+          },
+          {
+            "step_number": 5,
+            "heading": "Divide by the last prime factor (23)",
+            "content": "The quotient is 23, which is a prime number. Divide 23 by itself.",
+            "calculation": "$23 \\div 23 = 1$"
+          },
+          {
+            "step_number": 6,
+            "heading": "Write the prime factorization",
+            "content": "Combine all the prime divisors found.",
+            "calculation": "$7429 = 17 \\times 19 \\times 23$"
+          }
+        ],
+        "learning_tip": "When dealing with larger numbers, you might need to test divisibility by larger prime numbers. It's often helpful to list primes (2, 3, 5, 7, 11, 13, 17, 19, 23, ...) and systematically try them. If a prime $p$ is a factor of $N$, then $N/p$ must be less than or equal to $p$ if $N$ is prime or $N/p$ has its smallest prime factor less than or equal to $p$. Generally, you only need to check primes up to $\\sqrt{N}$.",
+        "related_concepts": [
+          "Prime Factorization",
+          "Prime Numbers",
+          "Composite Numbers",
+          "Divisibility Tests"
+        ]
+      },
+      "commonMistakes": [
+        {
+          "mistake": "Giving up too soon or not checking higher primes",
+          "description": "Students might become discouraged if smaller primes don't work and incorrectly assume the number is prime or miss the correct factors."
+        },
+        {
+          "mistake": "Arithmetic errors in division",
+          "description": "Complex divisions with larger numbers can lead to calculation mistakes."
+        },
+        {
+          "mistake": "Not recognizing a quotient as prime",
+          "description": "After dividing, students might not recognize the resulting quotient (e.g., 23) as a prime number, leading to unnecessary further checks."
+        }
+      ],
+      "teacherNotes": [
+        "Highlight that prime factorization might involve trying several primes, especially for numbers with larger prime factors.",
+        "Encourage students to perform long division carefully or use a calculator for intermediate steps if allowed, to minimize arithmetic errors.",
+        "Discuss the concept of checking primes only up to the square root of the number as an optimization technique."
+      ]
+    },
+    {
+      "id": "q_math_ch1_ex1.1_q2_part1",
+      "subject": "mathematics",
+      "chapter": "Chapter 1: Real Numbers",
+      "topic": "real-numbers",
+      "questionType": "ncert-exercises",
+      "source": {
+        "exerciseNumber": "1.1",
+        "questionNumber": 2,
+        "partNumber": 1
+      },
+      "questionText": "Find the LCM and HCF of the following pairs of integers and verify that $LCM\\times HCF=$ product of the two numbers. (i) 26 and 91",
+      "answer": "HCF(26, 91) = 13, LCM(26, 91) = 182. Verification: $182 \\times 13 = 2366$ and $26 \\times 91 = 2366$. Thus, $LCM \\times HCF = Product$ of the two numbers.",
+      "solution": {
+        "introduction": "To find the HCF (Highest Common Factor) and LCM (Lowest Common Multiple) of two integers using the prime factorization method, we first express each number as a product of its prime factors. The HCF is the product of the smallest power of each common prime factor, and the LCM is the product of the greatest power of each prime factor involved in the numbers. We will then verify the property: $LCM(a,b) \\times HCF(a,b) = a \\times b$.",
+        "steps": [
+          {
+            "step_number": 1,
+            "heading": "Prime factorization of 26",
+            "content": "Break down 26 into its prime factors.",
+            "calculation": "$26 = 2 \\times 13 = 2^1 \\times 13^1$"
+          },
+          {
+            "step_number": 2,
+            "heading": "Prime factorization of 91",
+            "content": "Break down 91 into its prime factors. Note that 91 is not divisible by 2, 3, or 5. Try 7.",
+            "calculation": "$91 = 7 \\times 13 = 7^1 \\times 13^1$"
+          },
+          {
+            "step_number": 3,
+            "heading": "Find the HCF of 26 and 91",
+            "content": "The HCF is the product of the smallest power of each common prime factor. The only common prime factor is 13, and its smallest power is $13^1$.",
+            "calculation": "$HCF(26, 91) = 13^1 = 13$"
+          },
+          {
+            "step_number": 4,
+            "heading": "Find the LCM of 26 and 91",
+            "content": "The LCM is the product of the greatest power of each prime factor involved in the numbers (2, 7, and 13).",
+            "calculation": "$LCM(26, 91) = 2^1 \\times 7^1 \\times 13^1 = 2 \\times 7 \\times 13 = 14 \\times 13 = 182$"
+          },
+          {
+            "step_number": 5,
+            "heading": "Verify the relationship $LCM \\times HCF = Product$ of the numbers",
+            "content": "Calculate the product of LCM and HCF, and the product of the two given numbers, and compare them.",
+            "calculation": "Product of LCM and HCF: $182 \\times 13 = 2366$ \nProduct of the two numbers: $26 \\times 91 = 2366$ \nSince $2366 = 2366$, the relationship is verified."
+          }
+        ],
+        "learning_tip": "Remember that the HCF uses 'common' factors with the 'smallest' powers, while the LCM uses 'all' prime factors with the 'greatest' powers. This distinction is key!",
+        "related_concepts": [
+          "Prime Factorization",
+          "Highest Common Factor (HCF)",
+          "Lowest Common Multiple (LCM)",
+          "Fundamental Theorem of Arithmetic"
+        ]
+      },
+      "commonMistakes": [
+        {
+          "mistake": "Confusing HCF and LCM rules",
+          "description": "Students might use the greatest power for HCF or smallest power for LCM, or forget to include all prime factors for LCM."
+        },
+        {
+          "mistake": "Errors in prime factorization",
+          "description": "Incorrectly finding the prime factors of 26 or 91 will lead to incorrect HCF and LCM."
+        },
+        {
+          "mistake": "Arithmetic errors in multiplication/division",
+          "description": "Mistakes during the multiplication steps for LCM or verification can lead to wrong answers."
+        }
+      ],
+      "teacherNotes": [
+        "Emphasize the definitions of HCF and LCM in terms of prime factorization powers.",
+        "Encourage students to clearly list the prime factors and their powers for each number before calculating HCF and LCM.",
+        "Stress the importance of verifying the relationship $LCM \\times HCF = a \\times b$ as a self-check mechanism."
+      ]
+    },
+    {
+      "id": "q_math_ch1_ex1.1_q2_part2",
+      "subject": "mathematics",
+      "chapter": "Chapter 1: Real Numbers",
+      "topic": "real-numbers",
+      "questionType": "ncert-exercises",
+      "source": {
+        "exerciseNumber": "1.1",
+        "questionNumber": 2,
+        "partNumber": 2
+      },
+      "questionText": "Find the LCM and HCF of the following pairs of integers and verify that $LCM\\times HCF=$ product of the two numbers. (ii) 510 and 92",
+      "answer": "HCF(510, 92) = 2, LCM(510, 92) = 23460. Verification: $23460 \\times 2 = 46920$ and $510 \\times 92 = 46920$. Thus, $LCM \\times HCF = Product$ of the two numbers.",
+      "solution": {
+        "introduction": "We will determine the HCF and LCM of 510 and 92 using the prime factorization method. The HCF is found by taking the product of the lowest powers of common prime factors, while the LCM is the product of the highest powers of all prime factors involved. Finally, we will verify the property that the product of the HCF and LCM of two numbers is equal to the product of the numbers themselves.",
+        "steps": [
+          {
+            "step_number": 1,
+            "heading": "Prime factorization of 510",
+            "content": "Break down 510 into its prime factors.",
+            "calculation": "$510 = 10 \\times 51 = (2 \\times 5) \\times (3 \\times 17) = 2^1 \\times 3^1 \\times 5^1 \\times 17^1$"
+          },
+          {
+            "step_number": 2,
+            "heading": "Prime factorization of 92",
+            "content": "Break down 92 into its prime factors.",
+            "calculation": "$92 = 2 \\times 46 = 2 \\times 2 \\times 23 = 2^2 \\times 23^1$"
+          },
+          {
+            "step_number": 3,
+            "heading": "Find the HCF of 510 and 92",
+            "content": "Identify the common prime factors and take the smallest power of each. The only common prime factor is 2, and its smallest power is $2^1$.",
+            "calculation": "$HCF(510, 92) = 2^1 = 2$"
+          },
+          {
+            "step_number": 4,
+            "heading": "Find the LCM of 510 and 92",
+            "content": "Identify all prime factors involved in both numbers (2, 3, 5, 17, 23) and take the greatest power of each. The greatest power of 2 is $2^2$.",
+            "calculation": "$LCM(510, 92) = 2^2 \\times 3^1 \\times 5^1 \\times 17^1 \\times 23^1 = 4 \\times 3 \\times 5 \\times 17 \\times 23 = 12 \\times 5 \\times 17 \\times 23 = 60 \\times 17 \\times 23 = 1020 \\times 23 = 23460$"
+          },
+          {
+            "step_number": 5,
+            "heading": "Verify the relationship $LCM \\times HCF = Product$ of the numbers",
+            "content": "Multiply the calculated LCM and HCF, and then multiply the original numbers, comparing the results.",
+            "calculation": "Product of LCM and HCF: $23460 \\times 2 = 46920$ \nProduct of the two numbers: $510 \\times 92 = 46920$ \nSince $46920 = 46920$, the relationship is verified."
+          }
+        ],
+        "learning_tip": "When performing prime factorization, look for easy factors first (like 2, 5, 10). This can simplify the process before moving to other primes.",
+        "related_concepts": [
+          "Prime Factorization",
+          "Highest Common Factor (HCF)",
+          "Lowest Common Multiple (LCM)",
+          "Fundamental Theorem of Arithmetic"
+        ]
+      },
+      "commonMistakes": [
+        {
+          "mistake": "Errors in prime factorization",
+          "description": "Incorrectly breaking down 510 or 92 into prime factors, especially if skipping or miscalculating divisions."
+        },
+        {
+          "mistake": "Incorrectly identifying common factors or greatest powers",
+          "description": "Mistakes in choosing the correct power for common factors (HCF) or including all factors with their highest powers (LCM)."
+        },
+        {
+          "mistake": "Calculation errors during verification",
+          "description": "Large number multiplications can be prone to errors, leading to incorrect verification."
+        }
+      ],
+      "teacherNotes": [
+        "Advise students to be meticulous with prime factorization, especially for numbers that have several prime factors.",
+        "Reinforce the rules for HCF (smallest powers of common primes) and LCM (greatest powers of all primes).",
+        "Encourage students to double-check their calculations, particularly for the verification step, as it's a good way to catch errors."
+      ]
+    },
+    {
+      "id": "q_math_ch1_ex1.1_q2_part3",
+      "subject": "mathematics",
+      "chapter": "Chapter 1: Real Numbers",
+      "topic": "real-numbers",
+      "questionType": "ncert-exercises",
+      "source": {
+        "exerciseNumber": "1.1",
+        "questionNumber": 2,
+        "partNumber": 3
+      },
+      "questionText": "Find the LCM and HCF of the following pairs of integers and verify that $LCM\\times HCF=$ product of the two numbers. (iii) 336 and 54",
+      "answer": "HCF(336, 54) = 6, LCM(336, 54) = 3024. Verification: $3024 \\times 6 = 18144$ and $336 \\times 54 = 18144$. Thus, $LCM \\times HCF = Product$ of the two numbers.",
+      "solution": {
+        "introduction": "To find the HCF and LCM of 336 and 54 using the prime factorization method, we will first express each number as a product of its prime factors. The HCF is determined by the product of the lowest powers of all common prime factors. The LCM is found by taking the product of the highest powers of all prime factors present in either number. Finally, we will confirm the relationship: $LCM(a,b) \\times HCF(a,b) = a \\times b$.",
+        "steps": [
+          {
+            "step_number": 1,
+            "heading": "Prime factorization of 336",
+            "content": "Break down 336 into its prime factors.",
+            "calculation": "$336 = 2 \\times 168 = 2 \\times 2 \\times 84 = 2 \\times 2 \\times 2 \\times 42 = 2 \\times 2 \\times 2 \\times 2 \\times 21 = 2^4 \\times 3 \\times 7 = 2^4 \\times 3^1 \\times 7^1$"
+          },
+          {
+            "step_number": 2,
+            "heading": "Prime factorization of 54",
+            "content": "Break down 54 into its prime factors.",
+            "calculation": "$54 = 2 \\times 27 = 2 \\times 3 \\times 9 = 2 \\times 3 \\times 3 \\times 3 = 2^1 \\times 3^3$"
+          },
+          {
+            "step_number": 3,
+            "heading": "Find the HCF of 336 and 54",
+            "content": "Identify the common prime factors and take the smallest power of each. Common factors are 2 and 3. Smallest power of 2 is $2^1$. Smallest power of 3 is $3^1$.",
+            "calculation": "$HCF(336, 54) = 2^1 \\times 3^1 = 2 \\times 3 = 6$"
+          },
+          {
+            "step_number": 4,
+            "heading": "Find the LCM of 336 and 54",
+            "content": "Identify all prime factors involved (2, 3, 7) and take the greatest power of each. Greatest power of 2 is $2^4$. Greatest power of 3 is $3^3$. Greatest power of 7 is $7^1$.",
+            "calculation": "$LCM(336, 54) = 2^4 \\times 3^3 \\times 7^1 = 16 \\times 27 \\times 7 = 432 \\times 7 = 3024$"
+          },
+          {
+            "step_number": 5,
+            "heading": "Verify the relationship $LCM \\times HCF = Product$ of the numbers",
+            "content": "Multiply the calculated LCM and HCF, and then multiply the original numbers, and compare.",
+            "calculation": "Product of LCM and HCF: $3024 \\times 6 = 18144$ \nProduct of the two numbers: $336 \\times 54 = 18144$ \nSince $18144 = 18144$, the relationship is verified."
+          }
+        ],
+        "learning_tip": "When writing prime factorizations, express them with powers (e.g., $2^4$) for clarity. This makes it easier to pick out the smallest and greatest powers for HCF and LCM calculations.",
+        "related_concepts": [
+          "Prime Factorization",
+          "Highest Common Factor (HCF)",
+          "Lowest Common Multiple (LCM)",
+          "Exponents"
+        ]
+      },
+      "commonMistakes": [
+        {
+          "mistake": "Errors in repeated division for prime factorization",
+          "description": "Especially for 336, repeatedly dividing by 2 can lead to arithmetic errors or missing a factor."
+        },
+        {
+          "mistake": "Selecting incorrect powers for HCF/LCM",
+          "description": "Forgetting to take the *smallest* power for HCF or the *greatest* power for LCM when a prime factor appears in both numbers with different powers."
+        },
+        {
+          "mistake": "Not including all unique prime factors for LCM",
+          "description": "Forgetting to include the prime factor 7 (from 336) in the LCM calculation because it's not present in 54."
+        }
+      ],
+      "teacherNotes": [
+        "Advise students to be systematic in their prime factorization, possibly using a factor tree or ladder method.",
+        "Reiterate the precise rules for calculating HCF and LCM using prime factorizations, emphasizing 'common' vs. 'all' factors and 'smallest' vs. 'greatest' powers.",
+        "Encourage students to practice the verification step as it helps confirm their calculations and understanding of the relationship."
+      ]
+    },
+    {
+      "id": "q_math_ch1_ex1.1_q3_part1",
+      "subject": "mathematics",
+      "chapter": "Chapter 1: Real Numbers",
+      "topic": "real-numbers",
+      "questionType": "ncert-exercises",
+      "source": {
+        "exerciseNumber": "1.1",
+        "questionNumber": 3,
+        "partNumber": 1
+      },
+      "questionText": "Find the LCM and HCF of the following integers by applying the prime factorisation method. (i) 12, 15 and 21",
+      "answer": "HCF(12, 15, 21) = 3, LCM(12, 15, 21) = 420.",
+      "solution": {
+        "introduction": "To find the HCF (Highest Common Factor) and LCM (Lowest Common Multiple) of three integers using the prime factorization method, we first express each number as a product of its prime factors. The HCF is the product of the smallest power of each prime factor common to *all* three numbers. The LCM is the product of the greatest power of *every* prime factor that appears in *any* of the numbers.",
+        "steps": [
+          {
+            "step_number": 1,
+            "heading": "Prime factorization of 12",
+            "content": "Break down 12 into its prime factors.",
+            "calculation": "$12 = 2 \\times 6 = 2 \\times 2 \\times 3 = 2^2 \\times 3^1$"
+          },
+          {
+            "step_number": 2,
+            "heading": "Prime factorization of 15",
+            "content": "Break down 15 into its prime factors.",
+            "calculation": "$15 = 3 \\times 5 = 3^1 \\times 5^1$"
+          },
+          {
+            "step_number": 3,
+            "heading": "Prime factorization of 21",
+            "content": "Break down 21 into its prime factors.",
+            "calculation": "$21 = 3 \\times 7 = 3^1 \\times 7^1$"
+          },
+          {
+            "step_number": 4,
+            "heading": "Find the HCF of 12, 15, and 21",
+            "content": "Identify the prime factors that are common to all three numbers and take the smallest power of each. The only common prime factor is 3, and its smallest power is $3^1$.",
+            "calculation": "$HCF(12, 15, 21) = 3^1 = 3$"
+          },
+          {
+            "step_number": 5,
+            "heading": "Find the LCM of 12, 15, and 21",
+            "content": "Identify all unique prime factors from the factorizations (2, 3, 5, 7) and take the greatest power of each. The greatest power of 2 is $2^2$, of 3 is $3^1$, of 5 is $5^1$, and of 7 is $7^1$.",
+            "calculation": "$LCM(12, 15, 21) = 2^2 \\times 3^1 \\times 5^1 \\times 7^1 = 4 \\times 3 \\times 5 \\times 7 = 12 \\times 35 = 420$"
+          }
+        ],
+        "learning_tip": "For HCF of multiple numbers, a prime factor must be present in *all* numbers. For LCM, a prime factor only needs to be present in *at least one* number, and you take its highest power.",
+        "related_concepts": [
+          "Prime Factorization",
+          "Highest Common Factor (HCF)",
+          "Lowest Common Multiple (LCM)",
+          "Fundamental Theorem of Arithmetic"
+        ]
+      },
+      "commonMistakes": [
+        {
+          "mistake": "Incorrectly identifying common factors for HCF",
+          "description": "Students might include factors that are common to only two numbers instead of all three for HCF."
+        },
+        {
+          "mistake": "Missing prime factors for LCM",
+          "description": "Forgetting to include a prime factor that appears in only one or two of the numbers when calculating the LCM."
+        },
+        {
+          "mistake": "Errors in calculating powers or final product",
+          "description": "Arithmetic mistakes when multiplying the prime factors raised to their respective powers."
+        }
+      ],
+      "teacherNotes": [
+        "Clarify the distinction between finding HCF/LCM for two numbers versus three or more numbers, especially regarding common factors.",
+        "Recommend organizing the prime factorizations vertically to easily identify common and unique factors and their powers.",
+        "Remind students that the property $LCM \\times HCF = a \\times b$ is generally *not* true for more than two numbers."
+      ]
+    },
+    {
+      "id": "q_math_ch1_ex1.1_q3_part2",
+      "subject": "mathematics",
+      "chapter": "Chapter 1: Real Numbers",
+      "topic": "real-numbers",
+      "questionType": "ncert-exercises",
+      "source": {
+        "exerciseNumber": "1.1",
+        "questionNumber": 3,
+        "partNumber": 2
+      },
+      "questionText": "Find the LCM and HCF of the following integers by applying the prime factorisation method. (ii) 17, 23 and 29",
+      "answer": "HCF(17, 23, 29) = 1, LCM(17, 23, 29) = 11339.",
+      "solution": {
+        "introduction": "To find the HCF and LCM of a set of integers using the prime factorization method, we express each number as a product of its prime factors. The HCF is the product of the smallest powers of common prime factors. The LCM is the product of the greatest powers of all unique prime factors. This problem involves prime numbers, which simplifies their factorizations.",
+        "steps": [
+          {
+            "step_number": 1,
+            "heading": "Prime factorization of 17",
+            "content": "17 is a prime number, so its only prime factor is itself.",
+            "calculation": "$17 = 17^1$"
+          },
+          {
+            "step_number": 2,
+            "heading": "Prime factorization of 23",
+            "content": "23 is a prime number, so its only prime factor is itself.",
+            "calculation": "$23 = 23^1$"
+          },
+          {
+            "step_number": 3,
+            "heading": "Prime factorization of 29",
+            "content": "29 is a prime number, so its only prime factor is itself.",
+            "calculation": "$29 = 29^1$"
+          },
+          {
+            "step_number": 4,
+            "heading": "Find the HCF of 17, 23, and 29",
+            "content": "Since 17, 23, and 29 are all prime numbers and distinct, they have no common prime factors other than 1. Therefore, their HCF is 1.",
+            "calculation": "$HCF(17, 23, 29) = 1$"
+          },
+          {
+            "step_number": 5,
+            "heading": "Find the LCM of 17, 23, and 29",
+            "content": "The LCM is the product of the greatest power of each unique prime factor involved. Since they are all distinct primes, the LCM is their product.",
+            "calculation": "$LCM(17, 23, 29) = 17 \\times 23 \\times 29 = 391 \\times 29 = 11339$"
+          }
+        ],
+        "learning_tip": "The HCF of any set of distinct prime numbers is always 1. The LCM of any set of distinct prime numbers is always their product.",
+        "related_concepts": [
+          "Prime Numbers",
+          "Highest Common Factor (HCF)",
+          "Lowest Common Multiple (LCM)",
+          "Co-prime Numbers"
+        ]
+      },
+      "commonMistakes": [
+        {
+          "mistake": "Incorrectly applying the definition of HCF for primes",
+          "description": "Students might mistakenly think there's no HCF if no common factors are explicitly listed, forgetting that 1 is always a common factor."
+        },
+        {
+          "mistake": "Errors in multiplication for LCM",
+          "description": "Multiplying three relatively large numbers can lead to arithmetic errors if not done carefully."
+        },
+        {
+          "mistake": "Trying to find non-existent common factors",
+          "description": "Spending time looking for common prime factors other than 1 among distinct primes."
+        }
+      ],
+      "teacherNotes": [
+        "Emphasize the special case when dealing with prime numbers: their HCF is 1, and their LCM is their product.",
+        "Discuss the concept of co-prime numbers (or relatively prime numbers) and how distinct primes are always co-prime.",
+        "Encourage careful multiplication steps to avoid arithmetic errors for the LCM."
+      ]
+    },
+    {
+      "id": "q_math_ch1_ex1.1_q3_part3",
+      "subject": "mathematics",
+      "chapter": "Chapter 1: Real Numbers",
+      "topic": "real-numbers",
+      "questionType": "ncert-exercises",
+      "source": {
+        "exerciseNumber": "1.1",
+        "questionNumber": 3,
+        "partNumber": 3
+      },
+      "questionText": "Find the LCM and HCF of the following integers by applying the prime factorisation method. (iii) 8, 9 and 25",
+      "answer": "HCF(8, 9, 25) = 1, LCM(8, 9, 25) = 1800.",
+      "solution": {
+        "introduction": "To find the HCF and LCM of 8, 9, and 25 using the prime factorization method, we will first express each number as a product of its prime factors. The HCF is the product of the smallest powers of common prime factors present in all numbers. The LCM is the product of the greatest powers of all prime factors involved in any of the numbers. It's important to note that these numbers are pairwise co-prime, meaning no two numbers share a common prime factor.",
+        "steps": [
+          {
+            "step_number": 1,
+            "heading": "Prime factorization of 8",
+            "content": "Break down 8 into its prime factors.",
+            "calculation": "$8 = 2 \\times 2 \\times 2 = 2^3$"
+          },
+          {
+            "step_number": 2,
+            "heading": "Prime factorization of 9",
+            "content": "Break down 9 into its prime factors.",
+            "calculation": "$9 = 3 \\times 3 = 3^2$"
+          },
+          {
+            "step_number": 3,
+            "heading": "Prime factorization of 25",
+            "content": "Break down 25 into its prime factors.",
+            "calculation": "$25 = 5 \\times 5 = 5^2$"
+          },
+          {
+            "step_number": 4,
+            "heading": "Find the HCF of 8, 9, and 25",
+            "content": "Observe that there are no common prime factors among 8 ($2^3$), 9 ($3^2$), and 25 ($5^2$). When numbers have no common prime factors, their HCF is 1.",
+            "calculation": "$HCF(8, 9, 25) = 1$"
+          },
+          {
+            "step_number": 5,
+            "heading": "Find the LCM of 8, 9, and 25",
+            "content": "The LCM is the product of the greatest power of each unique prime factor involved. In this case, it's the product of all prime factors, raised to their respective powers.",
+            "calculation": "$LCM(8, 9, 25) = 2^3 \\times 3^2 \\times 5^2 = 8 \\times 9 \\times 25 = 72 \\times 25 = 1800$"
+          }
+        ],
+        "learning_tip": "If a set of numbers are pairwise co-prime (meaning any pair from the set has an HCF of 1), then their overall HCF will be 1, and their LCM will be the product of the numbers themselves.",
+        "related_concepts": [
+          "Prime Factorization",
+          "Highest Common Factor (HCF)",
+          "Lowest Common Multiple (LCM)",
+          "Co-prime Numbers"
+        ]
+      },
+      "commonMistakes": [
+        {
+          "mistake": "Incorrectly identifying HCF when no obvious common prime factors exist",
+          "description": "Students might incorrectly state the HCF as 0 or 'no HCF' instead of 1 when the numbers are co-prime."
+        },
+        {
+          "mistake": "Arithmetic errors in calculating LCM for larger products",
+          "description": "Multiplying 8, 9, and 25 requires careful calculation to avoid mistakes."
+        },
+        {
+          "mistake": "Confusing concepts for pairwise co-prime numbers",
+          "description": "Failing to recognize that for pairwise co-prime numbers, LCM is simply their product."
+        }
+      ],
+      "teacherNotes": [
+        "Explain the concept of pairwise co-prime numbers and how it simplifies finding HCF and LCM.",
+        "Reinforce that 1 is a factor of every number, and thus, the HCF is always at least 1.",
+        "Encourage students to clearly write down the prime factorization for each number before calculating HCF and LCM."
+      ]
+    },
+    {
+      "id": "q_math_ch1_ex1.1_q4",
+      "subject": "mathematics",
+      "chapter": "Chapter 1: Real Numbers",
+      "topic": "real-numbers",
+      "questionType": "ncert-exercises",
+      "source": {
+        "exerciseNumber": "1.1",
+        "questionNumber": 4,
+        "partNumber": null
+      },
+      "questionText": "Given that HCF $(306,657)=9,$ find LCM (306, 657).",
+      "answer": "LCM(306, 657) = 22338.",
+      "solution": {
+        "introduction": "For any two positive integers 'a' and 'b', there is a fundamental relationship between their HCF (Highest Common Factor) and LCM (Lowest Common Multiple): $HCF(a,b) \\times LCM(a,b) = a \\times b$. We can use this property to find the LCM when the HCF and the two numbers are given.",
+        "steps": [
+          {
+            "step_number": 1,
+            "heading": "State the given information",
+            "content": "We are given two numbers, $a = 306$ and $b = 657$. We are also given their HCF.",
+            "calculation": "$a = 306$ \n$b = 657$ \n$HCF(306, 657) = 9$"
+          },
+          {
+            "step_number": 2,
+            "heading": "Recall the relationship between HCF and LCM",
+            "content": "The product of two numbers is equal to the product of their HCF and LCM.",
+            "calculation": "$HCF(a,b) \\times LCM(a,b) = a \\times b$"
+          },
+          {
+            "step_number": 3,
+            "heading": "Substitute the known values into the formula",
+            "content": "Substitute the given values for 'a', 'b', and HCF into the relationship.",
+            "calculation": "$9 \\times LCM(306, 657) = 306 \\times 657$"
+          },
+          {
+            "step_number": 4,
+            "heading": "Calculate the product of the two numbers",
+            "content": "Multiply 306 by 657.",
+            "calculation": "$306 \\times 657 = 201042$"
+          },
+          {
+            "step_number": 5,
+            "heading": "Solve for LCM",
+            "content": "Divide the product of the numbers by the HCF to find the LCM.",
+            "calculation": "$LCM(306, 657) = \\frac{201042}{9}$ \n$LCM(306, 657) = 22338$"
+          }
+        ],
+        "learning_tip": "This relationship ($HCF \\times LCM = a \\times b$) is a very useful shortcut for finding either HCF or LCM if the other and the two numbers are known. It only applies to *two* numbers!",
+        "related_concepts": [
+          "Highest Common Factor (HCF)",
+          "Lowest Common Multiple (LCM)",
+          "Relationship between HCF and LCM"
+        ]
+      },
+      "commonMistakes": [
+        {
+          "mistake": "Applying the relationship to more than two numbers",
+          "description": "Students might mistakenly try to use this formula for three or more numbers, where it does not hold true."
+        },
+        {
+          "mistake": "Arithmetic errors during multiplication or division",
+          "description": "Calculations involving larger numbers can lead to mistakes if not performed carefully."
+        },
+        {
+          "mistake": "Swapping HCF and LCM in the formula",
+          "description": "Incorrectly arranging the formula (e.g., $LCM = HCF \\times a \\times b$) will lead to wrong answers."
+        }
+      ],
+      "teacherNotes": [
+        "Emphasize that the formula $HCF(a,b) \\times LCM(a,b) = a \\times b$ is specific to *two* positive integers.",
+        "Encourage students to write down the formula clearly before substituting values.",
+        "Advise careful execution of the multiplication and division steps to avoid errors."
+      ]
+    },
+    {
+      "id": "q_math_ch1_ex1.1_q5",
+      "subject": "mathematics",
+      "chapter": "Chapter 1: Real Numbers",
+      "topic": "real-numbers",
+      "questionType": "ncert-exercises",
+      "source": {
+        "exerciseNumber": "1.1",
+        "questionNumber": 5,
+        "partNumber": null
+      },
+      "questionText": "Check whether $6^{n}$ can end with the digit 0 for any natural number n.",
+      "answer": "No, $6^n$ cannot end with the digit 0 for any natural number n.",
+      "solution": {
+        "introduction": "For a natural number to end with the digit zero, its prime factorization must contain both 2 and 5. This is because any number ending in zero is a multiple of 10, and the prime factors of 10 are 2 and 5. We will analyze the prime factorization of $6^n$ to determine if it contains the prime factor 5.",
+        "steps": [
+          {
+            "step_number": 1,
+            "heading": "Understand the condition for a number to end with digit zero",
+            "content": "A number ends with the digit 0 if and only if it is divisible by 10. This implies that its prime factorization must include both 2 and 5 as factors. In other words, the prime factor 5 must be present in its unique prime factorization.",
+            "calculation": ""
+          },
+          {
+            "step_number": 2,
+            "heading": "Find the prime factorization of $6^n$",
+            "content": "First, find the prime factors of the base number, 6. Then, raise these prime factors to the power of n.",
+            "calculation": "$6 = 2 \\times 3$ \nSo, $6^n = (2 \\times 3)^n = 2^n \\times 3^n$"
+          },
+          {
+            "step_number": 3,
+            "heading": "Apply the Fundamental Theorem of Arithmetic",
+            "content": "The Fundamental Theorem of Arithmetic states that the prime factorization of any composite number is unique. From the factorization of $6^n = 2^n \\times 3^n$, we can see that the only prime factors of $6^n$ are 2 and 3. The prime factor 5 is not present in this factorization.",
+            "calculation": ""
+          },
+          {
+            "step_number": 4,
+            "heading": "Conclusion",
+            "content": "Since the unique prime factorization of $6^n$ does not contain the prime factor 5, $6^n$ cannot be divisible by 5. Therefore, there is no natural number 'n' for which $6^n$ ends with the digit zero.",
+            "calculation": ""
+          }
+        ],
+        "learning_tip": "If a number's prime factorization does not include both 2 and 5, it will never end in a zero. For example, $2^n$ will always end in 2, 4, 8, or 6, and $5^n$ will always end in 5. You need both to get a zero!",
+        "related_concepts": [
+          "Prime Factorization",
+          "Fundamental Theorem of Arithmetic",
+          "Divisibility Rules",
+          "Natural Numbers"
+        ]
+      },
+      "commonMistakes": [
+        {
+          "mistake": "Not knowing the condition for ending in zero",
+          "description": "Students might not connect 'ending with digit 0' to the necessity of having both 2 and 5 as prime factors."
+        },
+        {
+          "mistake": "Incorrect prime factorization of the base",
+          "description": "Errors in breaking down the base number (like 6) into its prime factors."
+        },
+        {
+          "mistake": "Misunderstanding the uniqueness of prime factorization",
+          "description": "Failing to grasp that the Fundamental Theorem of Arithmetic guarantees only the primes found will be present, and no others."
+        }
+      ],
+      "teacherNotes": [
+        "Emphasize that the unique prime factorization is the core concept for this problem.",
+        "Provide examples of numbers that end in zero (e.g., 20 = $2^2 \\times 5$, 50 = $2 \\times 5^2$) to illustrate the presence of both 2 and 5.",
+        "Discuss why $4^n$ also does not end in zero (as it only has prime factor 2), linking it to the example in the textbook."
+      ]
+    },
+  {
+  "id": "q_math_ch1_ex1.1_q6",
+  "subject": "mathematics",
+  "chapter": "Chapter 1: Real Numbers",
+  "topic": "real-numbers",
+  "questionType": "ncert-exercises",
+  "source": {
+    "exerciseNumber": "1.1",
+    "questionNumber": 6,
+    "partNumber": null
+  },
+  "questionText": "Explain why $7\\times11\\times13+13$ and $7\\times6\\times5\\times4\\times3\\times2\\times1+5$ are composite numbers.",
+  "answer": "Both $7\\times11\\times13+13$ and $7\\times6\\times5\\times4\\times3\\times2\\times1+5$ are composite numbers because they can be expressed as a product of two or more prime factors (i.e. they have divisors other than 1 and themselves).",
+  "solution": {
+    "introduction": "A composite number is a positive integer that has at least one divisor other than 1 and itself. We will show that each expression can be factored, proving its composite nature.",
+    "steps": [
+      {
+        "step_number": 1,
+        "heading": "Analyse the first expression",
+        "content": "Factor out the common term 13 from $7\\times11\\times13+13$.",
+        "calculation": "$7\\times11\\times13+13 = 13\\,(7\\times11+1)$"
+      },
+      {
+        "step_number": 2,
+        "heading": "Simplify inside the bracket",
+        "content": "Compute $7\\times11 + 1$.",
+        "calculation": "$7\\times11+1 = 77+1 = 78$"
+      },
+      {
+        "step_number": 3,
+        "heading": "Prime-factor check for the first expression",
+        "content": "Since $13\\times78$ has factors 13, 2, 3,  etc., it is composite.",
+        "calculation": "$78 = 2\\times3\\times13 \\;\\Rightarrow\\; 13\\times78 = 2\\times3\\times13^2$"
+      },
+      {
+        "step_number": 4,
+        "heading": "Analyse the second expression",
+        "content": "Write $7\\times6\\times5\\times4\\times3\\times2\\times1$ as $7!$ and factor out 5.",
+        "calculation": "$7! + 5 = 5\\bigl(7\\times6\\times4\\times3\\times2\\times1 + 1\\bigr)$"
+      },
+      {
+        "step_number": 5,
+        "heading": "Compute the bracket correctly",
+        "content": "Notice the 5 has already been factored out, so the product inside is $7\\times6\\times4\\times3\\times2\\times1 = 1008$.",
+        "calculation": "$5\\bigl(1008 + 1\\bigr) = 5\\times1009$"
+      },
+      {
+        "step_number": 6,
+        "heading": "Conclude compositeness of the second expression",
+        "content": "$7\\times6\\times5\\times4\\times3\\times2\\times1+5$ equals $5\\times1009$; thus it has at least the factors 5 and 1009 and is therefore composite.",
+        "calculation": "$5\\times1009 = 5045$"
+      }
+    ],
+    "learning_tip": "Look for a common factor first; the distributive property (factoring) often reveals non-trivial divisors straight away.",
+    "related_concepts": [
+      "Composite Numbers",
+      "Prime Factorisation",
+      "Distributive Property"
+    ]
+  },
+  "commonMistakes": [
+    {
+      "mistake": "Missing the common factor",
+      "description": "Failing to see that 13 (first expression) or 5 (second expression) is common, making factorisation harder."
+    },
+    {
+      "mistake": "Arithmetic slip after factoring",
+      "description": "Multiplying by a factor that has already been extracted (e.g. accidentally keeping the 5 inside and outside the bracket)."
+    }
+  ],
+  "teacherNotes": [
+    "Point out that the value $7!$ is 5040; after removing the factor 5 only 1008 remains inside the parenthesis.",
+    "Emphasise that once a non-trivial factorisation is found, the number is automatically composite—there is no need to factor it completely."
+  ]
+}
+
+,
+    {
+      "id": "q_math_ch1_ex1.1_q7",
+      "subject": "mathematics",
+      "chapter": "Chapter 1: Real Numbers",
+      "topic": "real-numbers",
+      "questionType": "ncert-exercises",
+      "source": {
+        "exerciseNumber": "1.1",
+        "questionNumber": 7,
+        "partNumber": null
+      },
+      "questionText": "There is a circular path around a sports field. Sonia takes 18 minutes to drive one round of the field, while Ravi takes 12 minutes for the same. Suppose they both start at the same point and at the same time, and go in the same direction. After how many minutes will they meet again at the starting point?",
+      "answer": "They will meet again at the starting point after 36 minutes.",
+      "solution": {
+        "introduction": "This problem requires us to find the time after which Sonia and Ravi will meet again at the starting point. This will happen at a time that is a common multiple of the time each person takes to complete one round. Specifically, it will be the least common multiple (LCM) of their individual times.",
+        "steps": [
+          {
+            "step_number": 1,
+            "heading": "Identify the core problem",
+            "content": "Sonia and Ravi start at the same point and time, and move in the same direction. They will meet again at the starting point when both have completed a whole number of rounds and arrived simultaneously. This implies we need to find a common multiple of their individual times. Since we want the *first* time they meet, we need the Least Common Multiple (LCM).",
+            "calculation": "Sonia's time = 18 minutes \nRavi's time = 12 minutes"
+          },
+          {
+            "step_number": 2,
+            "heading": "Find the prime factorization of each number",
+            "content": "To find the LCM using the prime factorization method, first express 18 and 12 as a product of their prime factors.",
+            "calculation": "$18 = 2 \\times 9 = 2 \\times 3 \\times 3 = 2^1 \\times 3^2$ \n$12 = 2 \\times 6 = 2 \\times 2 \\times 3 = 2^2 \\times 3^1$"
+          },
+          {
+            "step_number": 3,
+            "heading": "Calculate the LCM",
+            "content": "The LCM is the product of the greatest power of each prime factor involved in the numbers (2 and 3). The greatest power of 2 is $2^2$. The greatest power of 3 is $3^2$.",
+            "calculation": "$LCM(18, 12) = 2^2 \\times 3^2 = 4 \\times 9 = 36$"
+          },
+          {
+            "step_number": 4,
+            "heading": "State the conclusion",
+            "content": "The LCM of 18 and 12 is 36. This means they will meet again at the starting point after 36 minutes.",
+            "calculation": ""
+          }
+        ],
+        "learning_tip": "Problems involving 'when will they meet again' or 'when will events occur simultaneously' almost always require finding the Least Common Multiple (LCM).",
+        "related_concepts": [
+          "Least Common Multiple (LCM)",
+          "Prime Factorization",
+          "Word Problems",
+          "Real Numbers"
+        ]
+      },
+      "commonMistakes": [
+        {
+          "mistake": "Confusing LCM with HCF",
+          "description": "Students might mistakenly try to find the HCF instead of the LCM, which would give a time (6 minutes) when they've both completed a part of a round, not when they meet at the starting point simultaneously."
+        },
+        {
+          "mistake": "Arithmetic errors in prime factorization or LCM calculation",
+          "description": "Mistakes in breaking down 18 or 12, or in multiplying the factors for LCM."
+        },
+        {
+          "mistake": "Not understanding the context of the problem",
+          "description": "Failing to interpret the problem as an LCM scenario."
+        }
+      ],
+      "teacherNotes": [
+        "Explain to students why this type of problem requires LCM, by illustrating how their individual laps will eventually align at the starting point at a common multiple of their times.",
+        "Encourage students to draw a timeline or use multiples to visually understand why LCM is the correct approach if they are struggling.",
+        "Reinforce the real-world application of LCM in synchronization problems."
+      ]
+    },
+    {
+      "id": "q_math_ch1_ex1.2_q1",
+      "subject": "mathematics",
+      "chapter": "Chapter 1: Real Numbers",
+      "topic": "real-numbers",
+      "questionType": "ncert-exercises",
+      "source": {
+        "exerciseNumber": "1.2",
+        "questionNumber": 1,
+        "partNumber": null
+      },
+      "questionText": "Prove that $\\sqrt{5}$ is irrational.",
+      "answer": "$\\sqrt{5}$ is an irrational number.",
+      "solution": {
+        "introduction": "To prove that $\\sqrt{5}$ is irrational, we will use the method of proof by contradiction. This involves assuming the opposite (that $\\sqrt{5}$ is rational) and then showing that this assumption leads to a contradiction, thereby proving our original statement to be true. The proof relies on the definition of rational numbers and a theorem related to prime numbers and divisibility (Theorem 1.2 from NCERT: If p is a prime and p divides $a^2$, then p divides a).",
+        "steps": [
+          {
+            "step_number": 1,
+            "heading": "Assume $\\sqrt{5}$ is rational",
+            "content": "Let's assume, to the contrary, that $\\sqrt{5}$ is rational. By definition, a rational number can be expressed in the form $\\frac{a}{b}$, where 'a' and 'b' are integers, $b \\neq 0$, and 'a' and 'b' are coprime (i.e., they have no common factors other than 1).",
+            "calculation": "Assume $\\sqrt{5} = \\frac{a}{b}$, where a, b are integers, $b \\neq 0$, and $HCF(a,b) = 1$."
+          },
+          {
+            "step_number": 2,
+            "heading": "Square both sides and rearrange",
+            "content": "Square both sides of the equation and rearrange to isolate $a^2$.",
+            "calculation": "$(b\\sqrt{5})^2 = a^2$ \n$5b^2 = a^2$ \nThis implies that $a^2$ is divisible by 5."
+          },
+          {
+            "step_number": 3,
+            "heading": "Apply divisibility theorem (Theorem 1.2)",
+            "content": "Since $a^2$ is divisible by 5, and 5 is a prime number, according to Theorem 1.2 (If p divides $a^2$, then p divides a), it follows that 'a' must also be divisible by 5.",
+            "calculation": "Since $a^2$ is divisible by 5, $a$ is also divisible by 5."
+          },
+          {
+            "step_number": 4,
+            "heading": "Express 'a' in terms of 5 and substitute",
+            "content": "Since 'a' is divisible by 5, we can write $a = 5c$ for some integer 'c'. Substitute this into the equation from Step 2.",
+            "calculation": "Let $a = 5c$ \n$5b^2 = (5c)^2$ \n$5b^2 = 25c^2$ \nDivide by 5: $b^2 = 5c^2$ \nThis implies that $b^2$ is divisible by 5."
+          },
+          {
+            "step_number": 5,
+            "heading": "Apply divisibility theorem again for 'b'",
+            "content": "Since $b^2$ is divisible by 5, and 5 is a prime number, it follows that 'b' must also be divisible by 5.",
+            "calculation": "Since $b^2$ is divisible by 5, $b$ is also divisible by 5."
+          },
+          {
+            "step_number": 6,
+            "heading": "Identify the contradiction",
+            "content": "From Step 3, we concluded that 'a' is divisible by 5. From Step 5, we concluded that 'b' is divisible by 5. This means that 'a' and 'b' have 5 as a common factor. However, in Step 1, we assumed that 'a' and 'b' are coprime (i.e., they have no common factors other than 1). This is a contradiction.",
+            "calculation": "Contradiction: 'a' and 'b' have a common factor 5, which contradicts our assumption that $HCF(a,b) = 1$."
+          },
+          {
+            "step_number": 7,
+            "heading": "Conclusion",
+            "content": "Since our initial assumption (that $\\sqrt{5}$ is rational) led to a contradiction, our assumption must be false. Therefore, $\\sqrt{5}$ is an irrational number.",
+            "calculation": ""
+          }
+        ],
+        "learning_tip": "Proof by contradiction is a powerful technique. When proving irrationality of square roots, the key steps are: assume rational, square and rearrange, apply the divisibility theorem twice, and then show the common factor contradiction.",
+        "related_concepts": [
+          "Irrational Numbers",
+          "Rational Numbers",
+          "Proof by Contradiction",
+          "Prime Numbers",
+          "Divisibility",
+          "Fundamental Theorem of Arithmetic"
+        ]
+      },
+      "commonMistakes": [
+        {
+          "mistake": "Not explicitly stating the assumption of coprimality",
+          "description": "Failing to mention that 'a' and 'b' are coprime is a crucial omission, as it forms the basis of the contradiction."
+        },
+        {
+          "mistake": "Incorrectly applying the divisibility theorem",
+          "description": "Confusing 'p divides $a^2$' with 'p divides a' or not recognizing its importance."
+        },
+        {
+          "mistake": "Logical leaps or missing steps",
+          "description": "Skipping intermediate steps or not clearly explaining the logical flow from assumption to contradiction."
+        }
+      ],
+      "teacherNotes": [
+        "Emphasize the structure of proof by contradiction: assume opposite, deduce a contradiction, conclude original statement is true.",
+        "Spend time on Theorem 1.2 (If p divides $a^2$, then p divides a) as it's fundamental to these proofs.",
+        "Encourage students to write down each step clearly, justifying it, especially the point where the contradiction arises."
+      ]
+    },
+    {
+      "id": "q_math_ch1_ex1.2_q2",
+      "subject": "mathematics",
+      "chapter": "Chapter 1: Real Numbers",
+      "topic": "real-numbers",
+      "questionType": "ncert-exercises",
+      "source": {
+        "exerciseNumber": "1.2",
+        "questionNumber": 2,
+        "partNumber": null
+      },
+      "questionText": "Prove that $3+2\\sqrt{5}$ is irrational.",
+      "answer": "$3+2\\sqrt{5}$ is an irrational number.",
+      "solution": {
+        "introduction": "To prove that $3+2\\sqrt{5}$ is irrational, we will again use the method of proof by contradiction. The strategy is to assume that $3+2\\sqrt{5}$ is rational, and then manipulate this assumption to show that it implies $\\sqrt{5}$ is rational. Since we know that $\\sqrt{5}$ is irrational (which can be proven independently, or is often taken as a known result after proving $\\sqrt{2}$ or $\\sqrt{3}$ irrational), this contradiction will prove that our initial assumption was false.",
+        "steps": [
+          {
+            "step_number": 1,
+            "heading": "Assume $3+2\\sqrt{5}$ is rational",
+            "content": "Let's assume, to the contrary, that $3+2\\sqrt{5}$ is a rational number. By definition, a rational number can be expressed as a fraction $\\frac{a}{b}$, where 'a' and 'b' are integers, $b \\neq 0$, and 'a' and 'b' are coprime.",
+            "calculation": "Assume $3+2\\sqrt{5} = \\frac{a}{b}$, where a, b are integers, $b \\neq 0$, and $HCF(a,b) = 1$."
+          },
+          {
+            "step_number": 2,
+            "heading": "Isolate the irrational term",
+            "content": "Rearrange the equation to isolate the term containing $\\sqrt{5}$ on one side.",
+            "calculation": "$2\\sqrt{5} = \\frac{a}{b} - 3$ \n$2\\sqrt{5} = \\frac{a - 3b}{b}$"
+          },
+          {
+            "step_number": 3,
+            "heading": "Further isolate $\\sqrt{5}$",
+            "content": "Divide by 2 to completely isolate $\\sqrt{5}$.",
+            "calculation": "$\\sqrt{5} = \\frac{a - 3b}{2b}$"
+          },
+          {
+            "step_number": 4,
+            "heading": "Analyze the nature of the right-hand side",
+            "content": "Since 'a' and 'b' are integers, $a-3b$ is an integer, and $2b$ is a non-zero integer (since $b \\neq 0$). Therefore, the expression $\\frac{a-3b}{2b}$ is in the form of an integer divided by a non-zero integer, which by definition means it is a rational number.",
+            "calculation": "If a, b are integers, then $(a-3b)$ is an integer and $2b$ is a non-zero integer. \nThus, $\\frac{a-3b}{2b}$ is a rational number."
+          },
+          {
+            "step_number": 5,
+            "heading": "Identify the contradiction",
+            "content": "From Step 3, we have $\\sqrt{5} = \\frac{a-3b}{2b}$. From Step 4, we established that the right-hand side is rational. This implies that $\\sqrt{5}$ must be rational. However, it is a known and established fact (from previous proofs or axioms) that $\\sqrt{5}$ is an irrational number. This is a contradiction.",
+            "calculation": "Contradiction: $\\sqrt{5}$ is rational, but we know $\\sqrt{5}$ is irrational."
+          },
+          {
+            "step_number": 6,
+            "heading": "Conclusion",
+            "content": "Since our initial assumption that $3+2\\sqrt{5}$ is rational led to a contradiction, our assumption must be false. Therefore, $3+2\\sqrt{5}$ is an irrational number.",
+            "calculation": ""
+          }
+        ],
+        "learning_tip": "When proving expressions involving sums, differences, products, or quotients of rational and irrational numbers, the strategy is often to isolate the known irrational part and show that if the entire expression were rational, then the known irrational part would also have to be rational, leading to a contradiction.",
+        "related_concepts": [
+          "Irrational Numbers",
+          "Rational Numbers",
+          "Proof by Contradiction",
+          "Properties of Rational and Irrational Numbers"
+        ]
+      },
+      "commonMistakes": [
+        {
+          "mistake": "Arithmetic errors when isolating the irrational term",
+          "description": "Mistakes in transposing terms or performing operations can lead to an incorrect rational expression on the right-hand side."
+        },
+        {
+          "mistake": "Not clearly explaining why the isolated term is rational",
+          "description": "Simply stating that $\\frac{a-3b}{2b}$ is rational without explaining why (i.e., it's an integer over a non-zero integer) is a common oversight."
+        },
+        {
+          "mistake": "Assuming $\\sqrt{5}$ is irrational without prior proof/reference",
+          "description": "For a complete proof, the irrationality of $\\sqrt{5}$ should either be proven beforehand or clearly stated as a fact that the proof relies upon (as done in the introduction)."
+        }
+      ],
+      "teacherNotes": [
+        "Emphasize the 'chain of implication' in these proofs: assume rational -> isolate irrational part -> show irrational part is rational -> contradiction -> original assumption false.",
+        "Remind students that the sum/difference/product/quotient of a non-zero rational and an irrational number is always irrational. This proof exemplifies that property.",
+        "Stress the importance of clearly defining 'a' and 'b' and their properties (integers, coprime, $b \\neq 0$).",
+        "Point out that the structure of this proof is very similar to proving $5-\\sqrt{3}$ or $3\\sqrt{2}$ irrational, which are examples in the textbook[cite: 496, 507]."
+      ]
+    },
+    {
+      "id": "q_math_ch1_ex1.2_q3_part1",
+      "subject": "mathematics",
+      "chapter": "Chapter 1: Real Numbers",
+      "topic": "real-numbers",
+      "questionType": "ncert-exercises",
+      "source": {
+        "exerciseNumber": "1.2",
+        "questionNumber": 3,
+        "partNumber": 1
+      },
+      "questionText": "Prove that the following are irrationals: $\\frac{1}{\\sqrt{2}}$",
+      "answer": "$\\frac{1}{\\sqrt{2}}$ is an irrational number.",
+      "solution": {
+        "introduction": "To prove that $\\frac{1}{\\sqrt{2}}$ is irrational, we will employ the method of proof by contradiction. This means we will assume the opposite, i.e., $\\frac{1}{\\sqrt{2}}$ is rational, and then show that this assumption leads to a logical inconsistency or contradiction with a known mathematical fact (in this case, that $\\sqrt{2}$ is irrational).",
+        "steps": [
+          {
+            "step_number": 1,
+            "heading": "Assume $\\frac{1}{\\sqrt{2}}$ is rational",
+            "content": "Let's assume, for the sake of contradiction, that $\\frac{1}{\\sqrt{2}}$ is a rational number. By definition, a rational number can be expressed in the form $\\frac{a}{b}$, where 'a' and 'b' are integers, $b \\neq 0$, and 'a' and 'b' are coprime (i.e., their HCF is 1).",
+            "calculation": "Assume $\\frac{1}{\\sqrt{2}} = \\frac{a}{b}$, where a, b are integers, $b \\neq 0$, and $HCF(a,b) = 1$."
+          },
+          {
+            "step_number": 2,
+            "heading": "Rearrange the equation to isolate $\\sqrt{2}$",
+            "content": "Invert both sides of the equation to get $\\sqrt{2}$ on one side.",
+            "calculation": "$\\frac{1}{\\sqrt{2}} = \\frac{a}{b}$ \n$\\sqrt{2} = \\frac{b}{a}$"
+          },
+          {
+            "step_number": 3,
+            "heading": "Analyze the nature of the right-hand side",
+            "content": "Since 'a' and 'b' are integers, and $a \\neq 0$ (because if $a=0$, then $\\frac{1}{\\sqrt{2}}=0$ which is false), the expression $\\frac{b}{a}$ is in the form of an integer divided by a non-zero integer. This means $\\frac{b}{a}$ is a rational number.",
+            "calculation": "If a, b are integers, then $b$ is an integer and $a$ is a non-zero integer. \nThus, $\\frac{b}{a}$ is a rational number."
+          },
+          {
+            "step_number": 4,
+            "heading": "Identify the contradiction",
+            "content": "From Step 2, we have $\\sqrt{2} = \\frac{b}{a}$. From Step 3, we established that $\\frac{b}{a}$ is rational. This implies that $\\sqrt{2}$ must be a rational number. [cite_start]However, it is a well-known and proven fact that $\\sqrt{2}$ is an irrational number[cite: 449]. This constitutes a contradiction.",
+            "calculation": "Contradiction: $\\sqrt{2}$ is rational, but we know $\\sqrt{2}$ is irrational."
+          },
+          {
+            "step_number": 5,
+            "heading": "Conclusion",
+            "content": "Since our initial assumption (that $\\frac{1}{\\sqrt{2}}$ is rational) led to a contradiction, our assumption must be false. Therefore, $\\frac{1}{\\sqrt{2}}$ is an irrational number.",
+            "calculation": ""
+          }
+        ],
+        "learning_tip": "When proving the irrationality of fractions involving square roots, try to isolate the 'known' irrational square root term. If you can show it equals a rational expression, you've found your contradiction.",
+        "related_concepts": [
+          "Irrational Numbers",
+          "Rational Numbers",
+          "Proof by Contradiction",
+          "Properties of Rational and Irrational Numbers"
+        ]
+      },
+      "commonMistakes": [
+        {
+          "mistake": "Incorrectly inverting the fraction",
+          "description": "Errors in algebraic manipulation when moving from $\\frac{1}{\\sqrt{2}}$ to $\\sqrt{2}$."
+        },
+        {
+          "mistake": "Not explicitly stating that 'a' cannot be zero",
+          "description": "While implied by $b \\neq 0$ and the structure, it's good practice to clarify why the denominator 'a' is non-zero."
+        },
+        {
+          "mistake": "Assuming $\\sqrt{2}$ is irrational without citing or knowing it",
+          "description": "The proof relies on the established irrationality of $\\sqrt{2}$. If that hasn't been proven or stated as a given, the proof is incomplete."
+        }
+      ],
+      "teacherNotes": [
+        "Reiterate the fundamental property: the quotient of a non-zero rational number and an irrational number is irrational. This proof demonstrates that.",
+        "Emphasize the critical role of the established fact that $\\sqrt{2}$ is irrational[cite: 449].",
+        "Encourage students to practice similar proofs (e.g., $1/\\sqrt{3}$) to solidify their understanding."
+      ]
+    },
+    {
+      "id": "q_math_ch1_ex1.2_q3_part2",
+      "subject": "mathematics",
+      "chapter": "Chapter 1: Real Numbers",
+      "topic": "real-numbers",
+      "questionType": "ncert-exercises",
+      "source": {
+        "exerciseNumber": "1.2",
+        "questionNumber": 3,
+        "partNumber": 2
+      },
+      "questionText": "Prove that the following are irrationals: (ii) $7\\sqrt{5}$",
+      "answer": "$7\\sqrt{5}$ is an irrational number.",
+      "solution": {
+        "introduction": "To demonstrate that $7\\sqrt{5}$ is an irrational number, we will employ the proof by contradiction method. We will begin by assuming the opposite, that $7\\sqrt{5}$ is rational. Our aim is to show that this assumption leads to a contradiction, specifically implying that $\\sqrt{5}$ is rational, which we know to be false (as $\\sqrt{5}$ is an irrational number).",
+        "steps": [
+          {
+            "step_number": 1,
+            "heading": "Assume $7\\sqrt{5}$ is rational",
+            "content": "Let's assume, to the contrary, that $7\\sqrt{5}$ is a rational number. By definition, a rational number can be written in the form $\\frac{a}{b}$, where 'a' and 'b' are integers, $b \\neq 0$, and 'a' and 'b' are coprime (meaning they share no common factors other than 1).",
+            "calculation": "Assume $7\\sqrt{5} = \\frac{a}{b}$, where a, b are integers, $b \\neq 0$, and $HCF(a,b) = 1$."
+          },
+          {
+            "step_number": 2,
+            "heading": "Isolate the irrational term $\\sqrt{5}$",
+            "content": "Rearrange the equation to isolate $\\sqrt{5}$ on one side.",
+            "calculation": "$\\sqrt{5} = \\frac{a}{7b}$"
+          },
+          {
+            "step_number": 3,
+            "heading": "Analyze the nature of the right-hand side",
+            "content": "Since 'a' and 'b' are integers, and 7 is an integer, $a$ is an integer and $7b$ is a non-zero integer (since $b \\neq 0$). Therefore, the expression $\\frac{a}{7b}$ represents an integer divided by a non-zero integer, which by definition means it is a rational number.",
+            "calculation": "If a, b are integers, then $a$ is an integer and $7b$ is a non-zero integer. \nThus, $\\frac{a}{7b}$ is a rational number."
+          },
+          {
+            "step_number": 4,
+            "heading": "Identify the contradiction",
+            "content": "From Step 2, we have $\\sqrt{5} = \\frac{a}{7b}$. From Step 3, we deduced that $\\frac{a}{7b}$ is rational. This implies that $\\sqrt{5}$ must be a rational number. However, it is a known and established fact that $\\sqrt{5}$ is an irrational number. This is a contradiction.",
+            "calculation": "Contradiction: $\\sqrt{5}$ is rational, but we know $\\sqrt{5}$ is irrational."
+          },
+          {
+            "step_number": 5,
+            "heading": "Conclusion",
+            "content": "Since our initial assumption (that $7\\sqrt{5}$ is rational) led to a contradiction, our assumption must be false. Therefore, $7\\sqrt{5}$ is an irrational number.",
+            "calculation": ""
+          }
+        ],
+        "learning_tip": "The product of a non-zero rational number and an irrational number is always irrational. This type of proof illustrates this property by reducing the problem to the known irrationality of a square root.",
+        "related_concepts": [
+          "Irrational Numbers",
+          "Rational Numbers",
+          "Proof by Contradiction",
+          "Properties of Rational and Irrational Numbers"
+        ]
+      },
+      "commonMistakes": [
+        {
+          "mistake": "Arithmetic errors when isolating $\\sqrt{5}$",
+          "description": "Mistakes in dividing by 7 or other algebraic manipulations can lead to an incorrect expression on the rational side."
+        },
+        {
+          "mistake": "Insufficient explanation of why the RHS is rational",
+          "description": "Not clearly articulating that the right side is a ratio of integers (integer divided by non-zero integer) makes the proof less rigorous."
+        },
+        {
+          "mistake": "Lack of clear statement that $\\sqrt{5}$ is irrational",
+          "description": "The proof hinges on the established irrationality of $\\sqrt{5}$. This must be assumed as known or proven as a prerequisite."
+        }
+      ],
+      "teacherNotes": [
+        "Reinforce the property that a rational multiplied by an irrational (non-zero) results in an irrational number. This proof is a direct application.",
+        "Stress the importance of the initial assumption of coprimality for 'a' and 'b' and how it leads to the contradiction.",
+        "Encourage students to practice similar proofs (e.g., $3\\sqrt{7}$) to build confidence in this proof technique."
+      ]
+    },
+    {
+      "id": "q_math_ch1_ex1.2_q3_part3",
+      "subject": "mathematics",
+      "chapter": "Chapter 1: Real Numbers",
+      "topic": "real-numbers",
+      "questionType": "ncert-exercises",
+      "source": {
+        "exerciseNumber": "1.2",
+        "questionNumber": 3,
+        "partNumber": 3
+      },
+      "questionText": "Prove that the following are irrationals: (iii) $6+\\sqrt{2}$",
+      "answer": "$6+\\sqrt{2}$ is an irrational number.",
+      "solution": {
+        "introduction": "To prove that $6+\\sqrt{2}$ is an irrational number, we will use the method of proof by contradiction. We will assume the opposite, that $6+\\sqrt{2}$ is rational, and then show that this assumption leads to a contradiction. The contradiction will arise from the fact that we know $\\sqrt{2}$ is an irrational number.",
+        "steps": [
+          {
+            "step_number": 1,
+            "heading": "Assume $6+\\sqrt{2}$ is rational",
+            "content": "Let's assume, to the contrary, that $6+\\sqrt{2}$ is a rational number. By definition, a rational number can be expressed in the form $\\frac{a}{b}$, where 'a' and 'b' are integers, $b \\neq 0$, and 'a' and 'b' are coprime.",
+            "calculation": "Assume $6+\\sqrt{2} = \\frac{a}{b}$, where a, b are integers, $b \\neq 0$, and $HCF(a,b) = 1$."
+          },
+          {
+            "step_number": 2,
+            "heading": "Isolate the irrational term $\\sqrt{2}$",
+            "content": "Rearrange the equation to isolate $\\sqrt{2}$ on one side.",
+            "calculation": "$\\sqrt{2} = \\frac{a}{b} - 6$ \n$\\sqrt{2} = \\frac{a - 6b}{b}$"
+          },
+          {
+            "step_number": 3,
+            "heading": "Analyze the nature of the right-hand side",
+            "content": "Since 'a' and 'b' are integers, and 6 is an integer, $a-6b$ is an integer. Also, $b$ is a non-zero integer. Therefore, the expression $\\frac{a-6b}{b}$ is in the form of an integer divided by a non-zero integer, which by definition means it is a rational number.",
+            "calculation": "If a, b are integers, then $(a-6b)$ is an integer and $b$ is a non-zero integer. \nThus, $\\frac{a-6b}{b}$ is a rational number."
+          },
+          {
+            "step_number": 4,
+            "heading": "Identify the contradiction",
+            "content": "From Step 2, we have $\\sqrt{2} = \\frac{a-6b}{b}$. From Step 3, we deduced that the right-hand side is rational. This implies that $\\sqrt{2}$ must be a rational number. [cite_start]However, it is a known and established fact that $\\sqrt{2}$ is an irrational number[cite: 449]. This is a contradiction.",
+            "calculation": "Contradiction: $\\sqrt{2}$ is rational, but we know $\\sqrt{2}$ is irrational."
+          },
+          {
+            "step_number": 5,
+            "heading": "Conclusion",
+            "content": "Since our initial assumption (that $6+\\sqrt{2}$ is rational) led to a contradiction, our assumption must be false. Therefore, $6+\\sqrt{2}$ is an irrational number.",
+            "calculation": ""
+          }
+        ],
+        "learning_tip": "The sum or difference of a rational number and an irrational number is always irrational. This proof demonstrates that principle directly by isolating the irrational component.",
+        "related_concepts": [
+          "Irrational Numbers",
+          "Rational Numbers",
+          "Proof by Contradiction",
+          "Properties of Rational and Irrational Numbers"
+        ]
+      },
+      "commonMistakes": [
+        {
+          "mistake": "Arithmetic errors when moving terms",
+          "description": "Mistakes in transposing 6 to the other side (e.g., $a/b + 6$) can lead to an incorrect rational expression."
+        },
+        {
+          "mistake": "Not justifying why the RHS is rational",
+          "description": "Failing to explain that a difference of integers divided by a non-zero integer is rational is a common gap in the proof."
+        },
+        {
+          "mistake": "Assuming $\\sqrt{2}$ is irrational without proper context",
+          "description": "The proof relies on the established irrationality of $\\sqrt{2}$[cite: 449]. This should be a known fact or proven beforehand for completeness."
+        }
+      ],
+      "teacherNotes": [
+        "Emphasize the 'structure' of these proofs: reduce the problem to the known irrationality of a basic square root.",
+        "Remind students that the set of rational numbers is closed under addition, subtraction, multiplication, and division (by non-zero numbers). This means if $X$ is rational and $Y$ is rational, $X+Y$, $X-Y$, $X*Y$, $X/Y$ are also rational. This property is implicitly used when we state that $(a-6b)/b$ is rational.",
+        "Encourage precise language and clear step-by-step reasoning in all contradiction proofs."
+      ]
+    }
+  ]
+}
+

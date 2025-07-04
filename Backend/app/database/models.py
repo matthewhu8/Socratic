@@ -78,9 +78,11 @@ class NcertExercises(Base):
     # Question and answer
     question_text = Column(Text, nullable=True)
     answer = Column(Text, nullable=True)
+
+    # Solution information (stored as JSON)
+    solution = Column(JSON, nullable=True)  # Object with introduction, steps array, learning_tip, related_concepts
     
     # Mark scheme information (stored as JSON)
-    marking_criteria = Column(JSON, nullable=True)  # Array of marking criteria
     common_mistakes = Column(JSON, nullable=True)  # Array of common mistakes
     teacher_notes = Column(JSON, nullable=True)  # Array of teacher notes
 
@@ -173,6 +175,7 @@ class AITutorSession(Base):
     
     # Relationship
     student = relationship("StudentUser", back_populates="ai_tutor_sessions")
+
 
 # Add the relationship to StudentUser
 StudentUser.ai_tutor_sessions = relationship("AITutorSession", back_populates="student") 

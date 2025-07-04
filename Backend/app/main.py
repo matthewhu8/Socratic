@@ -508,6 +508,7 @@ async def get_questions(
         questions = []
         
         if practice_mode == "ncert-examples":
+            print(grade, chapter_name)
             # Query NCERT Examples table by chapter
             db_questions = db.query(NcertExamples).filter(
                 NcertExamples.grade == grade,
@@ -531,17 +532,14 @@ async def get_questions(
                 
         elif practice_mode == "ncert-exercises":
             # Query NCERT Exercises table by chapter
+            print(grade, chapter_name)
             db_questions = db.query(NcertExercises).filter(
                 NcertExercises.grade == grade,
                 NcertExercises.chapter == chapter_name
             ).all()
             
             print(f"Found {len(db_questions)} exercises for grade={grade}, chapter={chapter_name}")
-            if db_questions:
-                first_q = db_questions[0]
-                print(f"First question has marking_criteria: {first_q.marking_criteria is not None}")
-                print(f"First question has common_mistakes: {first_q.common_mistakes is not None}")
-                print(f"First question has teacher_notes: {first_q.teacher_notes is not None}")
+    
             
             # Convert to standard format
             for i, q in enumerate(db_questions):
@@ -552,7 +550,8 @@ async def get_questions(
                     topic=q.topic or "",
                     question_number=q.source_question_number or q.exercise_number,
                     max_marks=5,  # Default for exercises
-                    marking_criteria=q.marking_criteria,
+                    solution_data=q.solution,
+                    marking_criteria=None,
                     common_mistakes=q.common_mistakes,
                     teacher_notes=q.teacher_notes
                 ))
