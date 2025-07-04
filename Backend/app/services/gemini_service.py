@@ -21,6 +21,63 @@ class GeminiService:
         self.video_quiz_model = genai.GenerativeModel('gemini-2.5-flash-preview-05-20', system_instruction="You are quiz maker that will test the student's retention of the video. The query will contain a video transcript and a list of their previous messages, create questions in JSON format that tests the user on general subject matter related concepts discussed in the transcript, and place a particular emphasis on the topics the student seemed to be confused about based on the chatlog. Make 5 total questions.")
         self.photo_grading_model = genai.GenerativeModel('gemini-2.5-flash-preview-05-20', system_instruction="You are a detailed oriented CBSE style grader for 10th grade math questions. Utilize the attached question and 'solution' to ensure the student's work is fully correct. The student's work will be provided in the query as a photo. Please provide your response in the JSON format shown in the prompt. Do no hesitate to leave fields blank if there are no comments needed. ")
         self.question_chat_model = genai.GenerativeModel('gemini-2.5-flash-preview-05-20', system_instruction="The student is asking a question about a math problem. Return a short response to the question, addressing the student's concerns and explaining the concept in a simple, understandable way if possible. The student's question will be provided in the query. The math problem will be provided in the query. We will provide the step-by-step solution to the problem in the query but blatantly reveal the solution, it is only so you don't give out incorrect information and guide the student towards the correct path.")
+        # Create a specialized tutor model
+        self.tutor_model = genai.GenerativeModel(
+                'gemini-2.5-flash-preview-05-20',
+                system_instruction="""You are an expert AI math tutor helping students learn through a shared interactive whiteboard.
+
+                CRITICAL RULES:
+                1. When a canvas image is provided, you MUST ALWAYS analyze it first and acknowledge what you see
+                2. Never say "I don't see anything on the whiteboard" if an image is provided
+                3. Be specific and helpful - avoid generic responses like "I understand your question"
+                
+                UNDERSTANDING STUDENT INTENT:
+                - If they something similar to "solve this", "what's the answer", "just tell me" → Provide step-by-step solution
+                - If they say something similar to "help me", "guide me", "how do I", "I'm stuck" → Guide them with hints
+                - If they ask something similar to "is this correct", "check my work" → Analyze their work and provide feedback
+                - If they ask something similar to "conceptual questions" → Explain the concept clearly
+                
+                WHITEBOARD USAGE:
+                - Use drawing commands to illustrate solutions, concepts, and corrections
+                - When analyzing student work, draw corrections in a different color
+                - Add visual aids like graphs, diagrams, and step-by-step solutions
+                
+                RESPONSE FORMAT:
+                Always respond with a JSON object containing:
+                - "response": Your conversational explanation (be specific and helpful!)
+                - "drawing_commands": Array of drawing commands for the whiteboard
+                
+                Drawing command types:
+                - {"type": "text", "text": "content", "position": {"x": 100, "y": 100}}
+                - {"type": "shape", "shape": "rectangle/circle/line", "options": {...}}
+                - {"type": "path", "points": [...], "options": {"color": "#000000", "width": 2}}
+                - {"type": "clear"} - to clear the board
+
+                You MUST respond with ONLY a valid JSON object. Be specific and helpful in your response!
+
+Example response for a student asking about solving x + y = 10, y = x + 4:
+{{
+    "response": "I see you're working with a system of linear equations! Let me help you solve this step by step. We have x + y = 10 and y = x + 4. The best approach is substitution since the second equation already gives us y in terms of x.",
+    "drawing_commands": [
+        {{"type": "clear"}},
+        {{"type": "text", "text": "System of Equations:", "position": {{"x": 50, "y": 50}}}},
+        {{"type": "text", "text": "Equation 1: x + y = 10", "position": {{"x": 50, "y": 90}}}},
+        {{"type": "text", "text": "Equation 2: y = x + 4", "position": {{"x": 50, "y": 130}}}},
+        {{"type": "text", "text": "Step 1: Substitute equation 2 into equation 1", "position": {{"x": 50, "y": 200}}}},
+        {{"type": "text", "text": "x + (x + 4) = 10", "position": {{"x": 70, "y": 240}}}},
+        {{"type": "text", "text": "Step 2: Simplify", "position": {{"x": 50, "y": 300}}}},
+        {{"type": "text", "text": "2x + 4 = 10", "position": {{"x": 70, "y": 340}}}},
+        {{"type": "text", "text": "Step 3: Solve for x", "position": {{"x": 50, "y": 400}}}},
+        {{"type": "text", "text": "2x = 6", "position": {{"x": 70, "y": 440}}}},
+        {{"type": "text", "text": "x = 3", "position": {{"x": 70, "y": 480}}}},
+        {{"type": "text", "text": "Step 4: Find y using equation 2", "position": {{"x": 50, "y": 540}}}},
+        {{"type": "text", "text": "y = 3 + 4 = 7", "position": {{"x": 70, "y": 580}}}},
+        {{"type": "text", "text": "Answer: x = 3, y = 7", "position": {{"x": 50, "y": 640}}}},
+        {{"type": "shape", "shape": "rectangle", "options": {{"x": 40, "y": 630, "width": 200, "height": 40, "color": "#00FF00"}}}}
+    ]
+}}      
+                """
+            )
         print(f"GEMINI MODEL: {self.model}")
     
     def format_chat_history(self, chat_history: List[Dict]) -> List[Dict]:
@@ -199,12 +256,6 @@ Respond with ONLY the JSON, no additional text.
             
             # Use chat history if available
             print(f"🔄 Preparing to send request to Gemini...")
-            print(f"📊 Final content_parts summary:")
-            for i, part in enumerate(content_parts):
-                if isinstance(part, Image.Image):
-                    print(f"   Part {i}: PIL Image - {part.size} {part.mode}")
-                else:
-                    print(f"   Part {i}: {type(part)} - {str(part)[:100]}...")
             
             if chat_history:
                 formatted_history = self.format_chat_history(chat_history[-10:])
@@ -215,7 +266,7 @@ Respond with ONLY the JSON, no additional text.
                 print(f"💬 No chat history, generating fresh response")
                 response = self.model.generate_content(content_parts)
             
-            
+            print(f"RESPONSE: {response.text}")
             return response.text
             
         except Exception as e:
@@ -382,41 +433,6 @@ Remember: You're a tutor helping them learn, not just giving answers.
     ) -> Dict:
         """Generate an AI tutor response with optional drawing commands for the whiteboard."""
         try:
-            # Create a specialized tutor model
-            tutor_model = genai.GenerativeModel(
-                'gemini-2.5-flash-preview-05-20',
-                system_instruction="""You are an expert AI math tutor helping students learn through a shared interactive whiteboard.
-
-                CRITICAL RULES:
-                1. When a canvas image is provided, you MUST ALWAYS analyze it first and acknowledge what you see
-                2. Never say "I don't see anything on the whiteboard" if an image is provided
-                3. Be specific and helpful - avoid generic responses like "I understand your question"
-                
-                UNDERSTANDING STUDENT INTENT:
-                - If they say "solve this", "what's the answer", "just tell me" → Provide step-by-step solution
-                - If they say "help me", "guide me", "how do I", "I'm stuck" → Guide them with hints
-                - If they ask "is this correct", "check my work" → Analyze their work and provide feedback
-                - If they ask conceptual questions → Explain the concept clearly
-                
-                WHITEBOARD USAGE:
-                - Use drawing commands to illustrate solutions, concepts, and corrections
-                - When analyzing student work, draw corrections in a different color
-                - Add visual aids like graphs, diagrams, and step-by-step solutions
-                
-                RESPONSE FORMAT:
-                Always respond with a JSON object containing:
-                - "response": Your conversational explanation (be specific and helpful!)
-                - "drawing_commands": Array of drawing commands for the whiteboard
-                
-                Drawing command types:
-                - {"type": "text", "text": "content", "position": {"x": 100, "y": 100}}
-                - {"type": "shape", "shape": "rectangle/circle/line", "options": {...}}
-                - {"type": "path", "points": [...], "options": {"color": "#000000", "width": 2}}
-                - {"type": "clear"} - to clear the board
-                
-                Be encouraging, specific, and always address exactly what the student asked for."""
-            )
-            
             # Build conversation history
             conversation = "Previous conversation:\n"
             for msg in messages[-5:]:  # Last 5 messages for context
@@ -427,22 +443,21 @@ Remember: You're a tutor helping them learn, not just giving answers.
             
             # Analyze query intent
             query_lower = query.lower()
-            intent = "guide"  # default
+            intent = "Give hints and guide them without revealing the answer"  # default
             
             if any(phrase in query_lower for phrase in ["solve", "what's the answer", "just tell me", "show me the solution"]):
-                intent = "solve"
+                intent = "Provide complete step-by-step solution"
             elif any(phrase in query_lower for phrase in ["check my", "is this correct", "did i do", "analyze my"]):
-                intent = "check"
+                intent = "Analyze their work and provide specific feedback"
             elif any(phrase in query_lower for phrase in ["what is", "explain", "why", "how does", "what does"]):
-                intent = "explain"
+                intent = "Explain the concept clearly with examples"
             
             # Add context about canvas if image is provided
             canvas_instruction = ""
             if canvas_image:
                 canvas_instruction = """
-IMPORTANT: The student has shared their whiteboard work with you. 
+The student has shared their whiteboard work with you. 
 You MUST analyze the image and acknowledge what you see.
-Look for: equations, calculations, diagrams, or any mathematical work.
 Address their specific work in your response."""
             
             # Create the prompt
@@ -451,37 +466,9 @@ Address their specific work in your response."""
 
 STUDENT: {query}
 
+{intent}
+
 {canvas_instruction}
-
-DETECTED INTENT: {intent}
-- If intent is "solve": Provide complete step-by-step solution
-- If intent is "guide": Give hints and guide them without revealing the answer
-- If intent is "check": Analyze their work and provide specific feedback
-- If intent is "explain": Explain the concept clearly with examples
-
-You MUST respond with ONLY a valid JSON object. Be specific and helpful in your response!
-
-Example response for a student asking about solving x + y = 10, y = x + 4:
-{{
-    "response": "I see you're working with a system of linear equations! Let me help you solve this step by step. We have x + y = 10 and y = x + 4. The best approach is substitution since the second equation already gives us y in terms of x.",
-    "drawing_commands": [
-        {{"type": "clear"}},
-        {{"type": "text", "text": "System of Equations:", "position": {{"x": 50, "y": 50}}}},
-        {{"type": "text", "text": "Equation 1: x + y = 10", "position": {{"x": 50, "y": 90}}}},
-        {{"type": "text", "text": "Equation 2: y = x + 4", "position": {{"x": 50, "y": 130}}}},
-        {{"type": "text", "text": "Step 1: Substitute equation 2 into equation 1", "position": {{"x": 50, "y": 200}}}},
-        {{"type": "text", "text": "x + (x + 4) = 10", "position": {{"x": 70, "y": 240}}}},
-        {{"type": "text", "text": "Step 2: Simplify", "position": {{"x": 50, "y": 300}}}},
-        {{"type": "text", "text": "2x + 4 = 10", "position": {{"x": 70, "y": 340}}}},
-        {{"type": "text", "text": "Step 3: Solve for x", "position": {{"x": 50, "y": 400}}}},
-        {{"type": "text", "text": "2x = 6", "position": {{"x": 70, "y": 440}}}},
-        {{"type": "text", "text": "x = 3", "position": {{"x": 70, "y": 480}}}},
-        {{"type": "text", "text": "Step 4: Find y using equation 2", "position": {{"x": 50, "y": 540}}}},
-        {{"type": "text", "text": "y = 3 + 4 = 7", "position": {{"x": 70, "y": 580}}}},
-        {{"type": "text", "text": "Answer: x = 3, y = 7", "position": {{"x": 50, "y": 640}}}},
-        {{"type": "shape", "shape": "rectangle", "options": {{"x": 40, "y": 630, "width": 200, "height": 40, "color": "#00FF00"}}}}
-    ]
-}}
 
 Remember: Be specific, helpful, and always acknowledge the student's work when they share their whiteboard!
 """
@@ -515,7 +502,7 @@ Remember: Be specific, helpful, and always acknowledge the student's work when t
                 print("No canvas image provided in request")
             
             # Generate response
-            response = tutor_model.generate_content(content_parts)
+            response = self.tutor_model.generate_content(content_parts)
             response_text = response.text.strip()
             
             # Parse JSON response
