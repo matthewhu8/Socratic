@@ -15,6 +15,9 @@ class StudentUser(Base):
     grade = Column(String)
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.now)
+    learning_goals = Column(JSON, nullable=True)
+    knowledge_profile = Column(JSON, nullable=True)
+    learning_style = Column(String, nullable=True)
 
 class TeacherUser(Base):
     __tablename__ = "teacher_users"
@@ -49,6 +52,7 @@ class NcertExamples(Base):
     # Question and answer
     question_text = Column(Text, nullable=True)
     answer = Column(Text, nullable=True)
+    difficulty = Column(String, nullable=True) # e.g., 'Easy', 'Medium', 'Hard'
     
     # Solution information (stored as JSON)
     solution = Column(JSON, nullable=True)  # Object with introduction, steps array, learning_tip, related_concepts
@@ -56,6 +60,10 @@ class NcertExamples(Base):
     # Additional information (stored as JSON)
     common_mistakes = Column(JSON, nullable=True)  # Array of common mistakes
     teacher_notes = Column(JSON, nullable=True)  # Array of teacher notes
+
+    # More data to be used for AI personalization
+    prerequisites = Column(JSON, nullable=True)
+    skills_tested = Column(JSON, nullable=True)
 
 class NcertExercises(Base):
     __tablename__ = "ncert_exercises"
@@ -78,6 +86,7 @@ class NcertExercises(Base):
     # Question and answer
     question_text = Column(Text, nullable=True)
     answer = Column(Text, nullable=True)
+    difficulty = Column(String, nullable=True) # e.g., 'Easy', 'Medium', 'Hard'
 
     # Solution information (stored as JSON)
     solution = Column(JSON, nullable=True)  # Object with introduction, steps array, learning_tip, related_concepts
@@ -85,6 +94,10 @@ class NcertExercises(Base):
     # Mark scheme information (stored as JSON)
     common_mistakes = Column(JSON, nullable=True)  # Array of common mistakes
     teacher_notes = Column(JSON, nullable=True)  # Array of teacher notes
+
+    # More data to be used for AI personalization
+    prerequisites = Column(JSON, nullable=True)
+    skills_tested = Column(JSON, nullable=True)
 
 class PYQs(Base):
     __tablename__ = "pyqs"
@@ -108,12 +121,17 @@ class PYQs(Base):
     # Question and answer
     question_text = Column(Text, nullable=True)
     answer = Column(Text, nullable=True)
+    difficulty = Column(String, nullable=True) # e.g., 'Easy', 'Medium', 'Hard'
     
     # Mark scheme information (stored as JSON)
     total_marks = Column(Integer, nullable=True)
     marking_criteria = Column(JSON, nullable=True)  # Array of marking criteria with marks
     common_mistakes = Column(JSON, nullable=True)  # Array of common mistakes with deductions
     teacher_notes = Column(JSON, nullable=True)  # Array of teacher notes
+
+    # More data to be used for AI personalization
+    prerequisites = Column(JSON, nullable=True)
+    skills_tested = Column(JSON, nullable=True)
 
 class GradingSession(Base):
     __tablename__ = "grading_sessions"
@@ -129,12 +147,14 @@ class GradingSession(Base):
     grade = Column(String, nullable=False)
     topic = Column(String, nullable=True)
     status = Column(String, default="waiting_for_submission")
+    time_spent = Column(Integer, nullable=True)
     image_path = Column(String, nullable=True)
     image_uploaded_at = Column(DateTime, nullable=True)
     mobile_connected_at = Column(DateTime, nullable=True)
     grading_result = Column(JSON, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     expires_at = Column(DateTime, nullable=False)
+    confidence_level = Column(Integer, nullable=True)
     
     # Relationship
     student = relationship("StudentUser", back_populates="grading_sessions")
@@ -172,6 +192,9 @@ class AITutorSession(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     ended_at = Column(DateTime, nullable=True)
+    session_summary = Column(Text, nullable=True)
+    identified_misconceptions = Column(JSON, nullable=True)
+    learning_goals_achieved = Column(JSON, nullable=True)
     
     # Relationship
     student = relationship("StudentUser", back_populates="ai_tutor_sessions")
