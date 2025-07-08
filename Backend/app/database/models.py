@@ -18,6 +18,8 @@ class StudentUser(Base):
     learning_goals = Column(JSON, nullable=True)
     knowledge_profile = Column(JSON, nullable=True)
     learning_style = Column(String, nullable=True)
+    preferred_session_length = Column(Integer, nullable=True)  # in minutes
+    last_active = Column(DateTime, nullable=True)
 
 class TeacherUser(Base):
     __tablename__ = "teacher_users"
@@ -52,7 +54,7 @@ class NcertExamples(Base):
     # Question and answer
     question_text = Column(Text, nullable=True)
     answer = Column(Text, nullable=True)
-    difficulty = Column(String, nullable=True) # e.g., 'Easy', 'Medium', 'Hard'
+    difficulty = Column(Float, nullable=True) # e.g., 0.5, 1.0, 1.5
     
     # Solution information (stored as JSON)
     solution = Column(JSON, nullable=True)  # Object with introduction, steps array, learning_tip, related_concepts
@@ -86,7 +88,7 @@ class NcertExercises(Base):
     # Question and answer
     question_text = Column(Text, nullable=True)
     answer = Column(Text, nullable=True)
-    difficulty = Column(String, nullable=True) # e.g., 'Easy', 'Medium', 'Hard'
+    difficulty = Column(Float, nullable=True) # e.g., 0.5, 1.0, 1.5
 
     # Solution information (stored as JSON)
     solution = Column(JSON, nullable=True)  # Object with introduction, steps array, learning_tip, related_concepts
@@ -121,7 +123,7 @@ class PYQs(Base):
     # Question and answer
     question_text = Column(Text, nullable=True)
     answer = Column(Text, nullable=True)
-    difficulty = Column(String, nullable=True) # e.g., 'Easy', 'Medium', 'Hard'
+    difficulty = Column(Float, nullable=True) # e.g., 0.5, 1.0, 1.5
     
     # Mark scheme information (stored as JSON)
     total_marks = Column(Integer, nullable=True)
@@ -147,7 +149,10 @@ class GradingSession(Base):
     grade = Column(String, nullable=False)
     topic = Column(String, nullable=True)
     status = Column(String, default="waiting_for_submission")
+    attempts = Column(Integer, default=0, nullable=True)
     time_spent = Column(Integer, nullable=True)
+    hint_used = Column(Boolean, default=False, nullable=True)
+    solution_viewed = Column(Boolean, default=False, nullable=True)
     image_path = Column(String, nullable=True)
     image_uploaded_at = Column(DateTime, nullable=True)
     mobile_connected_at = Column(DateTime, nullable=True)
@@ -176,6 +181,8 @@ class YouTubeQuizResults(Base):
     student_answers = Column(JSON)
     score = Column(Float)
     difficulty_rating = Column(String, nullable=True)
+    skills_tested = Column(JSON, nullable=True)
+    confidence_level = Column(Integer, nullable=True)
     
     # Relationships
     student = relationship("StudentUser", foreign_keys=[student_id])
