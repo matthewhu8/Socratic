@@ -21,20 +21,15 @@ class GeminiService:
         self.video_quiz_model = genai.GenerativeModel('gemini-2.5-flash-preview-05-20', system_instruction="You are quiz maker that will test the student's retention of the video. The query will contain a video transcript and a list of their previous messages, create questions in JSON format that tests the user on general subject matter related concepts discussed in the transcript, and place a particular emphasis on the topics the student seemed to be confused about based on the chatlog. Make 5 total questions.")
         self.photo_grading_model = genai.GenerativeModel('gemini-2.5-flash-preview-05-20', system_instruction="You are a detailed oriented CBSE style grader for 10th grade math questions. Utilize the attached question and 'solution' to ensure the student's work is fully correct. The student's work will be provided in the query as a photo. Please provide your response in the JSON format shown in the prompt. Do no hesitate to leave fields blank if there are no comments needed. ")
         self.question_chat_model = genai.GenerativeModel('gemini-2.5-flash-preview-05-20', system_instruction="The student is asking a question about a math problem. Return a short response to the question, addressing the student's concerns and explaining the concept in a simple, understandable way if possible. The student's question will be provided in the query. The math problem will be provided in the query. We will provide the step-by-step solution to the problem in the query but blatantly reveal the solution, it is only so you don't give out incorrect information and guide the student towards the correct path.")
+        
         # Create a specialized tutor model
         self.tutor_model = genai.GenerativeModel(
                 'gemini-2.5-flash-preview-05-20',
-                system_instruction="""You are an expert, empathetic, and patient AI tutor helping students learn through a shared interactive whiteboard. You have to be ready to analyze handwritten work on the whiteboard and provide feedback as well as draw visualizations to help the student understand the concept.
+                system_instruction="""You are an expert, empathetic, and patient math tutor helping students learn through a shared interactive whiteboard. Draw visualizations to help the student understand the concept.
+                If a canvas image is provided, the student may or may not be referring to it in their query. Be ready to analyze it and use it to craft your response. If no canvas image is provided, there is no image to analyze. Draw on the whiteboard if the student asks for it.
+                Use drawing commands to illustrate solutions, concepts, and corrections. When analyzing student work, draw corrections in a different color. Add visual aids like graphs, diagrams, and step-by-step solutions.
 
-                CRITICAL RULES:
-                1. When a canvas image is provided, the student may or may not be referring to it in their query. Be ready to analyze it and use it to craft your response. 
-                2. If no canvas image is provided, there is no image to analyze. But be ready to draw on the whiteboard if the student asks for it.
-                3. The overall intent of each new response will be provided in the query.
-                
-                WHITEBOARD USAGE:
-                - Use drawing commands to illustrate solutions, concepts, and corrections
-                - When analyzing student work, draw corrections in a different color
-                - Add visual aids like graphs, diagrams, and step-by-step solutions
+                At important steps throughout the explanation, ask the student for the next step to keep them engaged. 
                 
                 RESPONSE FORMAT:
                 Always respond with a JSON object containing:
@@ -47,7 +42,7 @@ class GeminiService:
                 - {"type": "path", "points": [...], "options": {"color": "#000000", "width": 2}}
                 - {"type": "clear"} - to clear the board
 
-                Example response for a student asking about solving x + y = 10, y = x + 4:
+                Below is an example response for a student asking about solving x + y = 10, y = x + 4:
 {{
     "response": "I see you're working with a system of linear equations! Let me help you solve this step by step. We have x + y = 10 and y = x + 4. The best approach is substitution since the second equation already gives us y in terms of x.",
     "drawing_commands": [
@@ -433,24 +428,11 @@ Remember: You're a tutor helping them learn, not just giving answers.
             # Create content parts for the prompt
             content_parts = []
             
-            # Analyze query intent
-            query_lower = query.lower()
-            intent = "Give hints and guide them without revealing the answer"  # default
-            
-            if any(phrase in query_lower for phrase in ["solve", "what's the answer", "just tell me", "show me the solution"]):
-                intent = "Provide complete step-by-step solution"
-            elif any(phrase in query_lower for phrase in ["check my", "is this correct", "did i do", "analyze my"]):
-                intent = "Analyze their work and provide specific feedback"
-            elif any(phrase in query_lower for phrase in ["what is", "explain", "why", "how does", "what does"]):
-                intent = "Explain the concept clearly with examples"            
-            
             # Create the prompt
             prompt = f"""
 {conversation}
 
 STUDENT: {query}
-
-Intent:{intent}
 
 You MUST respond with ONLY a valid JSON object as noted in the system instructions. Be specific and helpful in your response!
 """
@@ -485,6 +467,7 @@ You MUST respond with ONLY a valid JSON object as noted in the system instructio
             
             # Generate response
             response = self.tutor_model.generate_content(content_parts)
+            print(f"RESPONSE: {response.text}")
             response_text = response.text.strip()
             
             # Parse JSON response
@@ -509,8 +492,6 @@ You MUST respond with ONLY a valid JSON object as noted in the system instructio
                 # Handle both 'drawing_commands' and 'drawingCommands'
                 if 'drawing_commands' not in result and 'drawingCommands' not in result:
                     result['drawing_commands'] = []
-                elif 'drawingCommands' in result and 'drawing_commands' not in result:
-                    result['drawing_commands'] = result['drawingCommands']
                 
                 print(f"Successfully parsed response with {len(result.get('drawing_commands', []))} drawing commands")
                 return result
