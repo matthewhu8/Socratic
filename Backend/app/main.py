@@ -917,6 +917,7 @@ async def submit_grading_image(
         
         # Update knowledge profile after successful grading
         try:
+            print(user_id, db_session.question_id, db_session.practice_mode, grading_result)
             updated_profile = KnowledgeProfileService.update_profile_after_grading(
                 db=db,
                 user_id=user_id,
