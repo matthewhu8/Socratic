@@ -8,6 +8,7 @@ import CreateTestPage from './pages/CreateTestPage';
 import CreatePracticeExamPage from './pages/CreatePracticeExamPage';
 import StudentDashboardPage from './pages/StudentDashboardPage';
 import StudentHomePage from './pages/StudentHomePage';
+import MathProgressPage from './pages/MathProgressPage';
 import AssessmentPage from './pages/AssessmentPage';
 import TestPage from './pages/TestPage';
 import TopicProgressPage from './pages/TopicProgressPage';
@@ -47,6 +48,11 @@ function App() {
             <Route path="/student/dashboard" element={
               <ProtectedRoute userType="student">
                 <StudentDashboardPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/student/math-progress" element={
+              <ProtectedRoute userType="student">
+                <MathProgressPage />
               </ProtectedRoute>
             } />
             <Route path="/student/learning-modules" element={

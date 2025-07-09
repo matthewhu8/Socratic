@@ -1,0 +1,76 @@
+{
+  "chapters": {
+    "Chapter 1: Real Numbers": {
+      "skills": [
+        {
+          "skill_name": "Prime Factorization",
+          "description": "Finding prime factors, expressing numbers as products of primes, using factor trees"
+        },
+        {
+          "skill_name": "HCF and LCM",
+          "description": "Finding HCF/LCM using prime factorization, understanding their relationship, solving word problems"
+        },
+        {
+          "skill_name": "Divisibility and Termination",
+          "description": "Understanding digit patterns, powers and last digits, identifying composite numbers"
+        },
+        {
+          "skill_name": "Irrational Numbers",
+          "description": "Proving irrationality, operations with irrationals, rationalization techniques"
+        },
+        {
+          "skill_name": "Euclid's Division Algorithm",
+          "description": "Applying division lemma, finding HCF using Euclid's algorithm"
+        }
+      ]
+    },
+    "Chapter 2: Polynomials": {
+      "skills": [
+        {
+          "skill_name": "Zeros of Polynomials",
+          "description": "Finding zeros from graphs and algebraically, understanding degree-zeros relationship"
+        },
+        {
+          "skill_name": "Quadratic Polynomials",
+          "description": "Finding zeros, factorization, forming quadratics from given zeros"
+        },
+        {
+          "skill_name": "Relationship Between Zeros and Coefficients",
+          "description": "Sum and product of zeros, verification, finding polynomials from conditions"
+        },
+        {
+          "skill_name": "Cubic Polynomials",
+          "description": "Verifying zeros, relationships for cubic polynomials, sum and product properties"
+        },
+        {
+          "skill_name": "Division Algorithm",
+          "description": "Polynomial division, finding quotient and remainder, verification"
+        }
+      ]
+    },
+    "Chapter 3: Pair of Linear Equations in Two Variables": {
+      "skills": [
+        {
+          "skill_name": "Graphical Method",
+          "description": "Plotting equations, finding intersections, identifying system types"
+        },
+        {
+          "skill_name": "Substitution Method",
+          "description": "Solving by substitution, word problems, identifying special cases"
+        },
+        {
+          "skill_name": "Elimination Method",
+          "description": "Solving by elimination, complex problems, applications"
+        },
+        {
+          "skill_name": "Word Problems",
+          "description": "Age, cost, number, and ratio problems using linear equations"
+        },
+        {
+          "skill_name": "System Classification",
+          "description": "Identifying parallel, coincident lines, determining solution types"
+        }
+      ]
+    }
+  }
+}

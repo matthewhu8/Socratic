@@ -445,13 +445,9 @@ function DynamicLearningPage() {
 
   return (
     <div className="dynamic-learning-container">
-      <div className="back-button-container">
-        <button onClick={() => navigate(-1)} className="back-button">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M19 12H5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            <path d="M12 19L5 12L12 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
-          Back
+      <div className="dynamic-header">
+        <button onClick={() => navigate('/student/home')} className="back-button">
+          ← Back to Home
         </button>
       </div>
       <div className="hero-section">

@@ -17,6 +17,7 @@ from .auth.utils import verify_password, get_password_hash, create_access_token,
 from .auth.schemas import TokenResponse, UserLogin, StudentCreate, TeacherCreate, StudentResponse, TeacherResponse, RefreshToken
 from .auth.dependencies import get_current_user, get_current_student, get_current_teacher
 from .services.conversation_service import ConversationService
+from .services.knowledge_profile_service import KnowledgeProfileService
 from jose import jwt, JWTError
 
 # Imports for Google Sign-In
@@ -914,6 +915,23 @@ async def submit_grading_image(
         db_session.status = "completed"
         db.commit()
         
+        # Update knowledge profile after successful grading
+        try:
+            updated_profile = KnowledgeProfileService.update_profile_after_grading(
+                db=db,
+                user_id=user_id,
+                question_id=db_session.question_id,
+                practice_mode=db_session.practice_mode,
+                grading_result=grading_result
+            )
+            if updated_profile:
+                print(f"Successfully updated knowledge profile for user {user_id}")
+            else:
+                print(f"Failed to update knowledge profile for user {user_id}")
+        except Exception as profile_error:
+            print(f"Error updating knowledge profile: {profile_error}")
+            # Don't fail the grading if profile update fails
+        
         # Clean up the uploaded image file after grading
         try:
             if os.path.exists(file_path):
@@ -1164,3 +1182,25 @@ async def get_ai_tutor_session(
     except Exception as e:
         print(f"Error getting AI tutor session: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to get session: {str(e)}")
+
+@app.get("/api/student/knowledge-profile")
+async def get_student_knowledge_profile(
+    current_user: StudentUser = Depends(get_current_student),
+    db: Session = Depends(get_db)
+):
+    """Get the current student's knowledge profile."""
+    try:
+        profile = KnowledgeProfileService.get_student_profile(db, current_user.id)
+        if not profile:
+            raise HTTPException(status_code=404, detail="Profile not found")
+        
+        return {
+            "status": "success",
+            "profile": profile
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error getting knowledge profile: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get profile: {str(e)}")
