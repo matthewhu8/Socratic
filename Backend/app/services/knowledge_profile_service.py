@@ -118,10 +118,16 @@ class KnowledgeProfileService:
             
             # Extract score from grading result
             if 'grade' not in grading_result:
-                print("No score found in grading result")
+                print("No grade found in grading result")
                 return profile
             
-            actual_score = int(grading_result["grade"].split('/')[0])/10
+            grade_parts = grading_result["grade"].split('/')
+            print(f"Grade parts: {grade_parts}")
+            print(f"First part: '{grade_parts[0]}'")
+            print(f"Type: {type(grade_parts[0])}")
+
+            numerator = float(grade_parts[0])
+            actual_score = numerator / 10
             print(actual_score)
             
             # Update timestamp
