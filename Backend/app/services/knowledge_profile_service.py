@@ -117,11 +117,11 @@ class KnowledgeProfileService:
             print(skills_tested)
             
             # Extract score from grading result
-            if 'score' not in grading_result:
+            if 'grade' not in grading_result:
                 print("No score found in grading result")
                 return profile
             
-            actual_score = float(grading_result['score']/10)  # 0.0 to 1.0
+            actual_score = grading_result["grade"].split('/')[0]/10
             print(actual_score)
             
             # Update timestamp
