@@ -121,7 +121,7 @@ class KnowledgeProfileService:
                 print("No score found in grading result")
                 return profile
             
-            actual_score = grading_result["grade"].split('/')[0]/10
+            actual_score = int(grading_result["grade"].split('/')[0])/10
             print(actual_score)
             
             # Update timestamp
