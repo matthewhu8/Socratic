@@ -26,15 +26,16 @@ class KnowledgeProfileService:
         """Get the skills_tested JSON for a given question"""
         try:
             if practice_mode == "ncert-examples":
-                question = db.query(NcertExamples).filter(NcertExamples.id == question_id).first()
+                question = db.query(NcertExamples).filter(NcertExamples.question_id == question_id).first()
             elif practice_mode == "ncert-exercises":
-                question = db.query(NcertExercises).filter(NcertExercises.id == question_id).first()
+                question = db.query(NcertExercises).filter(NcertExercises.question_id == question_id).first()
             elif practice_mode in ["previous-year-questions", "smart-practice"]:
-                question = db.query(PYQs).filter(PYQs.id == question_id).first()
+                question = db.query(PYQs).filter(PYQs.question_id == question_id).first()
             else:
                 return None
             
             if question and question.skills_tested:
+                print(question.skills_tested)
                 return question.skills_tested
             return None
         except Exception as e:
