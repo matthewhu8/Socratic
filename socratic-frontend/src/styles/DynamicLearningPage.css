@@ -1,34 +1,33 @@
-/* Dynamic Learning Page - CBSE Style */
+/* Dynamic Learning Page */
 .dynamic-learning-container {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   min-height: 100vh;
-  background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
 }
 
-/* Back Button */
-.back-button-container {
-  padding: 20px 40px 0;
+/* Header */
+.dynamic-header {
+  background: white;
+  padding: 1.5rem 2rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
 }
 
 .back-button {
-  background: rgba(255, 255, 255, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  color: white;
-  padding: 10px 16px;
+  padding: 0.5rem 1rem;
+  background: transparent;
+  border: 1px solid #e2e8f0;
   border-radius: 8px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
   cursor: pointer;
-  transition: all 0.2s ease;
-  font-size: 0.95rem;
-  font-weight: 500;
-  font-family: inherit;
+  font-size: 0.9rem;
+  color: #4a5568;
+  transition: all 0.2s;
+  display: inline-block;
 }
 
 .back-button:hover {
-  background: rgba(255, 255, 255, 0.3);
-  transform: translateX(-2px);
+  background: #f7fafc;
+  border-color: #cbd5e0;
+  transform: translateY(-1px);
 }
 
 /* Hero Section */
@@ -256,13 +255,8 @@
 
 /* Responsive Design */
 @media (max-width: 768px) {
-  .back-button-container {
-    padding: 16px 20px 0;
-  }
-  
-  .back-button {
-    padding: 8px 12px;
-    font-size: 0.9rem;
+  .dynamic-header {
+    padding: 1rem;
   }
   
   .hero-section h1 {

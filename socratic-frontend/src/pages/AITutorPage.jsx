@@ -571,14 +571,13 @@ function AITutorPage() {
 
   return (
     <div className="ai-tutor-container">
+      {/* Header */}
       <div className="ai-tutor-header">
-        <button className="back-button" onClick={() => navigate('/student/home')}>
-          ← Back
+        <button onClick={() => navigate('/student/home')} className="back-button">
+          ← Back to Home
         </button>
         <h1>AI Tutor</h1>
-        <div className="session-info">
-          {sessionId && <span>Session: {sessionId.slice(0, 8)}...</span>}
-        </div>
+        {sessionId && <p className="session-info">Session ID: {sessionId}</p>}
       </div>
 
       <div className="ai-tutor-content">

@@ -21,8 +21,8 @@ function StudentHomePage() {
   };
 
   const handleDashboardClick = (e) => {
-    e.preventDefault();
-    setShowPremiumMessage(true);
+    // Dashboard is now available - no longer blocked
+    // This function can be removed if we use Link instead
   };
 
   const handleDynamicLearningClick = (e) => {
@@ -154,12 +154,11 @@ function StudentHomePage() {
 
       {/* Main Navigation Options */}
       <div className="navigation-options">
-        <div className="nav-option disabled" onClick={handleDashboardClick}>
+        <Link to="/student/dashboard" className="nav-option">
           <div className="nav-option-icon"><MdDashboard /></div>
           <h2>Dashboard</h2>
           <p>View your progress, knowledge map, and performance analytics</p>
-          <span className="premium-badge">Beta</span>
-        </div>
+        </Link>
 
         <Link to="/student/learning-modules" className="nav-option">
           <div className="nav-option-icon"><TfiYoutube /></div>
