@@ -120,7 +120,8 @@ class KnowledgeProfileService:
             if 'grade' not in grading_result:
                 print("No grade found in grading result")
                 return profile
-            
+
+            print(grading_result["grade"])
             grade_parts = grading_result["grade"].split('/')
             print(f"Grade parts: {grade_parts}")
             print(f"First part: '{grade_parts[0]}'")
