@@ -37,18 +37,20 @@ function MathProgressPage() {
     return '#e74c3c'; // Red
   };
 
-  const chapters = [
-    { id: 1, name: 'Chapter 1' },
-    { id: 2, name: 'Chapter 2' },
-    { id: 3, name: 'Chapter 3' }
+  // Define the expected topics in order
+  const expectedTopics = [
+    "Real Numbers",
+    "Polynomials", 
+    "Pair of Linear Equations in Two Variables"
   ];
 
-  const getChapterData = (chapterNum) => {
-    if (!mathProgress || !mathProgress.subjects.mathematics.topics) return null;
+  const getTopicData = (topicName) => {
+    if (!mathProgress || !mathProgress.subjects || !mathProgress.subjects.mathematics || !mathProgress.subjects.mathematics.topics) {
+      return null;
+    }
     
     const topic = mathProgress.subjects.mathematics.topics.find(t => 
-      t.topic_name.toLowerCase().includes(`chapter ${chapterNum}`) || 
-      t.topic_name.toLowerCase().includes(`${chapterNum}`)
+      t.topic_name === topicName
     );
     
     return topic || null;
@@ -79,40 +81,66 @@ function MathProgressPage() {
 
       <div className="math-progress-content">
         <div className="chapters-grid">
-          {chapters.map((chapter) => {
-            const chapterData = getChapterData(chapter.id);
+          {expectedTopics.map((topicName) => {
+            const topicData = getTopicData(topicName);
             
             return (
-              <div key={chapter.id} className="chapter-card">
-                <h3>{chapter.name}</h3>
+              <div key={topicName} className="chapter-card">
+                <h3>{topicName}</h3>
                 
-                {chapterData ? (
-                  <div className="skills-list">
-                    {Object.entries(chapterData.skills).map(([skillName, skillData]) => (
-                      <div key={skillName} className="skill-item">
-                        <div className="skill-info">
-                          <span className="skill-name">{skillName}</span>
-                          <span 
-                            className="skill-score"
-                            style={{ color: getSkillColor(skillData.score) }}
-                          >
-                            {skillData.score}%
-                          </span>
-                        </div>
-                        <div className="skill-progress">
-                          <div 
-                            className="skill-progress-bar"
-                            style={{ 
-                              width: `${skillData.score}%`,
-                              backgroundColor: getSkillColor(skillData.score)
-                            }}
-                          />
-                        </div>
+                {topicData ? (
+                  <>
+                    <div className="overall-proficiency">
+                      <div className="proficiency-info">
+                        <span className="proficiency-label">Overall Proficiency</span>
+                        <span 
+                          className="proficiency-score"
+                          style={{ color: getSkillColor(topicData.overall_proficiency) }}
+                        >
+                          {topicData.overall_proficiency}%
+                        </span>
                       </div>
-                    ))}
-                  </div>
+                      <div className="proficiency-progress">
+                        <div 
+                          className="proficiency-progress-bar"
+                          style={{ 
+                            width: `${topicData.overall_proficiency}%`,
+                            backgroundColor: getSkillColor(topicData.overall_proficiency)
+                          }}
+                        />
+                      </div>
+                    </div>
+                    
+                    <div className="skills-section">
+                      <h4>Skills Breakdown</h4>
+                      <div className="skills-list">
+                        {Object.entries(topicData.skills).map(([skillName, skillData]) => (
+                          <div key={skillName} className="skill-item">
+                            <div className="skill-info">
+                              <span className="skill-name">{skillName}</span>
+                              <span 
+                                className="skill-score"
+                                style={{ color: getSkillColor(skillData.score) }}
+                              >
+                                {skillData.score}%
+                              </span>
+                            </div>
+                            <div className="skill-progress">
+                              <div 
+                                className="skill-progress-bar"
+                                style={{ 
+                                  width: `${skillData.score}%`,
+                                  backgroundColor: getSkillColor(skillData.score)
+                                }}
+                              />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </>
                 ) : (
-                  <div className="no-data">No progress data available</div>
+                  <div className="no-data">No progress data available for this topic</div>
                 )}
               </div>
             );
