@@ -2,6 +2,7 @@
 Service for managing and updating student knowledge profiles
 """
 import json
+import copy
 from datetime import datetime
 from typing import Dict, List, Optional
 from sqlalchemy.orm import Session
@@ -103,7 +104,7 @@ class KnowledgeProfileService:
             print(user.email)
             
             # Get or initialize profile
-            profile = user.knowledge_profile
+            profile = copy.deepcopy(user.knowledge_profile) if user.knowledge_profile else None
             if not profile:
                 print("no profile found, creating new blank profile")
                 profile = KnowledgeProfileService.initialize_blank_profile()
