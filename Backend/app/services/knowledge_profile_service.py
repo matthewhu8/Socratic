@@ -120,7 +120,7 @@ class KnowledgeProfileService:
             if 'grade' not in grading_result:
                 print("No grade found in grading result")
                 return profile
-            
+            print(grading_result["grade"])
             grade_parts = grading_result["grade"].split('/')
             print(f"Grade parts: {grade_parts}")
             print(f"First part: '{grade_parts[0]}'")
@@ -135,6 +135,7 @@ class KnowledgeProfileService:
             
             # Ensure mathematics subject exists
             if 'mathematics' not in profile['subjects']:
+                print("math not in profile for some weird reason")
                 profile['subjects']['mathematics'] = {'topics': []}
             
             # Process each skill tested
@@ -144,12 +145,7 @@ class KnowledgeProfileService:
                 skill_difficulty = skill_data.get('difficulty', 0.5)
                 weight = skill_data.get('weight', 1.0)
                 
-                # Map topic names to our standardized format
-                if topic_name == "Real Numbers":
-                    topic_name = "Real Numbers"
-                elif topic_name == "Polynomials":
-                    topic_name = "Polynomials"
-                elif topic_name == "Pair of Linear Equations":
+                if topic_name == "Pair of Linear Equations":
                     topic_name = "Pair of Linear Equations in Two Variables"
                 
                 # Find or create topic
@@ -203,7 +199,7 @@ class KnowledgeProfileService:
                 
                 # Create new topic if not found
                 if not topic_found:
-                    initial_score = max(10, min(90, int(actual_score * 100)))
+                    initial_score = max(10, min(60, int(actual_score * 100)))
                     new_topic = {
                         'topic_name': topic_name,
                         'overall_proficiency': initial_score,
@@ -214,10 +210,12 @@ class KnowledgeProfileService:
                             }
                         }
                     }
+                    print(type(profile["subjects"]["mathematics"]["topics"]))
                     profile['subjects']['mathematics']['topics'].append(new_topic)
                     print(f"Created new topic: {topic_name} with skill: {skill_name} (score: {initial_score})")
             
             # Save updated profile
+            print("established profile")
             user.knowledge_profile = profile
             db.commit()
             
