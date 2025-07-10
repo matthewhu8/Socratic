@@ -38,8 +38,6 @@ app.add_middleware(
         "http://localhost:3000",  # React frontend in local development
         "http://localhost:80",    # Frontend in containerized environment
         "http://localhost",       # Frontend in containerized environment (default port 80)
-        "http://frontend:80",     # Frontend service name in Docker network
-        "http://frontend",
         "http://0.0.0.0:3000",
         "0.0.0.0:3000",
         "http://0.0.0.0:8000",
@@ -49,9 +47,7 @@ app.add_middleware(
         "http://Matthews-MacBook-Pro.local:8000",
         # Add your production domains here
         "https://*.up.railway.app",  # All Railway subdomains
-        "https://*.netlify.app",  # In case you use Netlify for frontend
         "https://*.vercel.app",   # In case you use Vercel for frontend 
-        "https://frontend-production-81e0.up.railway.app",
         "https://socratic.up.railway.app"      # Replace with your custom domain
     ],
     allow_credentials=True,
@@ -380,13 +376,10 @@ async def youtube_video_quiz(request: dict, current_user = Depends(get_current_u
         
         # get session data from redis about this video to find previous messages
         session_data = await convo_service.get_video_session(user_id, video_id)
-        print(f"SESSION DATA RECEIVED: {session_data}")
         previous_messages = session_data.get("messages", [])
-
         # get entire video transcript from redis
         entire_transcript = convo_service.get_transcript_context(video_id, 0, 1000000)
-        print(f"ENTIRE TRANSCRIPT RECEIVED: {entire_transcript[0:100]}")
-        print(f"PREVIOUS MESSAGES RECEIVED: {previous_messages}")
+
 
         # Generate quiz using Gemini
         quiz_response = convo_service.gemini_service.generate_quiz(

@@ -209,7 +209,7 @@ const PreviousYearQuestionsPage = () => {
         practiceMode: practiceModeMapping[currentPracticeMode] || currentPracticeMode || '',
         subject: subject || '',
         grade: currentGrade || '',
-        topic: currentTopic !== 'direct' ? chapterName : null
+        topic: currentTopic !== 'direct' ? chapterName : null,
       };
 
       const response = await fetch(`${API_URL}/api/create-grading-session`, {
@@ -236,10 +236,8 @@ const PreviousYearQuestionsPage = () => {
     }
   };
 
-  // Handle grading completion
   const handleGradingComplete = (result) => {
     console.log('Grading completed:', result);
-    // You can handle the grading result here (e.g., store it, show additional UI, etc.)
   };
 
   // Function to fetch questions from API

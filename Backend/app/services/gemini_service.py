@@ -336,7 +336,6 @@ REQUIRED JSON FORMAT (respond with EXACTLY this structure):
 }}
 
 RULES:
-- Focus on topics the student seemed confused about from chat history, if any.
 - Make sure correct_answer exactly matches one of the three options
 - Return ONLY the JSON, nothing else
 """
@@ -353,11 +352,11 @@ RULES:
   "questions": [
     {
       "id": 1,
-      "question": "What was the main topic of this video?",
-      "option1": "Educational Content",
-      "option2": "Entertainment",
-      "option3": "News",
-      "correct_answer": "Educational Content"
+      "question": "Error Generating Quiz",
+      "option1": "Sorry",
+      "option2": "Sorry",
+      "option3": "Sorry",
+      "correct_answer": "Sorry"
     }
   ]
 }'''
