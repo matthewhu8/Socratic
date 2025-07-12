@@ -209,7 +209,7 @@ const PreviousYearQuestionsPage = () => {
         practiceMode: practiceModeMapping[currentPracticeMode] || currentPracticeMode || '',
         subject: subject || '',
         grade: currentGrade || '',
-        topic: currentTopic !== 'direct' ? chapterName : null,
+        topic: currentTopic !== 'direct' ? chapterName : null
       };
 
       const response = await fetch(`${API_URL}/api/create-grading-session`, {
