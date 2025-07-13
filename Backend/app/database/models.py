@@ -135,6 +135,41 @@ class PYQs(Base):
     prerequisites = Column(JSON, nullable=True)
     skills_tested = Column(JSON, nullable=True)
 
+class AIGeneratedQuestions(Base):
+    ___tablename__ = "aigeneratedquestions"
+
+    id = Column(Integer, primary_key=True, index=True)
+    question_id = Column(String, nullable=True)  # The custom id like "q_math_pyq_2023_q15"
+    
+    # Question metadata
+    subject = Column(String, nullable=True)
+    chapter = Column(String, nullable=True)
+    topic = Column(String, nullable=True)
+    question_type = Column(String, nullable=True)
+    max_marks = Column(Integer, nullable=True)
+    grade = Column(String, nullable=True)
+    
+    # Source information
+    source_year = Column(Integer, nullable=True)
+    source_question_number = Column(Integer, nullable=True)
+    source_part_number = Column(Integer, nullable=True)
+    
+    # Question and answer
+    question_text = Column(Text, nullable=True)
+    answer = Column(Text, nullable=True)
+    difficulty = Column(Float, nullable=True) # e.g., 0.5, 1.0, 1.5
+    
+    # Mark scheme information (stored as JSON)
+    total_marks = Column(Integer, nullable=True)
+    marking_criteria = Column(JSON, nullable=True)  # Array of marking criteria with marks
+    common_mistakes = Column(JSON, nullable=True)  # Array of common mistakes with deductions
+    teacher_notes = Column(JSON, nullable=True)  # Array of teacher notes
+
+    # More data to be used for AI personalization
+    prerequisites = Column(JSON, nullable=True)
+    skills_tested = Column(JSON, nullable=True)
+
+
 class GradingSession(Base):
     __tablename__ = "grading_sessions"
     

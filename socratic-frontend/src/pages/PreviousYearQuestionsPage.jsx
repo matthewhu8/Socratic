@@ -236,10 +236,8 @@ const PreviousYearQuestionsPage = () => {
     }
   };
 
-  // Handle grading completion
   const handleGradingComplete = (result) => {
     console.log('Grading completed:', result);
-    // You can handle the grading result here (e.g., store it, show additional UI, etc.)
   };
 
   // Function to fetch questions from API
