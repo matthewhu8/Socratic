@@ -22,48 +22,26 @@ class GeminiService:
         self.photo_grading_model = genai.GenerativeModel('gemini-2.5-flash-preview-05-20', system_instruction="You are a detailed oriented CBSE style grader for 10th grade math questions. Utilize the attached question and 'solution' to ensure the student's work is fully correct. The student's work will be provided in the query as a photo. Please provide your response in the JSON format shown in the prompt. Do no hesitate to leave fields blank if there are no comments needed. ")
         self.question_chat_model = genai.GenerativeModel('gemini-2.5-flash-preview-05-20', system_instruction="The student is asking a question about a math problem. Return a short response to the question, addressing the student's concerns and explaining the concept in a simple, understandable way if possible. The student's question will be provided in the query. The math problem will be provided in the query. We will provide the step-by-step solution to the problem in the query but blatantly reveal the solution, it is only so you don't give out incorrect information and guide the student towards the correct path.")
         
-        # Create a specialized tutor model
+        # Create simplified models for multi-stage processing
+        self.analysis_model = genai.GenerativeModel(
+            'gemini-2.5-flash-preview-05-20',
+            system_instruction="You analyze student queries and canvas images to determine learning context. Always respond with valid JSON only."
+        )
+        
+        self.text_model = genai.GenerativeModel(
+            'gemini-2.5-flash-preview-05-20', 
+            system_instruction="You are a patient math tutor. Provide encouraging, step-by-step guidance. Keep responses concise and engaging."
+        )
+        
+        self.visual_model = genai.GenerativeModel(
+            'gemini-2.5-flash-preview-05-20',
+            system_instruction="You generate drawing commands for educational whiteboard visualizations. Always respond with valid JSON arrays of drawing commands only."
+        )
+        
+        # Keep existing tutor model for backward compatibility
         self.tutor_model = genai.GenerativeModel(
                 'gemini-2.5-flash-preview-05-20',
-                system_instruction="""You are an expert, empathetic, and patient math tutor helping students learn through a shared interactive whiteboard. Draw visualizations to help the student understand the concept.
-                If a canvas image is provided, the student may or may not be referring to it in their query. Be ready to analyze it and use it to craft your response. If no canvas image is provided, there is no image to analyze. Draw on the whiteboard if the student asks for it.
-                Use drawing commands to illustrate solutions, concepts, and corrections. When analyzing student work, draw corrections in a different color. Add visual aids like graphs, diagrams, and step-by-step solutions.
-
-                At important steps throughout the explanation, ask the student for the next step to keep them engaged. 
-                
-                RESPONSE FORMAT:
-                Always respond with a JSON object containing:
-                - "response": Your conversational explanation (be specific and helpful!)
-                - "drawing_commands": Array of drawing commands for the whiteboard
-                
-                Drawing command types:
-                - {"type": "text", "text": "content", "position": {"x": 100, "y": 100}}
-                - {"type": "shape", "shape": "rectangle/circle/line", "options": {...}}
-                - {"type": "path", "points": [...], "options": {"color": "#000000", "width": 2}}
-                - {"type": "clear"} - to clear the board
-
-                Below is an example response for a student asking about solving x + y = 10, y = x + 4:
-{{
-    "response": "I see you're working with a system of linear equations! Let me help you solve this step by step. We have x + y = 10 and y = x + 4. The best approach is substitution since the second equation already gives us y in terms of x.",
-    "drawing_commands": [
-        {{"type": "clear"}},
-        {{"type": "text", "text": "System of Equations:", "position": {{"x": 50, "y": 50}}}},
-        {{"type": "text", "text": "Equation 1: x + y = 10", "position": {{"x": 50, "y": 90}}}},
-        {{"type": "text", "text": "Equation 2: y = x + 4", "position": {{"x": 50, "y": 130}}}},
-        {{"type": "text", "text": "Step 1: Substitute equation 2 into equation 1", "position": {{"x": 50, "y": 200}}}},
-        {{"type": "text", "text": "x + (x + 4) = 10", "position": {{"x": 70, "y": 240}}}},
-        {{"type": "text", "text": "Step 2: Simplify", "position": {{"x": 50, "y": 300}}}},
-        {{"type": "text", "text": "2x + 4 = 10", "position": {{"x": 70, "y": 340}}}},
-        {{"type": "text", "text": "Step 3: Solve for x", "position": {{"x": 50, "y": 400}}}},
-        {{"type": "text", "text": "2x = 6", "position": {{"x": 70, "y": 440}}}},
-        {{"type": "text", "text": "x = 3", "position": {{"x": 70, "y": 480}}}},
-        {{"type": "text", "text": "Step 4: Find y using equation 2", "position": {{"x": 50, "y": 540}}}},
-        {{"type": "text", "text": "y = 3 + 4 = 7", "position": {{"x": 70, "y": 580}}}},
-        {{"type": "text", "text": "Answer: x = 3, y = 7", "position": {{"x": 50, "y": 640}}}},
-        {{"type": "shape", "shape": "rectangle", "options": {{"x": 40, "y": 630, "width": 200, "height": 40, "color": "#00FF00"}}}}
-    ]
-}}
-                """
+                system_instruction="""You are a math tutor. Respond with JSON containing 'response' and 'drawing_commands' fields."""
             )
         print(f"GEMINI MODEL: {self.model}")
     
@@ -519,4 +497,110 @@ You MUST respond with ONLY a valid JSON object as noted in the system instructio
                 "response": "I apologize, but I encountered an error. Please try rephrasing your question or let me know if you'd like me to solve it step-by-step, guide you through it, or check your work.",
                 "drawing_commands": []
             }
+    
+    # New methods for multi-stage processing
+    async def generate_simple_response(self, prompt: str, image: Optional[str] = None) -> Dict:
+        """Generate a simple response for analysis and planning"""
+        try:
+            content_parts = [prompt]
+            if image:
+                try:
+                    if image.startswith('data:image'):
+                        image = image.split(',')[1]
+                    image_data = base64.b64decode(image)
+                    pil_image = Image.open(io.BytesIO(image_data))
+                    content_parts.append(pil_image)
+                except Exception as e:
+                    print(f"Error processing image: {e}")
+            
+            response = self.analysis_model.generate_content(content_parts)
+            response_text = response.text.strip()
+            
+            # Clean up markdown if present
+            if response_text.startswith('```'):
+                end_index = response_text.rfind('```')
+                if end_index > 3:
+                    response_text = response_text[3:end_index]
+                if response_text.startswith('json'):
+                    response_text = response_text[4:]
+                response_text = response_text.strip()
+            
+            return json.loads(response_text)
+            
+        except Exception as e:
+            print(f"Error in simple response: {e}")
+            return {}
+    
+    async def generate_text_only(self, prompt: str) -> str:
+        """Generate text-only response for teaching"""
+        try:
+            response = self.text_model.generate_content(prompt)
+            return response.text.strip()
+        except Exception as e:
+            print(f"Error generating text response: {e}")
+            return "I'm here to help! Could you please clarify your question?"
+    
+    async def generate_drawing_commands_only(self, prompt: str) -> List[Dict]:
+        """Generate drawing commands only"""
+        try:
+            response = self.visual_model.generate_content(prompt)
+            response_text = response.text.strip()
+            
+            # Clean up markdown if present
+            if response_text.startswith('```'):
+                end_index = response_text.rfind('```')
+                if end_index > 3:
+                    response_text = response_text[3:end_index]
+                if response_text.startswith('json'):
+                    response_text = response_text[4:]
+                response_text = response_text.strip()
+            
+            return json.loads(response_text)
+            
+        except Exception as e:
+            print(f"Error generating drawing commands: {e}")
+            return []
+    
+    async def generate_comparison_response(self, prompt: str, image1: str, image2: str) -> Dict:
+        """Generate response comparing two images"""
+        try:
+            content_parts = [prompt]
+            
+            # Process first image
+            try:
+                if image1.startswith('data:image'):
+                    image1 = image1.split(',')[1]
+                image1_data = base64.b64decode(image1)
+                pil_image1 = Image.open(io.BytesIO(image1_data))
+                content_parts.append(pil_image1)
+            except Exception as e:
+                print(f"Error processing image1: {e}")
+            
+            # Process second image
+            try:
+                if image2.startswith('data:image'):
+                    image2 = image2.split(',')[1]
+                image2_data = base64.b64decode(image2)
+                pil_image2 = Image.open(io.BytesIO(image2_data))
+                content_parts.append(pil_image2)
+            except Exception as e:
+                print(f"Error processing image2: {e}")
+            
+            response = self.analysis_model.generate_content(content_parts)
+            response_text = response.text.strip()
+            
+            # Clean up markdown if present
+            if response_text.startswith('```'):
+                end_index = response_text.rfind('```')
+                if end_index > 3:
+                    response_text = response_text[3:end_index]
+                if response_text.startswith('json'):
+                    response_text = response_text[4:]
+                response_text = response_text.strip()
+            
+            return json.loads(response_text)
+            
+        except Exception as e:
+            print(f"Error in comparison response: {e}")
+            return {}
 

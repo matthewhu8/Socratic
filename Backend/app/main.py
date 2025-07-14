@@ -1118,12 +1118,17 @@ async def process_ai_tutor_query(
         # Build complete message history
         messages = request.messages.copy() if request.messages else []
         
-        # Generate AI response with drawing commands
-        response_data = await convo_service.gemini_service.generate_tutor_response(
+        # Import the new orchestrator
+        from app.services.ai_whiteboard_orchestrator import AIWhiteboardOrchestrator
+        
+        # Create orchestrator instance
+        orchestrator = AIWhiteboardOrchestrator(convo_service.gemini_service)
+        
+        # Process query using new multi-stage architecture
+        response_data = await orchestrator.process_student_query(
             query=request.query,
-            messages=messages,
-            include_drawing_commands=True,
-            canvas_image=request.canvasImage
+            canvas_image=request.canvasImage,
+            chat_history=messages
         )
         
         print(f"Response from Gemini service: {response_data}")
