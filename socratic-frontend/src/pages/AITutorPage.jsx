@@ -294,46 +294,32 @@ function AITutorPage() {
       const data = await response.json();
       console.log('Full response from backend:', JSON.stringify(data, null, 2));
       
-      // Check if the response contains the expected structure
-      let aiResponse = data.response;
-      let drawingCommands = data.drawingCommands || data.drawing_commands;
+      // Extract response and drawing commands from backend
+      const aiResponse = data.response;
+      const drawingCommands = data.drawingCommands || [];
       
-      // If the response is a string that looks like JSON, try to parse it
-      if (typeof data.response === 'string' && data.response.includes('"response"')) {
-        try {
-          const parsedResponse = JSON.parse(data.response);
-          aiResponse = parsedResponse.response;
-          drawingCommands = parsedResponse.drawing_commands || parsedResponse.drawingCommands;
-          console.log('Parsed nested JSON response:', parsedResponse);
-        } catch (e) {
-          console.error('Failed to parse nested JSON:', e);
-        }
-      }
-      
-      console.log('Final aiResponse:', aiResponse);
-      console.log('Final drawingCommands:', drawingCommands);
+      console.log('AI Response:', aiResponse);
+      console.log('Drawing Commands:', drawingCommands);
       
       // Add AI response to messages
       setMessages(prev => [...prev, { role: 'assistant', content: aiResponse }]);
 
       // Execute drawing commands if any
-      console.log('Context available:', !!context, 'Canvas ref:', !!canvasRef.current);
-      if (drawingCommands && drawingCommands.length > 0 && context) {
+      if (drawingCommands && drawingCommands.length > 0) {
         console.log('Executing drawing commands:', drawingCommands);
-        executeDrawingCommands(drawingCommands);
-      } else {
-        console.log('No drawing commands to execute. drawingCommands:', drawingCommands, 'context:', context);
-        if (!context && canvasRef.current) {
-          console.log('Context missing, trying to get it from canvas');
+        if (context) {
+          executeDrawingCommands(drawingCommands);
+        } else if (canvasRef.current) {
+          // Get context if not available and retry
           const ctx = canvasRef.current.getContext('2d');
           if (ctx) {
             setContext(ctx);
-            console.log('Context set, retrying drawing commands');
-            if (drawingCommands && drawingCommands.length > 0) {
-              executeDrawingCommands(drawingCommands);
-            }
+            // Use the new context directly
+            executeDrawingCommandsWithContext(drawingCommands, ctx);
           }
         }
+      } else {
+        console.log('No drawing commands received');
       }
 
       // Speak the response
@@ -352,6 +338,16 @@ function AITutorPage() {
     }
   };
 
+  const executeDrawingCommandsWithContext = async (commands, ctx) => {
+    if (!ctx || !commands || commands.length === 0) {
+      console.log('Cannot execute drawing commands:', { hasContext: !!ctx, commands });
+      return;
+    }
+
+    console.log('Starting to execute drawing commands with provided context. Current Y position:', currentDrawingY);
+    executeDrawingCommandsInternal(commands, ctx);
+  };
+
   const executeDrawingCommands = async (commands) => {
     if (!context || !commands || commands.length === 0) {
       console.log('Cannot execute drawing commands:', { hasContext: !!context, commands });
@@ -359,22 +355,26 @@ function AITutorPage() {
     }
 
     console.log('Starting to execute drawing commands. Current Y position:', currentDrawingY);
+    executeDrawingCommandsInternal(commands, context);
+  };
+
+  const executeDrawingCommandsInternal = async (commands, ctx) => {
 
     // Test drawing to ensure canvas works
-    context.save();
-    context.fillStyle = '#ff0000';
-    context.fillRect(10, 10, 50, 50); // Red square at top left
-    context.restore();
+    ctx.save();
+    ctx.fillStyle = '#ff0000';
+    ctx.fillRect(10, 10, 50, 50); // Red square at top left
+    ctx.restore();
     console.log('Test drawing complete - you should see a red square');
 
     // Clear a specific area for the new drawing instead of the whole canvas
     const drawingAreaHeight = 400; // Height for each AI drawing
     
     // Create a white rectangle for the new drawing area
-    context.save();
-    context.fillStyle = '#ffffff';
-    context.fillRect(0, currentDrawingY, canvasRef.current.width, drawingAreaHeight);
-    context.restore();
+    ctx.save();
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, currentDrawingY, canvasRef.current.width, drawingAreaHeight);
+    ctx.restore();
     
     // Find the bounding box of the drawing commands to offset if needed
     let maxY = currentDrawingY;
@@ -388,27 +388,27 @@ function AITutorPage() {
         
         switch (command.type) {
           case 'text':
-            context.save();
+            ctx.save();
             // Handle font size from options
             const fontSize = command.options?.fontSize || 20;
-            context.font = command.font || `${fontSize}px Arial`;
-            context.fillStyle = command.options?.color || command.color || '#000000';
+            ctx.font = command.font || `${fontSize}px Arial`;
+            ctx.fillStyle = command.options?.color || command.color || '#000000';
             const adjustedY = command.position.y + yOffset;
-            context.fillText(command.text, command.position.x, adjustedY);
+            ctx.fillText(command.text, command.position.x, adjustedY);
             maxY = Math.max(maxY, adjustedY + 30); // Add some padding
-            context.restore();
+            ctx.restore();
             break;
             
           case 'shape':
-            context.save();
+            ctx.save();
             // Handle both 'color' and 'stroke' property names
-            context.strokeStyle = command.options?.color || command.options?.stroke || '#000000';
+            ctx.strokeStyle = command.options?.color || command.options?.stroke || '#000000';
             // Handle both 'width' and 'strokeWidth' property names
-            context.lineWidth = command.options?.width || command.options?.strokeWidth || 2;
+            ctx.lineWidth = command.options?.width || command.options?.strokeWidth || 2;
             
             if (command.shape === 'rectangle') {
               const rectY = command.options.y + yOffset;
-              context.strokeRect(
+              ctx.strokeRect(
                 command.options.x, 
                 rectY, 
                 command.options.width, 
@@ -416,9 +416,9 @@ function AITutorPage() {
               );
               maxY = Math.max(maxY, rectY + command.options.height + 20);
             } else if (command.shape === 'circle') {
-              context.beginPath();
+              ctx.beginPath();
               const circleY = command.options.y + yOffset;
-              context.arc(
+              ctx.arc(
                 command.options.x, 
                 circleY, 
                 command.options.radius || 50, 
@@ -428,55 +428,55 @@ function AITutorPage() {
               
               // Handle fill option for circles
               if (command.options.fill) {
-                context.fillStyle = command.options.color || '#000000';
-                context.fill();
+                ctx.fillStyle = command.options.color || '#000000';
+                ctx.fill();
               }
-              context.stroke();
+              ctx.stroke();
               maxY = Math.max(maxY, circleY + (command.options.radius || 50) + 20);
             } else if (command.shape === 'line') {
-              context.beginPath();
+              ctx.beginPath();
               
               // Handle dashed lines
               if (command.options.strokeDasharray) {
                 const dashArray = command.options.strokeDasharray.split(',').map(num => parseInt(num));
-                context.setLineDash(dashArray);
+                ctx.setLineDash(dashArray);
               }
               
-              context.moveTo(command.options.x1 || command.options.x, (command.options.y1 || command.options.y) + yOffset);
-              context.lineTo(command.options.x2, command.options.y2 + yOffset);
-              context.stroke();
+              ctx.moveTo(command.options.x1 || command.options.x, (command.options.y1 || command.options.y) + yOffset);
+              ctx.lineTo(command.options.x2, command.options.y2 + yOffset);
+              ctx.stroke();
               
               // Reset line dash
-              context.setLineDash([]);
+              ctx.setLineDash([]);
               
               maxY = Math.max(maxY, Math.max(command.options.y1 || command.options.y, command.options.y2) + yOffset + 20);
             }
-            context.restore();
+            ctx.restore();
             break;
             
           case 'path':
             if (command.points && command.points.length > 0) {
-              context.save();
+              ctx.save();
               // Handle both property name formats
-              context.strokeStyle = command.options?.color || command.options?.stroke || '#000000';
-              context.lineWidth = command.options?.width || command.options?.strokeWidth || 2;
+              ctx.strokeStyle = command.options?.color || command.options?.stroke || '#000000';
+              ctx.lineWidth = command.options?.width || command.options?.strokeWidth || 2;
               if (command.options?.lineCap) {
-                context.lineCap = command.options.lineCap;
+                ctx.lineCap = command.options.lineCap;
               }
               
               // Handle dashed lines
               if (command.options?.lineDash) {
-                context.setLineDash(command.options.lineDash);
+                ctx.setLineDash(command.options.lineDash);
               }
               
-              context.beginPath();
-              context.moveTo(command.points[0].x, command.points[0].y + yOffset);
+              ctx.beginPath();
+              ctx.moveTo(command.points[0].x, command.points[0].y + yOffset);
               for (let i = 1; i < command.points.length; i++) {
-                context.lineTo(command.points[i].x, command.points[i].y + yOffset);
+                ctx.lineTo(command.points[i].x, command.points[i].y + yOffset);
                 maxY = Math.max(maxY, command.points[i].y + yOffset + 20);
               }
-              context.stroke();
-              context.restore();
+              ctx.stroke();
+              ctx.restore();
             }
             break;
             
@@ -500,14 +500,14 @@ function AITutorPage() {
     setCurrentDrawingY(maxY + 100); // Add more spacing between drawings
     
     // Add a separator line between drawings
-    context.save();
-    context.strokeStyle = '#e5e7eb';
-    context.lineWidth = 1;
-    context.beginPath();
-    context.moveTo(50, maxY + 50);
-    context.lineTo(canvasRef.current.width - 50, maxY + 50);
-    context.stroke();
-    context.restore();
+    ctx.save();
+    ctx.strokeStyle = '#e5e7eb';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(50, maxY + 50);
+    ctx.lineTo(canvasRef.current.width - 50, maxY + 50);
+    ctx.stroke();
+    ctx.restore();
     
     // Scroll to the new content
     const scrollContainer = document.querySelector('.whiteboard-scroll-container');
