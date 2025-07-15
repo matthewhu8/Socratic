@@ -1115,8 +1115,11 @@ async def process_ai_tutor_query(
         if session_info["user_id"] != current_user.id:
             raise HTTPException(status_code=403, detail="Unauthorized")
         
-        # Build complete message history
+        # Build complete message history including current query
         messages = request.messages.copy() if request.messages else []
+        # Add current user query to messages for context
+        messages.append({"role": "user", "content": request.query})
+        print(f"Full message history with current query: {len(messages)} messages")
         
         # Import the new orchestrator
         from app.services.ai_whiteboard_orchestrator import AIWhiteboardOrchestrator
@@ -1134,7 +1137,7 @@ async def process_ai_tutor_query(
         print(f"Response from Gemini service: {response_data}")
         print(f"Drawing commands: {response_data.get('drawing_commands', [])}")
         
-        # Update session with new messages
+        # Update session with complete message history
         session_info["messages"] = messages + [{"role": "assistant", "content": response_data["response"]}]
         convo_service.redis_client.setex(
             f"ai_tutor:{request.sessionId}",
