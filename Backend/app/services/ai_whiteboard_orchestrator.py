@@ -41,28 +41,31 @@ class AIWhiteboardOrchestrator:
         chat_history: List[Dict[str, str]]
     ) -> Dict[str, Any]:
         """
-        Orchestrates the multi-stage processing of student queries
+        Orchestrates the processing of student queries - generates one step at a time
         """
         
         # Stage 1: Analyze query and determine approach
         analysis = await self._analyze_query(query, canvas_image, chat_history)
+        print(f"Step 1: Classifying the prompt {analysis}\n")
         
-        # Stage 2 & 3 can run in parallel
-        response_task = self._generate_teaching_response(analysis, query)
-        visual_task = self._plan_visuals(analysis, canvas_image) if analysis.requires_visual else None
+        # Stage 2: Generate teaching response for ONE step
+        teaching_response = await self._generate_teaching_response(analysis, query, chat_history)
+        print(f"Step 2: Generated teaching response: {teaching_response}\n")
         
-        # Wait for both tasks
-        teaching_response = await response_task
-        visual_plan = await visual_task if visual_task else None
-        
-        # Stage 4: Generate drawing commands if needed
+        # Stage 3: Plan visual for this specific step using the teaching response
         drawing_commands = []
-        if visual_plan:
-            drawing_commands = await self._generate_drawing_commands(
-                visual_plan, 
-                analysis,
-                teaching_response
-            )
+        if analysis.requires_visual:
+            visual_plan = await self._plan_visuals(analysis, canvas_image, teaching_response)
+            print(f"Step 3: Created visual plan for current step\n")
+            
+            # Stage 4: Generate drawing commands for this single visual
+            if visual_plan:
+                drawing_commands = await self._generate_drawing_commands(
+                    visual_plan, 
+                    analysis,
+                    teaching_response
+                )
+                print(f"Step 4: Generated {len(drawing_commands)} drawing commands\n")
         
         return {
             "response": teaching_response,
@@ -109,38 +112,66 @@ Respond with JSON only:
     async def _generate_teaching_response(
         self, 
         analysis: AnalysisResult,
-        original_query: str
+        original_query: str,
+        chat_history: List[Dict[str, str]]
     ) -> str:
         """
-        Stage 2: Generate focused pedagogical response
+        Stage 2: Generate focused pedagogical response for ONE STEP ONLY
         """
         approach_prompts = {
             PedagogicalApproach.GUIDED_DISCOVERY: """
-Help the student discover the solution themselves. Ask one specific question 
-that will guide them to the next step. Don't reveal the answer.
+Focus on the VERY NEXT STEP the student needs to understand. Ask ONE specific question 
+that guides them toward this step. Don't reveal future steps or the final answer.
+End with either:
+- A specific question about what they think should happen next
+- "Does this step make sense before we continue?"
 """,
             PedagogicalApproach.ERROR_CORRECTION: """
-Gently point out where they went wrong without being discouraging. 
-Ask them to reconsider that specific step.
+Address ONLY the immediate error they made. Gently point out the issue and 
+guide them to fix just that one mistake. 
+End with either:
+- A question about how to correct this specific error
+- "Do you see why this step needs to be corrected?"
 """,
             PedagogicalApproach.WORKED_EXAMPLE: """
-Show them the next step only, explaining why. Then ask if they can 
-continue from there.
+Show them ONLY the next immediate step with a clear explanation of why.
+DO NOT show multiple steps or the complete solution.
+End with either:
+- "Can you try the next step from here?"
+- "Does this step make sense before we move on?"
 """,
             PedagogicalApproach.CONCEPT_EXPLANATION: """
-Explain the concept they're struggling with using simple terms and 
-an analogy if helpful. Then relate it back to their problem.
+Explain ONLY the immediate concept needed for the current step.
+Use simple terms and relate it directly to what they're working on right now.
+End with either:
+- A question to check their understanding of this concept
+- "Does this concept make sense before we apply it?"
 """
         }
         
+        # Include chat history in prompt
+        history_context = ""
+        if chat_history:
+            recent_history = chat_history[-4:]  # Last 2 exchanges
+            history_context = "Recent conversation:\n"
+            for msg in recent_history:
+                role = "Student" if msg['role'] == 'user' else "Tutor"
+                history_context += f"{role}: {msg['content']}\n"
+        
         prompt = f"""
-You're tutoring {analysis.topic}. The student asked: "{original_query}"
+You're tutoring {analysis.topic}. 
+
+{history_context}
+
+Current student query: "{original_query}"
+
+IMPORTANT: Focus on explaining or guiding through ONLY THE NEXT SINGLE STEP.
 
 {approach_prompts[analysis.approach]}
 
-{"Address these misconceptions: " + ", ".join(analysis.misconceptions) if analysis.misconceptions else ""}
+{"Address this specific misconception: " + analysis.misconceptions[0] if analysis.misconceptions else ""}
 
-Respond in 2-3 sentences max. Be encouraging and specific.
+Respond in 2-4 sentences focusing on just the immediate next step.
 """
         
         return await self.gemini_service.generate_text_only(prompt)
@@ -148,29 +179,36 @@ Respond in 2-3 sentences max. Be encouraging and specific.
     async def _plan_visuals(
         self, 
         analysis: AnalysisResult,
-        canvas_image: Optional[str]
+        canvas_image: Optional[str],
+        teaching_response: str
     ) -> VisualPlan:
         """
-        Stage 3: Plan the visual layout
+        Stage 3: Plan ONE visual that matches the teaching response
         """
         prompt = f"""
-Plan visual elements for teaching {analysis.topic}.
-Elements needed: {', '.join(analysis.visual_elements)}
+Plan a SINGLE visual element for teaching {analysis.topic}.
 
-Create a layout that:
-1. Doesn't overlap with existing student work
-2. Organizes information clearly
-3. Uses color coding for different concepts
+Teaching response that needs visual support:
+"{teaching_response}"
 
-Output JSON with layout zones and drawing sequence:
+Current canvas state: {"Student has drawn something" if canvas_image else "Empty canvas"}
+
+Create a simple layout for ONLY the visual that directly supports what was just explained.
+Focus on the immediate step being taught, not future steps. 
+
+Output JSON with a single visual element:
 {{
     "layout_zones": [
-        {{"id": "problem", "x": 50, "y": 50, "width": 300, "height": 100}},
-        {{"id": "work_area", "x": 50, "y": 200, "width": 400, "height": 300}}
+        {{"id": "current_step", "x": 50, "y": 50, "width": 400, "height": 200}}
     ],
-    "drawing_sequence": ["problem_statement", "step1_hint"],
-    "content_mapping": {{"problem_statement": "x + 5 = 10", "step1_hint": "Subtract 5 from both sides"}}
+    "drawing_sequence": ["single_visual_element"],
+    "content_mapping": {{"single_visual_element": "visual content that matches the teaching response"}}
 }}
+
+Examples:
+- If teaching "subtract 5 from both sides", show: "x + 5 - 5 = 10 - 5"
+- If explaining a concept, show ONE simple diagram
+- If correcting an error, highlight JUST that error
 """
         
         result = await self.gemini_service.generate_simple_response(prompt, canvas_image)
@@ -183,48 +221,40 @@ Output JSON with layout zones and drawing sequence:
         teaching_response: str
     ) -> List[Dict[str, Any]]:
         """
-        Stage 4: Generate specific drawing commands
+        Stage 4: Generate drawing commands for the single visual element
         """
-        commands = []
-        
-        # Generate commands for each element in sequence
-        for element in visual_plan.drawing_sequence:
-            zone = self._get_zone_for_element(element, visual_plan)
-            content = visual_plan.content_mapping.get(element, "")
+        # Since we now have only one visual element per response
+        if not visual_plan.drawing_sequence:
+            return []
             
-            element_commands = await self._generate_element_commands(
-                element, zone, content, analysis.topic
-            )
-            commands.extend(element_commands)
+        element = visual_plan.drawing_sequence[0]  # Should only be one element
+        zone = visual_plan.layout_zones[0] if visual_plan.layout_zones else {"x": 50, "y": 50, "width": 400, "height": 200}
+        content = visual_plan.content_mapping.get(element, "")
         
-        return commands
-    
-    async def _generate_element_commands(
-        self,
-        element: str,
-        zone: Dict[str, Any],
-        content: str,
-        topic: str
-    ) -> List[Dict[str, Any]]:
-        """
-        Generate drawing commands for a specific element
-        """
+        # Generate all commands needed for this single visual in one API call
         prompt = f"""
-Generate precise drawing commands for {element} in a {topic} lesson.
-Zone: x={zone['x']}, y={zone['y']}, width={zone['width']}, height={zone['height']}
-Content: {content}
+Generate drawing commands for a {analysis.topic} visual.
 
-Use clear fonts, appropriate colors (blue for new concepts, green for correct, red for errors).
-Output JSON array of drawing commands only.
+Teaching context: "{teaching_response}"
+Visual content to draw: "{content}"
+Drawing area: x={zone['x']}, y={zone['y']}, width={zone['width']}, height={zone['height']}
 
-Example format:
+Create clear, simple visuals that directly support the teaching response.
+Use appropriate colors: blue for new concepts, green for correct steps, red for errors/corrections.
+
+Output a JSON array of drawing commands. Include all necessary elements (text, shapes, lines) to create the complete visual.
+
+Example commands:
 [
-    {{"type": "text", "text": "{content}", "position": {{"x": {zone['x']}, "y": {zone['y']}}}, "options": {{"color": "#000000"}}}},
-    {{"type": "shape", "shape": "rectangle", "options": {{"x": {zone['x']}, "y": {zone['y'] + 30}, "width": 200, "height": 40, "color": "#0000FF"}}}}
+    {{"type": "text", "text": "x + 5 = 10", "position": {{"x": 50, "y": 100}}, "options": {{"color": "#000000", "fontSize": 24}}}},
+    {{"type": "shape", "shape": "line", "options": {{"x1": 50, "y1": 120, "x2": 150, "y2": 120, "color": "#0000FF", "strokeWidth": 2}}}},
+    {{"type": "text", "text": "-5", "position": {{"x": 160, "y": 100}}, "options": {{"color": "#FF0000", "fontSize": 20}}}}
 ]
 """
         
-        return await self.gemini_service.generate_drawing_commands_only(prompt)
+        commands = await self.gemini_service.generate_drawing_commands_only(prompt)
+        return commands if commands else []
+    
     
     def _summarize_chat_history(self, history: List[Dict[str, str]]) -> str:
         """Summarize recent chat history for context"""
@@ -270,12 +300,3 @@ Example format:
             content_mapping=result.get("content_mapping", {})
         )
     
-    def _get_zone_for_element(self, element: str, visual_plan: VisualPlan) -> Dict[str, Any]:
-        """Find the appropriate zone for an element"""
-        # Simple mapping - could be more sophisticated
-        for zone in visual_plan.layout_zones:
-            if element.startswith(zone['id']):
-                return zone
-        
-        # Default zone if not found
-        return {"x": 50, "y": 50, "width": 400, "height": 200}
