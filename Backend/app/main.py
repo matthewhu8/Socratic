@@ -1134,7 +1134,7 @@ async def process_ai_tutor_query(
             chat_history=messages
         )
         
-        print(f"Response from Gemini service: {response_data}")
+        print(f"Response from Gemini service: {response_data}\n")
         print(f"Drawing commands: {response_data.get('drawing_commands', [])}")
         
         # Update session with complete message history
@@ -1147,7 +1147,7 @@ async def process_ai_tutor_query(
         
         return {
             "response": response_data["response"],
-            "drawingCommands": response_data.get("drawing_commands", [])
+            "svgContent": response_data.get("svgContent")
         }
         
     except HTTPException:

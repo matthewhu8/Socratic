@@ -32,10 +32,20 @@ class GeminiService:
             'gemini-2.5-flash-preview-05-20', 
             system_instruction="You are a patient math tutor. Provide encouraging, step-by-step guidance. Keep responses concise and engaging."
         )
+
+        self.determine_necessary_visual_model = genai.GenerativeModel(
+            'gemini-2.5-flash-preview-05-20',
+            system_instruction="You determine if a visual aid is necessary for the student's query. Respond according to prompt. Should be one word: 'true' or 'false'"
+        )
         
         self.visual_model = genai.GenerativeModel(
             'gemini-2.5-flash-preview-05-20',
             system_instruction="You generate drawing commands for educational whiteboard visualizations. Always respond with valid JSON arrays of drawing commands only."
+        )
+        
+        self.svg_model = genai.GenerativeModel(
+            'gemini-2.5-flash-preview-05-20',
+            system_instruction="You generate SVG content for educational math visualizations. Always respond with valid SVG markup only, starting with <svg> and ending with </svg>."
         )
         
         # Keep existing tutor model for backward compatibility
@@ -531,14 +541,18 @@ You MUST respond with ONLY a valid JSON object as noted in the system instructio
             print(f"Error in simple response: {e}")
             return {}
     
-    async def generate_text_only(self, prompt: str) -> str:
+    async def generate_text_only(self, prompt: str, visual: bool = False) -> str:
         """Generate text-only response for teaching"""
         try:
-            response = self.text_model.generate_content(prompt)
+            if visual: response = self.determine_necessary_visual_model.generate_content(prompt)
+            if not visual: response = self.text_model.generate_content(prompt)
             return response.text.strip()
         except Exception as e:
             print(f"Error generating text response: {e}")
             return "I'm here to help! Could you please clarify your question?"
+    
+        
+    
     
     async def generate_drawing_commands_only(self, prompt: str) -> List[Dict]:
         """Generate drawing commands only"""
@@ -603,4 +617,45 @@ You MUST respond with ONLY a valid JSON object as noted in the system instructio
         except Exception as e:
             print(f"Error in comparison response: {e}")
             return {}
+    
+    async def generate_svg_content(self, prompt: str, canvas_image: Optional[str] = None) -> Optional[str]:
+        """Generate SVG content for educational visualizations"""
+        try:
+            content_parts = [prompt]
+            
+            # Add canvas image if provided
+            if canvas_image:
+                try:
+                    if canvas_image.startswith('data:image'):
+                        canvas_image = canvas_image.split(',')[1]
+                    image_data = base64.b64decode(canvas_image)
+                    pil_image = Image.open(io.BytesIO(image_data))
+                    content_parts.append(pil_image)
+                except Exception as e:
+                    print(f"Error processing canvas image for SVG generation: {e}")
+            
+            response = self.svg_model.generate_content(content_parts)
+            response_text = response.text.strip()
+            
+            # Clean up markdown if present
+            if response_text.startswith('```'):
+                end_index = response_text.rfind('```')
+                if end_index > 3:
+                    response_text = response_text[3:end_index]
+                if response_text.startswith('svg') or response_text.startswith('xml'):
+                    # Remove language identifier
+                    lines = response_text.split('\n')
+                    response_text = '\n'.join(lines[1:])
+                response_text = response_text.strip()
+            
+            # Validate that response contains SVG
+            if not response_text.startswith('<svg') or not response_text.endswith('</svg>'):
+                print(f"Invalid SVG response: {response_text[:100]}...")
+                return None
+            
+            return response_text
+            
+        except Exception as e:
+            print(f"Error generating SVG content: {e}")
+            return None
 
