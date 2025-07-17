@@ -294,32 +294,32 @@ function AITutorPage() {
       const data = await response.json();
       console.log('Full response from backend:', JSON.stringify(data, null, 2));
       
-      // Extract response and drawing commands from backend
+      // Extract response and SVG content from backend
       const aiResponse = data.response;
-      const drawingCommands = data.drawingCommands || [];
+      const svgContent = data.svgContent;
       
       console.log('AI Response:', aiResponse);
-      console.log('Drawing Commands:', drawingCommands);
+      console.log('SVG Content:', svgContent);
       
       // Add AI response to messages
       setMessages(prev => [...prev, { role: 'assistant', content: aiResponse }]);
 
-      // Execute drawing commands if any
-      if (drawingCommands && drawingCommands.length > 0) {
-        console.log('Executing drawing commands:', drawingCommands);
+      // Render SVG content if any
+      if (svgContent) {
+        console.log('Rendering SVG content');
         if (context) {
-          executeDrawingCommands(drawingCommands);
+          renderSvgToCanvas(svgContent);
         } else if (canvasRef.current) {
           // Get context if not available and retry
           const ctx = canvasRef.current.getContext('2d');
           if (ctx) {
             setContext(ctx);
             // Use the new context directly
-            executeDrawingCommandsWithContext(drawingCommands, ctx);
+            renderSvgToCanvasWithContext(svgContent, ctx);
           }
         }
       } else {
-        console.log('No drawing commands received');
+        console.log('No SVG content received');
       }
 
       // Speak the response
@@ -338,181 +338,89 @@ function AITutorPage() {
     }
   };
 
-  const executeDrawingCommandsWithContext = async (commands, ctx) => {
-    if (!ctx || !commands || commands.length === 0) {
-      console.log('Cannot execute drawing commands:', { hasContext: !!ctx, commands });
+  const renderSvgToCanvasWithContext = async (svgContent, ctx) => {
+    if (!ctx || !svgContent) {
+      console.log('Cannot render SVG:', { hasContext: !!ctx, hasSvg: !!svgContent });
       return;
     }
 
-    console.log('Starting to execute drawing commands with provided context. Current Y position:', currentDrawingY);
-    executeDrawingCommandsInternal(commands, ctx);
+    console.log('Starting to render SVG with provided context. Current Y position:', currentDrawingY);
+    renderSvgInternal(svgContent, ctx);
   };
 
-  const executeDrawingCommands = async (commands) => {
-    if (!context || !commands || commands.length === 0) {
-      console.log('Cannot execute drawing commands:', { hasContext: !!context, commands });
+  const renderSvgToCanvas = async (svgContent) => {
+    if (!context || !svgContent) {
+      console.log('Cannot render SVG:', { hasContext: !!context, hasSvg: !!svgContent });
       return;
     }
 
-    console.log('Starting to execute drawing commands. Current Y position:', currentDrawingY);
-    executeDrawingCommandsInternal(commands, context);
+    console.log('Starting to render SVG. Current Y position:', currentDrawingY);
+    renderSvgInternal(svgContent, context);
   };
 
-  const executeDrawingCommandsInternal = async (commands, ctx) => {
-
-    // Test drawing to ensure canvas works
-    ctx.save();
-    ctx.fillStyle = '#ff0000';
-    ctx.fillRect(10, 10, 50, 50); // Red square at top left
-    ctx.restore();
-    console.log('Test drawing complete - you should see a red square');
-
-    // Clear a specific area for the new drawing instead of the whole canvas
-    const drawingAreaHeight = 400; // Height for each AI drawing
-    
-    // Create a white rectangle for the new drawing area
-    ctx.save();
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(0, currentDrawingY, canvasRef.current.width, drawingAreaHeight);
-    ctx.restore();
-    
-    // Find the bounding box of the drawing commands to offset if needed
-    let maxY = currentDrawingY;
-    
-    for (const command of commands) {
-      try {
-        console.log('Executing command:', command);
-        
-        // Apply Y offset to avoid overlapping
-        const yOffset = currentDrawingY;
-        
-        switch (command.type) {
-          case 'text':
-            ctx.save();
-            // Handle font size from options
-            const fontSize = command.options?.fontSize || 20;
-            ctx.font = command.font || `${fontSize}px Arial`;
-            ctx.fillStyle = command.options?.color || command.color || '#000000';
-            const adjustedY = command.position.y + yOffset;
-            ctx.fillText(command.text, command.position.x, adjustedY);
-            maxY = Math.max(maxY, adjustedY + 30); // Add some padding
-            ctx.restore();
-            break;
-            
-          case 'shape':
-            ctx.save();
-            // Handle both 'color' and 'stroke' property names
-            ctx.strokeStyle = command.options?.color || command.options?.stroke || '#000000';
-            // Handle both 'width' and 'strokeWidth' property names
-            ctx.lineWidth = command.options?.width || command.options?.strokeWidth || 2;
-            
-            if (command.shape === 'rectangle') {
-              const rectY = command.options.y + yOffset;
-              ctx.strokeRect(
-                command.options.x, 
-                rectY, 
-                command.options.width, 
-                command.options.height
-              );
-              maxY = Math.max(maxY, rectY + command.options.height + 20);
-            } else if (command.shape === 'circle') {
-              ctx.beginPath();
-              const circleY = command.options.y + yOffset;
-              ctx.arc(
-                command.options.x, 
-                circleY, 
-                command.options.radius || 50, 
-                0, 
-                2 * Math.PI
-              );
-              
-              // Handle fill option for circles
-              if (command.options.fill) {
-                ctx.fillStyle = command.options.color || '#000000';
-                ctx.fill();
-              }
-              ctx.stroke();
-              maxY = Math.max(maxY, circleY + (command.options.radius || 50) + 20);
-            } else if (command.shape === 'line') {
-              ctx.beginPath();
-              
-              // Handle dashed lines
-              if (command.options.strokeDasharray) {
-                const dashArray = command.options.strokeDasharray.split(',').map(num => parseInt(num));
-                ctx.setLineDash(dashArray);
-              }
-              
-              ctx.moveTo(command.options.x1 || command.options.x, (command.options.y1 || command.options.y) + yOffset);
-              ctx.lineTo(command.options.x2, command.options.y2 + yOffset);
-              ctx.stroke();
-              
-              // Reset line dash
-              ctx.setLineDash([]);
-              
-              maxY = Math.max(maxY, Math.max(command.options.y1 || command.options.y, command.options.y2) + yOffset + 20);
-            }
-            ctx.restore();
-            break;
-            
-          case 'path':
-            if (command.points && command.points.length > 0) {
-              ctx.save();
-              // Handle both property name formats
-              ctx.strokeStyle = command.options?.color || command.options?.stroke || '#000000';
-              ctx.lineWidth = command.options?.width || command.options?.strokeWidth || 2;
-              if (command.options?.lineCap) {
-                ctx.lineCap = command.options.lineCap;
-              }
-              
-              // Handle dashed lines
-              if (command.options?.lineDash) {
-                ctx.setLineDash(command.options.lineDash);
-              }
-              
-              ctx.beginPath();
-              ctx.moveTo(command.points[0].x, command.points[0].y + yOffset);
-              for (let i = 1; i < command.points.length; i++) {
-                ctx.lineTo(command.points[i].x, command.points[i].y + yOffset);
-                maxY = Math.max(maxY, command.points[i].y + yOffset + 20);
-              }
-              ctx.stroke();
-              ctx.restore();
-            }
-            break;
-            
-          case 'clear':
-            // Clear the entire canvas and reset the drawing position
-            clearCanvas();
-            setCurrentDrawingY(50);
-            maxY = 50; // Reset maxY as well
-            console.log('Canvas cleared and reset');
-            break;
-            
-          default:
-            console.warn('Unknown drawing command:', command.type);
+  const renderSvgInternal = async (svgContent, ctx) => {
+    try {
+      console.log('Starting SVG rendering process');
+      
+      // Clear a specific area for the new SVG content
+      const drawingAreaHeight = 400; // Height for each AI drawing
+      
+      // Create a white rectangle for the new drawing area
+      ctx.save();
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, currentDrawingY, canvasRef.current.width, drawingAreaHeight);
+      ctx.restore();
+      
+      // Create SVG blob and convert to image
+      const svgBlob = new Blob([svgContent], { type: 'image/svg+xml' });
+      const url = URL.createObjectURL(svgBlob);
+      const img = new Image();
+      
+      img.onload = () => {
+        try {
+          // Draw the SVG image onto the canvas at the current Y position
+          ctx.drawImage(img, 0, currentDrawingY);
+          console.log('SVG successfully rendered to canvas');
+          
+          // Update the current Y position for next drawing
+          const svgHeight = img.height || 300; // Default height if not available
+          const maxY = currentDrawingY + svgHeight;
+          setCurrentDrawingY(maxY + 100); // Add spacing between drawings
+          
+          // Add a separator line between drawings
+          ctx.save();
+          ctx.strokeStyle = '#e5e7eb';
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(50, maxY + 50);
+          ctx.lineTo(canvasRef.current.width - 50, maxY + 50);
+          ctx.stroke();
+          ctx.restore();
+          
+          // Scroll to the new content
+          const scrollContainer = document.querySelector('.whiteboard-scroll-container');
+          if (scrollContainer) {
+            scrollContainer.scrollTop = currentDrawingY - 200;
+          }
+          
+          // Clean up the object URL
+          URL.revokeObjectURL(url);
+        } catch (error) {
+          console.error('Error drawing SVG to canvas:', error);
+          URL.revokeObjectURL(url);
         }
-      } catch (err) {
-        console.error('Failed to execute drawing command:', err, command);
-      }
-    }
-    
-    // Update the current Y position for next drawing with more spacing
-    setCurrentDrawingY(maxY + 100); // Add more spacing between drawings
-    
-    // Add a separator line between drawings
-    ctx.save();
-    ctx.strokeStyle = '#e5e7eb';
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(50, maxY + 50);
-    ctx.lineTo(canvasRef.current.width - 50, maxY + 50);
-    ctx.stroke();
-    ctx.restore();
-    
-    // Scroll to the new content
-    const scrollContainer = document.querySelector('.whiteboard-scroll-container');
-    if (scrollContainer) {
-      scrollContainer.scrollTop = currentDrawingY - 200; // Scroll to show the new content
+      };
+      
+      img.onerror = (error) => {
+        console.error('Error loading SVG image:', error);
+        URL.revokeObjectURL(url);
+      };
+      
+      // Start loading the image
+      img.src = url;
+      
+    } catch (error) {
+      console.error('Error in SVG rendering process:', error);
     }
   };
 
