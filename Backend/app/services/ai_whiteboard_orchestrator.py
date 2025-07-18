@@ -14,17 +14,19 @@ class AIWhiteboardOrchestrator:
         self, 
         query: str, 
         canvas_image: Optional[str],
-        chat_history: List[Dict[str, str]]
+        chat_history: List[Dict[str, str]],
+        previous_canvas_image: Optional[str] = None,
+        has_annotation: bool = False
     ) -> Dict[str, Any]:
         """
         Orchestrates the processing of student queries - two stage workflow
         """
         
-        teaching_response = await self._generate_teaching_response(query, canvas_image, chat_history)
+        teaching_response = await self._generate_teaching_response(query, canvas_image, chat_history, previous_canvas_image, has_annotation)
         print(teaching_response)
         svg_content = None
         if await self._should_generate_visual(query, teaching_response, canvas_image):
-            svg_content = await self._generate_svg_visual(teaching_response, canvas_image, teaching_response, chat_history)
+            svg_content = await self._generate_svg_visual(teaching_response, canvas_image, teaching_response, chat_history, previous_canvas_image, has_annotation)
             print(f"Step 2: Generated visual for current step with teaching_response: {teaching_response}\n")
         
 
@@ -61,7 +63,9 @@ A visual aid not not needed (false) if the explanation is straight forward, simp
         self, 
         query: str, 
         canvas_image: Optional[str],
-        chat_history: List[Dict[str, str]]
+        chat_history: List[Dict[str, str]],
+        previous_canvas_image: Optional[str] = None,
+        has_annotation: bool = False
     ) -> str:
         """
 Generate a teaching response for the student's query. 
@@ -77,6 +81,11 @@ Generate a teaching response for the student's query.
                 role = "Student" if msg['role'] == 'user' else "Tutor"
                 history_context += f"{role}: {msg['content']}\n"
         
+        # Add annotation context if this is an annotation-based query
+        annotation_context = ""
+        if has_annotation and previous_canvas_image:
+            annotation_context = "\n\nIMPORTANT: The student has made new annotations/drawings on the whiteboard since our last interaction. Two images are provided - the previous state and current state. The student is likely referencing their new markings (circles, arrows, or written notes) when asking this question. Pay close attention to what they've added."
+
         prompt = f"""
 You are an expert math tutor meant ot help the student eventually learn and master the concept. Analyze the student's query and provide an appropriate pedagogical response
 
@@ -84,23 +93,36 @@ You are an expert math tutor meant ot help the student eventually learn and mast
 
 Student Query: "{query}"
 Canvas State: {"Student may have drawn something using their hand-writtenblack marker as shown in the image" if canvas_image else "Empty canvas"}
+{annotation_context}
 Analyze the student's query and provide an appropriate pedagogical response to encourage the student to think and learn without giving too much away while also providing help to prevent frustration. 
 """
         
-        return await self.gemini_service.generate_text_only(prompt, visual=False)
+        # If this is an annotation query, use comparison method, otherwise use standard method
+        if has_annotation and previous_canvas_image and canvas_image:
+            return await self.gemini_service.generate_comparison_text_response(prompt, previous_canvas_image, canvas_image)
+        else:
+            return await self.gemini_service.generate_text_only(prompt, visual=False)
     
     async def _generate_svg_visual(
         self, 
         query: str, 
         canvas_image: Optional[str],
         teaching_response: str, 
-        chat_history: List[Dict[str, str]]
+        chat_history: List[Dict[str, str]],
+        previous_canvas_image: Optional[str] = None,
+        has_annotation: bool = False
     ) -> Optional[str]:
+        # Add annotation context for SVG generation
+        annotation_svg_context = ""
+        if has_annotation and previous_canvas_image:
+            annotation_svg_context = "\n\nNOTE: The student has made new annotations since our last interaction. Build upon or reference their markings where appropriate."
+        
         prompt = f"""
 You are an expert visualization tutor who pays attention to every close detail of your response. Create an SVG visual to support this math tutoring response. 
 Student's Query: {query}
 Teaching Response: {teaching_response}
 Canvas State: {"Student has drawn something" if canvas_image else "Empty canvas"}
+{annotation_svg_context}
 
 Create a clear, education SVG that directly support the teaching response. 
 

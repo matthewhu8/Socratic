@@ -20,6 +20,9 @@ function AITutorPage() {
   const [context, setContext] = useState(null);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [currentDrawingY, setCurrentDrawingY] = useState(50); // Track Y position for AI drawings
+  const [previousCanvasImage, setPreviousCanvasImage] = useState(null); // Store previous canvas state
+  const [hasNewDrawing, setHasNewDrawing] = useState(false); // Track if user drew since last query
+  const [showAnnotationToggle, setShowAnnotationToggle] = useState(false); // Show manual annotation toggle
 
   // Initialize speech recognition
   useEffect(() => {
@@ -185,6 +188,7 @@ function AITutorPage() {
   const startDrawing = (e) => {
     if (!context) return;
     setIsDrawing(true);
+    setHasNewDrawing(true); // Mark that user has drawn something
     const rect = canvasRef.current.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
@@ -203,6 +207,10 @@ function AITutorPage() {
 
   const stopDrawing = () => {
     setIsDrawing(false);
+    // Show annotation toggle if user has drawn and we have a previous image
+    if (hasNewDrawing && previousCanvasImage) {
+      setShowAnnotationToggle(true);
+    }
   };
 
   const clearCanvas = () => {
@@ -216,6 +224,10 @@ function AITutorPage() {
     context.strokeStyle = '#000000';
     // Reset drawing position
     setCurrentDrawingY(50);
+    // Clear drawing states
+    setHasNewDrawing(false);
+    setPreviousCanvasImage(null);
+    setShowAnnotationToggle(false);
   };
 
   const captureCanvas = () => {
@@ -227,6 +239,39 @@ function AITutorPage() {
     }
     console.log('Canvas ref not available');
     return null;
+  };
+
+  const compressCanvas = (dataURL, maxWidth = 800, quality = 0.8) => {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Calculate new dimensions while maintaining aspect ratio
+        const ratio = Math.min(maxWidth / img.width, maxWidth / img.height);
+        canvas.width = img.width * ratio;
+        canvas.height = img.height * ratio;
+        
+        // Draw compressed image
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        
+        // Convert to compressed data URL
+        const compressedDataURL = canvas.toDataURL('image/jpeg', quality);
+        resolve(compressedDataURL);
+      };
+      img.src = dataURL;
+    });
+  };
+
+  const captureAndStorePreviousCanvas = () => {
+    const currentImage = captureCanvas();
+    if (currentImage) {
+      compressCanvas(currentImage).then(compressed => {
+        setPreviousCanvasImage(compressed);
+        console.log('Previous canvas image captured and compressed');
+      });
+    }
   };
 
   const isCanvasEmpty = () => {
@@ -252,21 +297,48 @@ function AITutorPage() {
     return true;
   };
 
-  const handleSubmit = async (text = userInput, includeCanvas = false) => {
+  const handleSubmit = async (text = userInput, includeCanvas = false, forceAnnotationMode = false) => {
     if (!text.trim() || isProcessing) return;
 
     // Always include canvas if there's any content on it OR if explicitly requested
     const hasCanvasContent = !isCanvasEmpty();
     const shouldIncludeCanvas = includeCanvas || hasCanvasContent;
 
+    // Determine if this is an annotation-based query
+    const isAnnotationQuery = Boolean(forceAnnotationMode || (hasNewDrawing && previousCanvasImage));
+    
     const canvasData = shouldIncludeCanvas ? captureCanvas() : null;
+    let compressedCanvasData = null;
+    let compressedPreviousData = null;
+    
+    // Compress current canvas if we have data
+    if (canvasData) {
+      compressedCanvasData = await compressCanvas(canvasData);
+    }
+    
+    // Compress previous canvas if this is an annotation query
+    if (isAnnotationQuery && previousCanvasImage) {
+      compressedPreviousData = previousCanvasImage; // Already compressed when stored
+    }
     
     if (shouldIncludeCanvas) {
       console.log('Including canvas in request');
       console.log('Canvas has content:', hasCanvasContent);
-      console.log('Canvas data exists:', canvasData !== null);
-      console.log('Canvas data length:', canvasData ? canvasData.length : 0);
+      console.log('Canvas data exists:', compressedCanvasData !== null);
+      console.log('Canvas data length:', compressedCanvasData ? compressedCanvasData.length : 0);
+      console.log('Is annotation query:', isAnnotationQuery);
+      console.log('Previous canvas exists:', compressedPreviousData !== null);
     }
+    
+    const requestPayload = {
+      sessionId,
+      query: text,
+      messages: messages.slice(-10),
+      canvasImage: compressedCanvasData,
+      previousCanvasImage: compressedPreviousData,
+      hasAnnotation: isAnnotationQuery,
+    };
+    console.log('Request payload:', JSON.stringify(requestPayload, null, 2));
 
     setIsProcessing(true);
     const newMessage = { role: 'user', content: text };
@@ -279,12 +351,7 @@ function AITutorPage() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          sessionId,
-          query: text,
-          messages: messages.slice(-10), // Send last 10 messages for context
-          canvasImage: canvasData,
-        }),
+        body: JSON.stringify(requestPayload),
       });
 
       if (!response.ok) {
@@ -326,6 +393,15 @@ function AITutorPage() {
       if (aiResponse) {
         speakText(aiResponse);
       }
+      
+      // Reset drawing state and capture new previous state after AI responds
+      setHasNewDrawing(false);
+      setShowAnnotationToggle(false);
+      
+      // Capture the current state as the new "previous" state after AI drawing completes
+      setTimeout(() => {
+        captureAndStorePreviousCanvas();
+      }, 1000); // Give time for SVG rendering to complete
 
     } catch (err) {
       console.error('Failed to process query:', err);
@@ -506,6 +582,20 @@ function AITutorPage() {
             <button onClick={clearCanvas} className="control-button">
               Clear Board
             </button>
+            {showAnnotationToggle && (
+              <div className="annotation-controls">
+                <button 
+                  onClick={() => {
+                    setShowAnnotationToggle(false);
+                    handleSubmit(userInput, false, true); // Force annotation mode
+                  }}
+                  className="annotation-button"
+                  disabled={!userInput.trim() || isProcessing}
+                >
+                  Send with annotation reference
+                </button>
+              </div>
+            )}
           </div>
           <div className="whiteboard-scroll-container">
             <canvas

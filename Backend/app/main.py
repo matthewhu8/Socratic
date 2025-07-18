@@ -1,5 +1,7 @@
 from fastapi import FastAPI, HTTPException, Depends, status, Request, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from pydantic import BaseModel, EmailStr
 from typing import List, Dict, Any, Optional
@@ -30,6 +32,14 @@ load_dotenv()
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Socratic Monolithic Backend")
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    print(f"Validation error: {exc}")
+    return JSONResponse(
+        status_code=422,
+        content={"detail": str(exc)}
+    )
 
 # CORS middleware - Updated for production
 app.add_middleware(
@@ -1040,6 +1050,8 @@ class AITutorQueryRequest(BaseModel):
     query: str
     messages: List[Dict[str, str]]
     canvasImage: Optional[str] = None  # Base64 encoded image
+    previousCanvasImage: Optional[str] = None  # Base64 encoded previous image
+    hasAnnotation: bool = False  # Flag indicating annotation-based query
 
 @app.post("/api/ai-tutor/create-session", response_model=AITutorSessionResponse)
 async def create_ai_tutor_session(
@@ -1104,6 +1116,12 @@ async def process_ai_tutor_query(
 ):
     """Process a query from the AI tutor interface."""
     try:
+        print(f"Received request: sessionId={request.sessionId}, query={request.query[:50]}...")
+        print(f"Has canvas image: {request.canvasImage is not None}")
+        print(f"Has previous canvas image: {request.previousCanvasImage is not None}")
+        print(f"Has annotation: {request.hasAnnotation}")
+        print(f"Canvas image length: {len(request.canvasImage) if request.canvasImage else 0}")
+        print(f"Previous canvas image length: {len(request.previousCanvasImage) if request.previousCanvasImage else 0}")
         # Get session from Redis
         session_data = convo_service.redis_client.get(f"ai_tutor:{request.sessionId}")
         if not session_data:
@@ -1131,7 +1149,9 @@ async def process_ai_tutor_query(
         response_data = await orchestrator.process_student_query(
             query=request.query,
             canvas_image=request.canvasImage,
-            chat_history=messages
+            chat_history=messages,
+            previous_canvas_image=request.previousCanvasImage,
+            has_annotation=request.hasAnnotation
         )
         
         print(f"Response from Gemini service: {response_data}\n")
