@@ -551,6 +551,40 @@ You MUST respond with ONLY a valid JSON object as noted in the system instructio
             print(f"Error generating text response: {e}")
             return "I'm here to help! Could you please clarify your question?"
     
+    async def generate_comparison_text_response(self, prompt: str, image1: str, image2: str) -> str:
+        """Generate text response comparing two canvas images"""
+        try:
+            content_parts = [prompt]
+            
+            # Process first image (previous state)
+            try:
+                if image1.startswith('data:image'):
+                    image1 = image1.split(',')[1]
+                image1_data = base64.b64decode(image1)
+                pil_image1 = Image.open(io.BytesIO(image1_data))
+                content_parts.append("Previous canvas state:")
+                content_parts.append(pil_image1)
+            except Exception as e:
+                print(f"Error processing previous image: {e}")
+            
+            # Process second image (current state)
+            try:
+                if image2.startswith('data:image'):
+                    image2 = image2.split(',')[1]
+                image2_data = base64.b64decode(image2)
+                pil_image2 = Image.open(io.BytesIO(image2_data))
+                content_parts.append("Current canvas state (with student's new annotations):")
+                content_parts.append(pil_image2)
+            except Exception as e:
+                print(f"Error processing current image: {e}")
+            
+            response = self.text_model.generate_content(content_parts)
+            return response.text.strip()
+            
+        except Exception as e:
+            print(f"Error in comparison text response: {e}")
+            return "I can see you've made some annotations! Could you tell me more about what you'd like help with?"
+    
         
     
     
