@@ -1168,6 +1168,7 @@ async def process_ai_tutor_query(
         return {
             "response": response_data["response"],
             "svgContent": response_data.get("svgContent")
+            # this is image is Y height, bump down Y marker by XYZ (juyst an idea)
         }
         
     except HTTPException:

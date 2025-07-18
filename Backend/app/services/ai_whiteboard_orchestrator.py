@@ -23,18 +23,18 @@ class AIWhiteboardOrchestrator:
         """
         
         teaching_response = await self._generate_teaching_response(query, canvas_image, chat_history, previous_canvas_image, has_annotation)
-        print(teaching_response)
+        print(f"step 1 generated: {teaching_response}")
+        # eventually would like a step to decide if we want new drawing (svg content), annotation on current image (JSON drawing with coordinates), or no drawing at all. For the purposes of speed for now, this step does not exist. 
+        # look into classification models etc. 
         svg_content = None
-        if await self._should_generate_visual(query, teaching_response, canvas_image):
-            svg_content = await self._generate_svg_visual(teaching_response, canvas_image, teaching_response, chat_history, previous_canvas_image, has_annotation)
-            print(f"Step 2: Generated visual for current step with teaching_response: {teaching_response}\n")
-        
-
+        svg_content = await self._generate_svg_visual(teaching_response, canvas_image, teaching_response, chat_history, previous_canvas_image, has_annotation)
+        print(f"Step 2: Generated visual for current step with teaching_response: {teaching_response}\n")
         return {
             "response": teaching_response,
             "svgContent": svg_content
         }
     
+    # we used to use this, but now since we are trying to speed up response time, we won't have a step to decide if visual is needed instead, we will just automatically produce an image for everything
     async def _should_generate_visual(
         self, 
         query: str, 
@@ -137,7 +137,7 @@ GUIDELINES:
 Respond with ONLY the complete SVG markup (starting with <svg> and ending with </svg>)!!!
 """
         
-        return await self.gemini_service.generate_svg_content(prompt, canvas_image)
+        return await self.gemini_service.generate_svg_content(prompt, canvas_image)#
     
     
  
