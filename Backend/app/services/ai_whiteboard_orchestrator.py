@@ -25,7 +25,7 @@ class AIWhiteboardOrchestrator:
         teaching_response = await self._generate_teaching_response(query, canvas_image, chat_history, previous_canvas_image, has_annotation)
         print(f"step 1 generated: {teaching_response}")
         # eventually would like a step to decide if we want new drawing (svg content), annotation on current image (JSON drawing with coordinates), or no drawing at all. For the purposes of speed for now, this step does not exist. 
-        # look into classification models etc. 
+        # look into classification models etc.
         svg_content = None
         svg_content = await self._generate_svg_visual(teaching_response, canvas_image, teaching_response, chat_history, previous_canvas_image, has_annotation)
         print(f"Step 2: Generated visual for current step with teaching_response: {teaching_response}\n")
@@ -34,30 +34,6 @@ class AIWhiteboardOrchestrator:
             "svgContent": svg_content
         }
     
-    # we used to use this, but now since we are trying to speed up response time, we won't have a step to decide if visual is needed instead, we will just automatically produce an image for everything
-    async def _should_generate_visual(
-        self, 
-        query: str, 
-        teaching_response: str, 
-        canvas_image: Optional[str]
-    ) -> bool:
-        """
-        Stage 1: Quick analysis to understand the learning context
-        """
-        prompt = f"""
-Determ if a visual aid would help explain this teaching reponse. 
-Student Query: {query}
-Teaching Response: {teaching_response}
-Canvas State: {"Student has drawn something" if canvas_image else "Empty canvas"}
-
-Respond with only: true/false
-
-A visual aid is helpful (true) for graphing, geometric conepts, step-by-step complex problem solving, diagrams, visualizing concepts if the student asks for it, correcting visual errors. 
-A visual aid not not needed (false) if the explanation is straight forward, simple encouragement, or questions that don't involve visual elements. 
-"""
-        
-        result = await self.gemini_service.generate_text_only(prompt, visual=True)
-        return result == "true"
     
     async def _generate_teaching_response(
         self, 
@@ -87,14 +63,14 @@ Generate a teaching response for the student's query.
             annotation_context = "\n\nIMPORTANT: The student has made new annotations/drawings on the whiteboard since our last interaction. Two images are provided - the previous state and current state. The student is likely referencing their new markings (circles, arrows, or written notes) when asking this question. Pay close attention to what they've added."
 
         prompt = f"""
-You are an expert math tutor meant ot help the student eventually learn and master the concept. Analyze the student's query and provide an appropriate pedagogical response
+You are an expert math tutor meant to help the student eventually learn and master the concept. 
 
 {history_context}
 
 Student Query: "{query}"
 Canvas State: {"Student may have drawn something using their hand-writtenblack marker as shown in the image" if canvas_image else "Empty canvas"}
 {annotation_context}
-Analyze the student's query and provide an appropriate pedagogical response to encourage the student to think and learn without giving too much away while also providing help to prevent frustration. 
+Answer the student's query while providing an appropriate pedagogical response to encourage the student to think and learn further about the topic. 
 """
         
         # If this is an annotation query, use comparison method, otherwise use standard method
@@ -124,7 +100,7 @@ Teaching Response: {teaching_response}
 Canvas State: {"Student has drawn something" if canvas_image else "Empty canvas"}
 {annotation_svg_context}
 
-Create a clear, education SVG that directly support the teaching response. 
+Create a clear, education SVG that supports the teaching response while helping answer the student's query. Do not reveal the answer to the teacher's follow up question if the teacher asks one. 
 
 GUIDELINES:
 1. Use a 600x400 viewBox for consistency

@@ -20,6 +20,7 @@ function AITutorPage() {
   const [context, setContext] = useState(null);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [currentDrawingY, setCurrentDrawingY] = useState(50); // Track Y position for AI drawings
+  const [nextDrawingY, setNextDrawingY] = useState(50); // Track next available Y position
   const [previousCanvasImage, setPreviousCanvasImage] = useState(null); // Store previous canvas state
   const [hasNewDrawing, setHasNewDrawing] = useState(false); // Track if user drew since last query
   const [showAnnotationToggle, setShowAnnotationToggle] = useState(false); // Show manual annotation toggle
@@ -63,7 +64,7 @@ function AITutorPage() {
         
         // Set canvas size based on container width
         const canvasWidth = containerWidth - 20; // Subtract padding
-        const canvasHeight = 2000; // Large height for scrolling
+        const canvasHeight = 800; // Initial height, will expand as needed
         
         // Save current canvas content if needed
         let imageData = null;
@@ -224,6 +225,7 @@ function AITutorPage() {
     context.strokeStyle = '#000000';
     // Reset drawing position
     setCurrentDrawingY(50);
+    setNextDrawingY(50);
     // Clear drawing states
     setHasNewDrawing(false);
     setPreviousCanvasImage(null);
@@ -438,13 +440,47 @@ function AITutorPage() {
     try {
       console.log('Starting SVG rendering process');
       
+      // Use the next available Y position
+      const drawingY = nextDrawingY;
+      console.log('Drawing at Y position:', drawingY);
+      
       // Clear a specific area for the new SVG content
       const drawingAreaHeight = 400; // Height for each AI drawing
+      const requiredHeight = drawingY + drawingAreaHeight + 200; // Extra buffer
+      
+      // Immediately reserve space for this drawing
+      setNextDrawingY(drawingY + drawingAreaHeight + 100);
+      
+      // Check if canvas needs to be expanded
+      if (canvasRef.current && canvasRef.current.height < requiredHeight) {
+        console.log(`Expanding canvas from ${canvasRef.current.height}px to ${requiredHeight + 500}px`);
+        
+        // Create temporary canvas to preserve content
+        const tempCanvas = document.createElement('canvas');
+        tempCanvas.width = canvasRef.current.width;
+        tempCanvas.height = canvasRef.current.height;
+        const tempCtx = tempCanvas.getContext('2d');
+        
+        // Copy current canvas content
+        tempCtx.drawImage(canvasRef.current, 0, 0);
+        
+        // Expand the main canvas
+        canvasRef.current.height = requiredHeight + 500; // Add extra space
+        canvasRef.current.style.height = (requiredHeight + 500) + 'px';
+        
+        // Restore the content
+        ctx.drawImage(tempCanvas, 0, 0);
+        
+        // Restore context settings
+        ctx.strokeStyle = '#000000';
+        ctx.lineWidth = 2;
+        ctx.lineCap = 'round';
+      }
       
       // Create a white rectangle for the new drawing area
       ctx.save();
       ctx.fillStyle = '#ffffff';
-      ctx.fillRect(0, currentDrawingY, canvasRef.current.width, drawingAreaHeight);
+      ctx.fillRect(0, drawingY, canvasRef.current.width, drawingAreaHeight);
       ctx.restore();
       
       // Create SVG blob and convert to image
@@ -454,14 +490,18 @@ function AITutorPage() {
       
       img.onload = () => {
         try {
-          // Draw the SVG image onto the canvas at the current Y position
-          ctx.drawImage(img, 0, currentDrawingY);
-          console.log('SVG successfully rendered to canvas');
+          // Draw the SVG image onto the canvas at the reserved Y position
+          ctx.drawImage(img, 0, drawingY);
+          console.log('SVG successfully rendered to canvas at Y:', drawingY);
           
-          // Update the current Y position for next drawing
+          // Update the current Y position for display purposes
           const svgHeight = img.height || 300; // Default height if not available
-          const maxY = currentDrawingY + svgHeight;
-          setCurrentDrawingY(maxY + 100); // Add spacing between drawings
+          const maxY = drawingY + svgHeight;
+          setCurrentDrawingY(drawingY); // Update current position
+          
+          // Update next position if the actual height is different
+          const actualNextY = maxY + 100;
+          setNextDrawingY(prevNext => Math.max(prevNext, actualNextY));
           
           // Add a separator line between drawings
           ctx.save();
@@ -476,7 +516,7 @@ function AITutorPage() {
           // Scroll to the new content
           const scrollContainer = document.querySelector('.whiteboard-scroll-container');
           if (scrollContainer) {
-            scrollContainer.scrollTop = currentDrawingY - 200;
+            scrollContainer.scrollTop = drawingY - 200;
           }
           
           // Clean up the object URL
