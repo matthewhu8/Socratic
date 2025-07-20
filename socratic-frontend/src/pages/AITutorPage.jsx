@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../contexts/AuthContext';
 import '../styles/AITutorPage.css';
 import API_URL, { fetchWithAuth } from '../config/api';
+import MathText from '../components/MathText';
 
 function AITutorPage() {
   const navigate = useNavigate();
@@ -654,7 +655,9 @@ function AITutorPage() {
             {messages.map((msg, index) => (
               <div key={index} className={`message ${msg.role}`}>
                 <strong>{msg.role === 'user' ? 'You' : 'AI Tutor'}:</strong>
-                <p>{msg.content}</p>
+                <div className="message-content">
+                  <MathText text={msg.content} />
+                </div>
               </div>
             ))}
             {isProcessing && (

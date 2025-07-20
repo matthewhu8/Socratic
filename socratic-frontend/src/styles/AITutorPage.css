@@ -234,6 +234,20 @@
   line-height: 1.5;
 }
 
+.message .message-content {
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* Ensure math expressions have proper spacing */
+.message .message-content .katex {
+  font-size: 1em;
+}
+
+.message .message-content .katex-display {
+  margin: 0.5em 0;
+}
+
 .input-section {
   padding: 1rem;
   border-top: 1px solid #e5e7eb;
