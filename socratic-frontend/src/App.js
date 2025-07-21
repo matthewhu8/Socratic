@@ -2,7 +2,6 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import HomePage from './pages/HomePage';
-import PhysicsProblemPage from './pages/PhysicProblemPage';
 import TeacherDashboardPage from './pages/TeacherDashboardPage';
 import CreateTestPage from './pages/CreateTestPage';
 import CreatePracticeExamPage from './pages/CreatePracticeExamPage';
@@ -141,8 +140,7 @@ function App() {
               </ProtectedRoute>
             } />
             
-            {/* Legacy/Other Routes */}
-            <Route path="/physics-problem" element={<PhysicsProblemPage />} />
+            
           </Routes>
         </div>
       </Router>

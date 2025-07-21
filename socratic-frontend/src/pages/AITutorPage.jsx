@@ -16,6 +16,7 @@ function AITutorPage() {
   const [messages, setMessages] = useState([]);
   const canvasRef = useRef(null);
   const recognition = useRef(null);
+  const currentAudioRef = useRef(null);
   const [isListening, setIsListening] = useState(false);
   const [isDrawing, setIsDrawing] = useState(false);
   const [context, setContext] = useState(null);
@@ -336,7 +337,7 @@ function AITutorPage() {
     const requestPayload = {
       sessionId,
       query: text,
-      messages: messages.slice(-10),
+      messages: messages,
       canvasImage: compressedCanvasData,
       previousCanvasImage: compressedPreviousData,
       hasAnnotation: isAnnotationQuery,
@@ -380,11 +381,9 @@ function AITutorPage() {
         if (context) {
           renderSvgToCanvas(svgContent);
         } else if (canvasRef.current) {
-          // Get context if not available and retry
           const ctx = canvasRef.current.getContext('2d');
           if (ctx) {
             setContext(ctx);
-            // Use the new context directly
             renderSvgToCanvasWithContext(svgContent, ctx);
           }
         }
@@ -446,7 +445,7 @@ function AITutorPage() {
       console.log('Drawing at Y position:', drawingY);
       
       // Clear a specific area for the new SVG content
-      const drawingAreaHeight = 400; // Height for each AI drawing
+      const drawingAreaHeight = 500; // Height for each AI drawing
       const requiredHeight = drawingY + drawingAreaHeight + 200; // Extra buffer
       
       // Immediately reserve space for this drawing
@@ -502,17 +501,8 @@ function AITutorPage() {
           
           // Update next position if the actual height is different
           const actualNextY = maxY + 100;
-          setNextDrawingY(prevNext => Math.max(prevNext, actualNextY));
-          
-          // Add a separator line between drawings
-          ctx.save();
-          ctx.strokeStyle = '#e5e7eb';
-          ctx.lineWidth = 1;
-          ctx.beginPath();
-          ctx.moveTo(50, maxY + 50);
-          ctx.lineTo(canvasRef.current.width - 50, maxY + 50);
-          ctx.stroke();
-          ctx.restore();
+          setNextDrawingY(prevNext => Math.max(prevNext, actualNextY))
+                    
           
           // Scroll to the new content
           const scrollContainer = document.querySelector('.whiteboard-scroll-container');
@@ -541,7 +531,88 @@ function AITutorPage() {
     }
   };
 
-  const speakText = (text) => {
+  const speakText = async (text) => {
+    // Try Google Cloud TTS first
+    try {
+      setIsSpeaking(true);
+      
+      const apiKey = process.env.REACT_APP_GOOGLE_TTS_KEY;
+      if (!apiKey) {
+        console.log('Google TTS API key not configured, falling back to browser TTS');
+        fallbackToSpeechSynthesis(text);
+        return;
+      }
+      
+      // Google Cloud TTS API request
+      const response = await fetch(`https://texttospeech.googleapis.com/v1/text:synthesize?key=${apiKey}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          input: { text },
+          voice: {
+            languageCode: 'en-US',
+            name: 'en-US-Journey-F', // Premium Neural voice - young, friendly female
+            // Alternative voices to try:
+            // 'en-US-Neural2-F' - Standard female neural voice
+            // 'en-US-Neural2-H' - Young female neural voice
+            // 'en-US-Wavenet-F' - Natural female wavenet voice
+            // 'en-US-Journey-D' - Warm male journey voice
+          },
+          audioConfig: {
+            audioEncoding: 'MP3',
+            speakingRate: 1.0, // Range: 0.25 to 4.0 (1.0 is normal speed)
+            pitch: 0, // Range: -20.0 to 20.0 semitones (0 is normal)
+            volumeGainDb: 0, // Range: -96.0 to 16.0 dB (0 is normal)
+          }
+        })
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Google TTS API error:', errorData);
+        throw new Error(errorData.error?.message || 'Google TTS request failed');
+      }
+      
+      const data = await response.json();
+      
+      // Create audio element from base64 response
+      const audio = new Audio(`data:audio/mp3;base64,${data.audioContent}`);
+      currentAudioRef.current = audio; // Store reference for stopping
+      
+      // Set up event handlers
+      audio.onloadeddata = () => {
+        console.log('Google TTS audio loaded successfully');
+      };
+      
+      audio.onended = () => {
+        setIsSpeaking(false);
+        currentAudioRef.current = null;
+      };
+      
+      audio.onerror = (error) => {
+        console.error('Google TTS audio playback error:', error);
+        setIsSpeaking(false);
+        currentAudioRef.current = null;
+        // Fallback to browser's speech synthesis
+        fallbackToSpeechSynthesis(text);
+      };
+      
+      // Play the audio
+      await audio.play();
+      console.log('Playing Google TTS audio');
+      
+    } catch (error) {
+      console.error('Failed to use Google TTS:', error);
+      setIsSpeaking(false);
+      currentAudioRef.current = null;
+      // Fallback to browser's speech synthesis
+      fallbackToSpeechSynthesis(text);
+    }
+  };
+  
+  const fallbackToSpeechSynthesis = (text) => {
     if ('speechSynthesis' in window) {
       // Cancel any ongoing speech
       window.speechSynthesis.cancel();
@@ -567,10 +638,18 @@ function AITutorPage() {
   };
   
   const stopSpeaking = () => {
+    // Stop VoiceRSS audio if playing
+    if (currentAudioRef.current) {
+      currentAudioRef.current.pause();
+      currentAudioRef.current = null;
+    }
+    
+    // Stop speech synthesis if playing
     if ('speechSynthesis' in window) {
       window.speechSynthesis.cancel();
-      setIsSpeaking(false);
     }
+    
+    setIsSpeaking(false);
   };
 
   const toggleListening = () => {

@@ -1068,14 +1068,6 @@ async def create_ai_tutor_session(
         
         # Get Agora credentials from environment
         app_identifier = os.getenv("AGORA_APP_IDENTIFIER", "your-app-identifier")
-        sdk_token = os.getenv("AGORA_SDK_TOKEN", "your-sdk-token")
-        
-        # Create room via Agora API
-        headers = {
-            "token": sdk_token,
-            "Content-Type": "application/json",
-            "region": "us-sv"
-        }
         
         # For development, we'll mock the response
         # In production, you would make actual API calls to Agora
@@ -1155,7 +1147,6 @@ async def process_ai_tutor_query(
         )
         
         print(f"Response from Gemini service: {response_data}\n")
-        print(f"Drawing commands: {response_data.get('drawing_commands', [])}")
         
         # Update session with complete message history
         session_info["messages"] = messages + [{"role": "assistant", "content": response_data["response"]}]
