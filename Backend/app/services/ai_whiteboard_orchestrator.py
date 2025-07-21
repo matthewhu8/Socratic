@@ -27,7 +27,7 @@ class AIWhiteboardOrchestrator:
         # eventually would like a step to decide if we want new drawing (svg content), annotation on current image (JSON drawing with coordinates), or no drawing at all. For the purposes of speed for now, this step does not exist. 
         # look into classification models etc.
         svg_content = None
-        svg_content = await self._generate_svg_visual(teaching_response, canvas_image, teaching_response, chat_history, previous_canvas_image, has_annotation)
+        svg_content = await self._generate_svg_visual(query, canvas_image, teaching_response, chat_history, previous_canvas_image, has_annotation)
         print(f"Step 2: Generated visual for current step with teaching_response: {teaching_response}\n")
         return {
             "response": teaching_response,
@@ -45,16 +45,63 @@ class AIWhiteboardOrchestrator:
     ) -> str:
         """
         Generate a teaching response using optimized chat-based approach.
+        Generate a teaching response using optimized chat-based approach.
         """
         
         # Use optimized approach with chat history instead of building prompt
         if has_annotation and previous_canvas_image and canvas_image:
-            # For annotation queries, still use comparison method
+            # For annotation queries, use chat history approach with both images
+            # Convert chat history to Gemini format
+            formatted_history = []
+            recent_history = chat_history[-10:] if len(chat_history) > 10 else chat_history
+            
+            for msg in recent_history:
+                role = "user" if msg.get("role") == "user" else "model"
+                formatted_history.append({
+                    "role": role,
+                    "parts": [msg.get("content", "")]
+                })
+            
+            # Start chat with history pre-loaded
+            chat = self.gemini_service.text_model.start_chat(history=formatted_history)
+            
+            # Context for annotation
             annotation_context = "IMPORTANT: The student has made new annotations/drawings on the whiteboard since our last interaction. Two images are provided - the previous state and current state. The student is likely referencing their new markings when asking this question. Pay close attention to what they've added."
             
-            minimal_prompt = f"Student Query: \"{query}\"\nCanvas: Student has drawn something\n{annotation_context}\nProvide encouraging guidance."
+            minimal_prompt = f"Student asks: \"{query}\"\nCanvas: Has student annotations\n{annotation_context}\nProvide guidance."
             
-            return await self.gemini_service.generate_comparison_text_response(minimal_prompt, previous_canvas_image, canvas_image)
+            # Prepare content parts with both images
+            content_parts = [minimal_prompt]
+            
+            # Add previous canvas image
+            try:
+                import base64
+                from PIL import Image
+                import io
+                
+                # Process previous image
+                if previous_canvas_image.startswith('data:image'):
+                    previous_canvas_image = previous_canvas_image.split(',')[1]
+                prev_image_data = base64.b64decode(previous_canvas_image)
+                prev_pil_image = Image.open(io.BytesIO(prev_image_data))
+                content_parts.append("Previous canvas state:")
+                content_parts.append(prev_pil_image)
+            except Exception as e:
+                print(f"Error processing previous canvas image in teaching response: {e}")
+            
+            # Add current canvas image
+            try:
+                if canvas_image.startswith('data:image'):
+                    canvas_image = canvas_image.split(',')[1]
+                curr_image_data = base64.b64decode(canvas_image)
+                curr_pil_image = Image.open(io.BytesIO(curr_image_data))
+                content_parts.append("Current canvas state (with new annotations):")
+                content_parts.append(curr_pil_image)
+            except Exception as e:
+                print(f"Error processing current canvas image in teaching response: {e}")
+            
+            response = await chat.send_message_async(content_parts)
+            return response.text.strip()
         else:
             # Use chat history approach for regular queries
             # Convert chat history to Gemini format
@@ -103,6 +150,17 @@ class AIWhiteboardOrchestrator:
         previous_canvas_image: Optional[str] = None,
         has_annotation: bool = False
     ) -> Optional[str]:
+        """
+        Generate SVG visual using optimized chat history method.
+        """
+        
+        # Use the new optimized SVG generation method
+        return await self.gemini_service.generate_svg_with_chat_history(
+            query=query,
+            teaching_response=teaching_response,
+            chat_history=chat_history,
+            canvas_image=canvas_image
+        )
         """
         Generate SVG visual using optimized chat history method.
         """
