@@ -44,40 +44,55 @@ class AIWhiteboardOrchestrator:
         has_annotation: bool = False
     ) -> str:
         """
-Generate a teaching response for the student's query. 
+        Generate a teaching response using optimized chat-based approach.
         """
         
-        # Include chat history in prompt
-        history_context = ""
-        if chat_history:
-            lengthChatHistory = -1 * len(chat_history)
-            recent_history = chat_history[lengthChatHistory:]  # Last 2 exchanges
-            history_context = "Recent conversation:\n"
-            for msg in recent_history:
-                role = "Student" if msg['role'] == 'user' else "Tutor"
-                history_context += f"{role}: {msg['content']}\n"
-        
-        # Add annotation context if this is an annotation-based query
-        annotation_context = ""
-        if has_annotation and previous_canvas_image:
-            annotation_context = "\n\nIMPORTANT: The student has made new annotations/drawings on the whiteboard since our last interaction. Two images are provided - the previous state and current state. The student is likely referencing their new markings (circles, arrows, or written notes) when asking this question. Pay close attention to what they've added."
-
-        prompt = f"""
-You are an expert math tutor meant to help the student eventually learn and master the concept. 
-
-{history_context}
-
-Student Query: "{query}"
-Canvas State: {"Student may have drawn something using their hand-writtenblack marker as shown in the image" if canvas_image else "Empty canvas"}
-{annotation_context}
-Answer the student's query while providing an appropriate pedagogical response to encourage the student to think and learn further about the topic. 
-"""
-        
-        # If this is an annotation query, use comparison method, otherwise use standard method
+        # Use optimized approach with chat history instead of building prompt
         if has_annotation and previous_canvas_image and canvas_image:
-            return await self.gemini_service.generate_comparison_text_response(prompt, previous_canvas_image, canvas_image)
+            # For annotation queries, still use comparison method
+            annotation_context = "IMPORTANT: The student has made new annotations/drawings on the whiteboard since our last interaction. Two images are provided - the previous state and current state. The student is likely referencing their new markings when asking this question. Pay close attention to what they've added."
+            
+            minimal_prompt = f"Student Query: \"{query}\"\nCanvas: Student has drawn something\n{annotation_context}\nProvide encouraging guidance."
+            
+            return await self.gemini_service.generate_comparison_text_response(minimal_prompt, previous_canvas_image, canvas_image)
         else:
-            return await self.gemini_service.generate_text_only(prompt, visual=False)
+            # Use chat history approach for regular queries
+            # Convert chat history to Gemini format
+            formatted_history = []
+            recent_history = chat_history[-10:] if len(chat_history) > 10 else chat_history
+            
+            for msg in recent_history:
+                role = "user" if msg.get("role") == "user" else "model"
+                formatted_history.append({
+                    "role": role,
+                    "parts": [msg.get("content", "")]
+                })
+            
+            # Start chat with history pre-loaded
+            chat = self.gemini_service.text_model.start_chat(history=formatted_history)
+            
+            # MINIMAL prompt - system instruction handles the rest
+            canvas_state = "Has student drawing" if canvas_image else "Empty"
+            minimal_prompt = f"Student asks: \"{query}\"\nCanvas: {canvas_state}\nProvide guidance."
+            
+            # Prepare content parts
+            content_parts = [minimal_prompt]
+            if canvas_image:
+                try:
+                    import base64
+                    from PIL import Image
+                    import io
+                    
+                    if canvas_image.startswith('data:image'):
+                        canvas_image = canvas_image.split(',')[1]
+                    image_data = base64.b64decode(canvas_image)
+                    pil_image = Image.open(io.BytesIO(image_data))
+                    content_parts.append(pil_image)
+                except Exception as e:
+                    print(f"Error processing canvas image in teaching response: {e}")
+            
+            response = await chat.send_message_async(content_parts)
+            return response.text.strip()
     
     async def _generate_svg_visual(
         self, 
@@ -88,32 +103,17 @@ Answer the student's query while providing an appropriate pedagogical response t
         previous_canvas_image: Optional[str] = None,
         has_annotation: bool = False
     ) -> Optional[str]:
-        # Add annotation context for SVG generation
-        annotation_svg_context = ""
-        if has_annotation and previous_canvas_image:
-            annotation_svg_context = "\n\nNOTE: The student has made new annotations since our last interaction. Build upon or reference their markings where appropriate."
+        """
+        Generate SVG visual using optimized chat history method.
+        """
         
-        prompt = f"""
-You are an expert visualization tutor who pays attention to every close detail of your response. Create an SVG visual to support this math tutoring response. 
-Student's Query: {query}
-Teaching Response: {teaching_response}
-Canvas State: {"Student has drawn something" if canvas_image else "Empty canvas"}
-{annotation_svg_context}
-
-Create a clear, education SVG that supports the teaching response while helping answer the student's query. Do not reveal the answer to the teacher's follow up question if the teacher asks one. 
-
-GUIDELINES:
-1. Use a 600x400 viewBox for consistency
-2. Focus ONLY on the immediate step being taught
-3. Use appropriate colors: blue (#2563eb) for new concepts, green (#16a34a) for correct steps, red (#dc2626) for errors
-4. Include clear text labels with readable font sizes (14 px or larger)
-5 Keep it simple - don't overcrowd the visual
-6. Position elements logically (equations horizantally steps vertically)
-
-Respond with ONLY the complete SVG markup (starting with <svg> and ending with </svg>)!!!
-"""
-        
-        return await self.gemini_service.generate_svg_content(prompt, canvas_image)#
+        # Use the new optimized SVG generation method
+        return await self.gemini_service.generate_svg_with_chat_history(
+            query=query,
+            teaching_response=teaching_response,
+            chat_history=chat_history,
+            canvas_image=canvas_image
+        )
     
     
  

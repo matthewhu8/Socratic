@@ -28,9 +28,21 @@ class GeminiService:
             system_instruction="You analyze student queries and canvas images to determine learning context. Always respond with valid JSON only."
         )
         
+        # Optimized text model with enhanced system instructions
         self.text_model = genai.GenerativeModel(
-            'gemini-2.5-flash-preview-05-20', 
-            system_instruction="You are a patient math tutor. Provide encouraging, step-by-step guidance. Keep responses concise and engaging."
+            'gemini-1.5-pro', 
+            system_instruction="""You are a patient, encouraging math tutor. Core approach:
+- Guide students to discover solutions themselves
+- Use Socratic questioning when appropriate 
+- Keep responses concise (2-3 paragraphs maximum)
+- Build naturally on previous conversation context
+- Acknowledge student work shown in images
+- Focus on understanding, not just answers""",
+            generation_config=genai.GenerationConfig(
+                temperature=0.7,
+                top_p=0.9,
+                max_output_tokens=500
+            )
         )
 
         self.determine_necessary_visual_model = genai.GenerativeModel(
@@ -43,9 +55,31 @@ class GeminiService:
             system_instruction="You generate drawing commands for educational whiteboard visualizations. Always respond with valid JSON arrays of drawing commands only."
         )
         
+        # Optimized SVG model with comprehensive system instructions and generation config
         self.svg_model = genai.GenerativeModel(
-            'gemini-2.5-flash-preview-05-20',
-            system_instruction="You generate SVG content for educational math visualizations. Always respond with valid SVG markup only, starting with <svg> and ending with </svg>."
+            'gemini-1.5-pro',
+            system_instruction="""You create educational SVG visualizations for math tutoring.
+
+TECHNICAL SPECIFICATIONS (follow automatically, never repeat):
+- viewBox="0 0 600 400" (always use this exact canvas size)
+- Colors: #2563eb (primary/new concepts), #16a34a (success/correct), #dc2626 (errors)
+- Font: Arial, sans-serif, minimum 14px size
+- Style: Clean, educational, student-friendly
+
+OUTPUT RULES (follow automatically, never repeat):
+- Output ONLY valid SVG markup
+- Start with <svg> tag, end with </svg> tag
+- No explanations or text outside SVG tags
+- Focus on current concept being taught
+- Keep visuals simple and uncluttered
+
+You understand these rules and follow them automatically for all requests.""",
+            generation_config=genai.GenerationConfig(
+                temperature=0.3,  # More consistent output
+                top_p=0.8,
+                max_output_tokens=1000,
+                response_mime_type="text/plain"
+            )
         )
         
         # Keep existing tutor model for backward compatibility
@@ -653,7 +687,7 @@ You MUST respond with ONLY a valid JSON object as noted in the system instructio
             return {}
     
     async def generate_svg_content(self, prompt: str, canvas_image: Optional[str] = None) -> Optional[str]:
-        """Generate SVG content for educational visualizations"""
+        """Generate SVG content for educational visualizations (legacy method)"""
         try:
             content_parts = [prompt]
             
@@ -692,4 +726,69 @@ You MUST respond with ONLY a valid JSON object as noted in the system instructio
         except Exception as e:
             print(f"Error generating SVG content: {e}")
             return None
+    
+    async def generate_svg_with_chat_history(self, query: str, teaching_response: str, 
+                                           chat_history: List[Dict], canvas_image: Optional[str] = None) -> Optional[str]:
+        """Generate SVG content using chat history for context (optimized method)"""
+        try:
+            # Convert chat history to Gemini format (only recent messages)
+            formatted_history = []
+            recent_history = chat_history[-10:] if len(chat_history) > 10 else chat_history
+            
+            for msg in recent_history:
+                role = "user" if msg.get("role") == "user" else "model"
+                formatted_history.append({
+                    "role": role,
+                    "parts": [msg.get("content", "")]
+                })
+            
+            # Start chat with history pre-loaded
+            chat = self.svg_model.start_chat(history=formatted_history)
+            
+            # MINIMAL prompt - all rules are in system instruction
+            minimal_prompt = f"Create visual for: {query}\nTeaching context: {teaching_response}"
+            
+            # Prepare content parts
+            content_parts = [minimal_prompt]
+            
+            # Add canvas image if provided
+            if canvas_image:
+                try:
+                    if canvas_image.startswith('data:image'):
+                        canvas_image = canvas_image.split(',')[1]
+                    image_data = base64.b64decode(canvas_image)
+                    pil_image = Image.open(io.BytesIO(image_data))
+                    content_parts.append(pil_image)
+                except Exception as e:
+                    print(f"Error processing canvas image for optimized SVG generation: {e}")
+            
+            # Send minimal prompt to chat session
+            response = await chat.send_message_async(content_parts)
+            response_text = response.text.strip()
+            
+            # Clean up markdown if present
+            if response_text.startswith('```'):
+                end_index = response_text.rfind('```')
+                if end_index > 3:
+                    response_text = response_text[3:end_index]
+                if response_text.startswith('svg') or response_text.startswith('xml'):
+                    lines = response_text.split('\n')
+                    response_text = '\n'.join(lines[1:])
+                response_text = response_text.strip()
+            
+            # Validate that response contains SVG
+            if not response_text.startswith('<svg') or not response_text.endswith('</svg>'):
+                print(f"Invalid SVG response from optimized method: {response_text[:100]}...")
+                return None
+            
+            return response_text
+            
+        except Exception as e:
+            print(f"Error in optimized SVG generation: {e}")
+            # Fallback to original method
+            print("Falling back to original SVG generation method")
+            return await self.generate_svg_content(
+                f"Create visual for: {query}\nTeaching context: {teaching_response}",
+                canvas_image
+            )
 
