@@ -29,17 +29,18 @@ class GeminiService:
         )
         
         # Optimized text model with enhanced system instructions
+        # Optimized text model with enhanced system instructions
         self.text_model = genai.GenerativeModel(
             'gemini-1.5-pro', 
             system_instruction="""You are a patient, encouraging math tutor. Core approach:
 - Guide students to discover solutions themselves
 - Use Socratic questioning when appropriate 
-- Keep responses concise (2-3 paragraphs maximum)
+- Keep responses concise (1 paragraphs maximum)
 - Build naturally on previous conversation context
 - Acknowledge student work shown in images
 - Focus on understanding, not just answers""",
             generation_config=genai.GenerationConfig(
-                temperature=0.7,
+                temperature=0.35,
                 top_p=0.9,
                 max_output_tokens=500
             )
@@ -56,6 +57,7 @@ class GeminiService:
         )
         
         # Optimized SVG model with comprehensive system instructions and generation config
+        # Optimized SVG model with comprehensive system instructions and generation config
         self.svg_model = genai.GenerativeModel(
             'gemini-1.5-pro',
             system_instruction="""You create educational SVG visualizations for math tutoring.
@@ -70,14 +72,14 @@ OUTPUT RULES (follow automatically, never repeat):
 - Output ONLY valid SVG markup
 - Start with <svg> tag, end with </svg> tag
 - No explanations or text outside SVG tags
-- Focus on current concept being taught
+- The image should no reveal the answer to our teacher response's follow-up question
 - Keep visuals simple and uncluttered
 
 You understand these rules and follow them automatically for all requests.""",
             generation_config=genai.GenerationConfig(
                 temperature=0.3,  # More consistent output
                 top_p=0.8,
-                max_output_tokens=1000,
+                max_output_tokens=1200,
                 response_mime_type="text/plain"
             )
         )
@@ -432,115 +434,7 @@ Remember: You're a tutor helping them learn, not just giving answers.
             print(f"Error generating question chat response: {e}")
             return "I'm sorry, I encountered an error while processing your question. Please try again or rephrase your question."
 
-    async def generate_tutor_response(
-        self,
-        query: str,
-        messages: List[Dict[str, str]],
-        include_drawing_commands: bool = True,
-        canvas_image: Optional[str] = None
-    ) -> Dict:
-        """Generate an AI tutor response with optional drawing commands for the whiteboard."""
-        try:
-            # Build conversation history
-            conversation = "Previous conversation:\n"
-            for msg in messages[-5:]:  # Last 5 messages for context
-                conversation += f"{msg['role'].upper()}: {msg['content']}\n"
-            
-            # Create content parts for the prompt
-            content_parts = []
-            
-            # Create the prompt
-            prompt = f"""
-{conversation}
-
-STUDENT: {query}
-
-You MUST respond with ONLY a valid JSON object as noted in the system instructions. Be specific and helpful in your response!
-"""
-            
-            content_parts.append(prompt)
-            
-            # Add canvas image if provided
-            if canvas_image:
-                try:
-                    print(f"Canvas image received, length: {len(canvas_image)}")
-                    
-                    # Remove data URL prefix if present
-                    if canvas_image.startswith('data:image'):
-                        canvas_image = canvas_image.split(',')[1]
-                    
-                    # Decode base64 image
-                    image_data = base64.b64decode(canvas_image)
-                    print(f"Decoded image data length: {len(image_data)}")
-                    
-                    # Convert to PIL Image
-                    pil_image = Image.open(io.BytesIO(image_data))
-                    print(f"PIL Image size: {pil_image.size}, mode: {pil_image.mode}")
-                    content_parts.append(pil_image)
-                    print("Canvas image successfully added to content parts")
-                    
-                except Exception as e:
-                    print(f"Error processing canvas image: {e}")
-                    import traceback
-                    traceback.print_exc()
-            else:
-                print("No canvas image provided in request")
-            
-            # Generate response
-            response = self.tutor_model.generate_content(content_parts)
-            print(f"RESPONSE: {response.text}")
-            response_text = response.text.strip()
-            
-            # Parse JSON response
-            try:
-                # Clean up markdown if present
-                if response_text.startswith('```'):
-                    # Find the end of the code block
-                    end_index = response_text.rfind('```')
-                    if end_index > 3:
-                        response_text = response_text[3:end_index]
-                    if response_text.startswith('json'):
-                        response_text = response_text[4:]
-                    response_text = response_text.strip()
-                
-                print(f"Attempting to parse JSON response: {response_text[:200]}...")
-                result = json.loads(response_text)
-                
-                # Ensure required fields exist and normalize field names
-                if 'response' not in result:
-                    result['response'] = "I'm here to help! Could you please clarify your question?"
-                
-                # Handle both 'drawing_commands' and 'drawingCommands'
-                if 'drawing_commands' not in result and 'drawingCommands' not in result:
-                    result['drawing_commands'] = []
-                
-                print(f"Successfully parsed response with {len(result.get('drawing_commands', []))} drawing commands")
-                return result
-                
-            except json.JSONDecodeError as e:
-                print(f"JSON parsing error: {e}")
-                print(f"Failed to parse: {response_text[:500]}...")
-                
-                # Try to extract a meaningful response
-                if "I'll help you" in response_text or "Let me" in response_text:
-                    # Extract the first paragraph as the response
-                    lines = response_text.split('\n')
-                    response_content = lines[0] if lines else response_text[:200]
-                else:
-                    response_content = "I can see you're working on a problem. Could you tell me specifically what you'd like help with? Would you like me to guide you through it, check your work, or explain a concept?"
-                
-                # Fallback if JSON parsing fails
-                return {
-                    "response": response_content,
-                    "drawing_commands": []
-                }
-            
-        except Exception as e:
-            print(f"Error generating tutor response: {e}")
-            return {
-                "response": "I apologize, but I encountered an error. Please try rephrasing your question or let me know if you'd like me to solve it step-by-step, guide you through it, or check your work.",
-                "drawing_commands": []
-            }
+    
     
     # New methods for multi-stage processing
     async def generate_simple_response(self, prompt: str, image: Optional[str] = None) -> Dict:
@@ -688,6 +582,7 @@ You MUST respond with ONLY a valid JSON object as noted in the system instructio
     
     async def generate_svg_content(self, prompt: str, canvas_image: Optional[str] = None) -> Optional[str]:
         """Generate SVG content for educational visualizations (legacy method)"""
+        """Generate SVG content for educational visualizations (legacy method)"""
         try:
             content_parts = [prompt]
             
@@ -726,6 +621,71 @@ You MUST respond with ONLY a valid JSON object as noted in the system instructio
         except Exception as e:
             print(f"Error generating SVG content: {e}")
             return None
+    
+    async def generate_svg_with_chat_history(self, query: str, teaching_response: str, 
+                                           chat_history: List[Dict], canvas_image: Optional[str] = None) -> Optional[str]:
+        """Generate SVG content using chat history for context (optimized method)"""
+        try:
+            # Convert chat history to Gemini format (only recent messages)
+            formatted_history = []
+            recent_history = chat_history[-10:] if len(chat_history) > 10 else chat_history
+            
+            for msg in recent_history:
+                role = "user" if msg.get("role") == "user" else "model"
+                formatted_history.append({
+                    "role": role,
+                    "parts": [msg.get("content", "")]
+                })
+            
+            # Start chat with history pre-loaded
+            chat = self.svg_model.start_chat(history=formatted_history)
+            
+            # MINIMAL prompt - all rules are in system instruction
+            minimal_prompt = f"Create visual for: {teaching_response}\n Student's original question: {query}"
+            
+            # Prepare content parts
+            content_parts = [minimal_prompt]
+            
+            # Add canvas image if provided
+            if canvas_image:
+                try:
+                    if canvas_image.startswith('data:image'):
+                        canvas_image = canvas_image.split(',')[1]
+                    image_data = base64.b64decode(canvas_image)
+                    pil_image = Image.open(io.BytesIO(image_data))
+                    content_parts.append(pil_image)
+                except Exception as e:
+                    print(f"Error processing canvas image for optimized SVG generation: {e}")
+            
+            # Send minimal prompt to chat session
+            response = await chat.send_message_async(content_parts)
+            response_text = response.text.strip()
+            
+            # Clean up markdown if present
+            if response_text.startswith('```'):
+                end_index = response_text.rfind('```')
+                if end_index > 3:
+                    response_text = response_text[3:end_index]
+                if response_text.startswith('svg') or response_text.startswith('xml'):
+                    lines = response_text.split('\n')
+                    response_text = '\n'.join(lines[1:])
+                response_text = response_text.strip()
+            
+            # Validate that response contains SVG
+            if not response_text.startswith('<svg') or not response_text.endswith('</svg>'):
+                print(f"Invalid SVG response from optimized method: {response_text[:100]}...")
+                return None
+            
+            return response_text
+            
+        except Exception as e:
+            print(f"Error in optimized SVG generation: {e}")
+            # Fallback to original method
+            print("Falling back to original SVG generation method")
+            return await self.generate_svg_content(
+                f"Create visual for: {query}\nTeaching context: {teaching_response}",
+                canvas_image
+            )
     
     async def generate_svg_with_chat_history(self, query: str, teaching_response: str, 
                                            chat_history: List[Dict], canvas_image: Optional[str] = None) -> Optional[str]:
