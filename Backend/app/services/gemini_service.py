@@ -59,17 +59,18 @@ class GeminiService:
         # Optimized SVG model with comprehensive system instructions and generation config
         # Optimized SVG model with comprehensive system instructions and generation config
         self.svg_model = genai.GenerativeModel(
-            'gemini-1.5-pro',
+            'gemini-2.5-flash',
             system_instruction="""You create educational SVG visualizations for math tutoring.
 
 TECHNICAL SPECIFICATIONS (follow automatically, never repeat):
 - viewBox="0 0 600 400" (always use this exact canvas size)
 - Colors: #2563eb (primary/new concepts), #16a34a (success/correct), #dc2626 (errors)
-- Font: Arial, sans-serif, minimum 14px size
+- Font: Arial, sans-serif, around 14px size
 - Style: Clean, educational, student-friendly
 
 OUTPUT RULES (follow automatically, never repeat):
 - Output ONLY valid SVG markup
+- Not too big of a frame
 - Start with <svg> tag, end with </svg> tag
 - No explanations or text outside SVG tags
 - The image should no reveal the answer to our teacher response's follow-up question
