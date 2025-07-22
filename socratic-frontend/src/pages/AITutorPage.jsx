@@ -536,7 +536,7 @@ function AITutorPage() {
     try {
       setIsSpeaking(true);
       
-      const apiKey = AIzaSyB_lC4glTCt2tmTWxq5yrO4sSNRWLITggI;
+      const apiKey = 'AIzaSyB_lC4glTCt2tmTWxq5yrO4sSNRWLITggI';
       if (!apiKey) {
         console.log('Google TTS API key not configured, falling back to browser TTS');
         fallbackToSpeechSynthesis(text);
