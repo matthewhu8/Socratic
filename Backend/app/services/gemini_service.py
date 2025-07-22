@@ -45,21 +45,11 @@ class GeminiService:
                 max_output_tokens=500
             )
         )
-
-        self.determine_necessary_visual_model = genai.GenerativeModel(
-            'gemini-2.5-flash-preview-05-20',
-            system_instruction="You determine if a visual aid is necessary for the student's query. Respond according to prompt. Should be one word: 'true' or 'false'"
-        )
-        
-        self.visual_model = genai.GenerativeModel(
-            'gemini-2.5-flash-preview-05-20',
-            system_instruction="You generate drawing commands for educational whiteboard visualizations. Always respond with valid JSON arrays of drawing commands only."
-        )
-        
+         
         # Optimized SVG model with comprehensive system instructions and generation config
         # Optimized SVG model with comprehensive system instructions and generation config
         self.svg_model = genai.GenerativeModel(
-            'gemini-2.5-flash-preview-05-20',
+            'gemini-1.5-pro',
             system_instruction="""You create educational SVG visualizations for math tutoring.
 
 TECHNICAL SPECIFICATIONS (follow automatically, never repeat):
@@ -70,11 +60,10 @@ TECHNICAL SPECIFICATIONS (follow automatically, never repeat):
 
 OUTPUT RULES (follow automatically, never repeat):
 - Output ONLY valid SVG markup
-- Not too big of a frame
 - Start with <svg> tag, end with </svg> tag
 - No explanations or text outside SVG tags
 - The image should no reveal the answer to our teacher response's follow-up question
-- Keep visuals simple and uncluttered
+- Keep visuals simple, uncluttered, compact
 
 You understand these rules and follow them automatically for all requests.""",
             generation_config=genai.GenerationConfig(
@@ -470,16 +459,6 @@ Remember: You're a tutor helping them learn, not just giving answers.
             print(f"Error in simple response: {e}")
             return {}
     
-    async def generate_text_only(self, prompt: str, visual: bool = False) -> str:
-        """Generate text-only response for teaching"""
-        try:
-            if visual: response = self.determine_necessary_visual_model.generate_content(prompt)
-            if not visual: response = self.text_model.generate_content(prompt)
-            return response.text.strip()
-        except Exception as e:
-            print(f"Error generating text response: {e}")
-            return "I'm here to help! Could you please clarify your question?"
-    
     async def generate_comparison_text_response(self, prompt: str, image1: str, image2: str) -> str:
         """Generate text response comparing two canvas images"""
         try:
@@ -514,29 +493,6 @@ Remember: You're a tutor helping them learn, not just giving answers.
             print(f"Error in comparison text response: {e}")
             return "I can see you've made some annotations! Could you tell me more about what you'd like help with?"
     
-        
-    
-    
-    async def generate_drawing_commands_only(self, prompt: str) -> List[Dict]:
-        """Generate drawing commands only"""
-        try:
-            response = self.visual_model.generate_content(prompt)
-            response_text = response.text.strip()
-            
-            # Clean up markdown if present
-            if response_text.startswith('```'):
-                end_index = response_text.rfind('```')
-                if end_index > 3:
-                    response_text = response_text[3:end_index]
-                if response_text.startswith('json'):
-                    response_text = response_text[4:]
-                response_text = response_text.strip()
-            
-            return json.loads(response_text)
-            
-        except Exception as e:
-            print(f"Error generating drawing commands: {e}")
-            return []
     
     async def generate_comparison_response(self, prompt: str, image1: str, image2: str) -> Dict:
         """Generate response comparing two images"""
