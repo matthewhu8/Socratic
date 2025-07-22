@@ -59,7 +59,7 @@ class GeminiService:
         # Optimized SVG model with comprehensive system instructions and generation config
         # Optimized SVG model with comprehensive system instructions and generation config
         self.svg_model = genai.GenerativeModel(
-            'gemini-2.5-flash',
+            'gemini-2.5-flash-preview-05-20',
             system_instruction="""You create educational SVG visualizations for math tutoring.
 
 TECHNICAL SPECIFICATIONS (follow automatically, never repeat):
