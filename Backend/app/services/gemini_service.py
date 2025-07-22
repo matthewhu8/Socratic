@@ -32,13 +32,25 @@ class GeminiService:
         # Optimized text model with enhanced system instructions
         self.text_model = genai.GenerativeModel(
             'gemini-1.5-pro', 
-            system_instruction="""You are a patient, encouraging math tutor. Core approach:
-- Guide students to discover solutions themselves
-- Use Socratic questioning when appropriate 
-- Keep responses concise (1 paragraphs maximum)
-- Build naturally on previous conversation context
-- Acknowledge student work shown in images
-- Focus on understanding, not just answers""",
+            system_instruction="""You are Socratic‑Tutor, a fast, patient math coach who provides concise explanations.
+
+STYLE & LENGTH:
+• Keep each response concise—ideally ≤ 200 words / 25 seconds of speech
+• Include at most one guiding question per turn
+• Skip filler; dive straight into substance
+
+TEACHING APPROACH:
+• For new problems:
+  1. Copy or paraphrase the question
+  2. List givens / knowns (e.g., a = …, b = …, n = …)
+  3. Show a skeleton of the relevant formula
+  4. Invite the student to supply missing pieces
+• For ongoing problems:
+  • Confirm or gently correct student work
+  • Reveal only the next step if student is stuck
+  • Give the full answer only when explicitly requested
+• Acknowledge specific student marks when helpful
+• Focus on understanding, not just answers""",
             generation_config=genai.GenerationConfig(
                 temperature=0.35,
                 top_p=0.9,
@@ -52,20 +64,33 @@ class GeminiService:
             'gemini-1.5-pro',
             system_instruction="""You create educational SVG visualizations for math tutoring.
 
-TECHNICAL SPECIFICATIONS (follow automatically, never repeat):
-- viewBox="0 0 600 400" (always use this exact canvas size)
-- Colors: #2563eb (primary/new concepts), #16a34a (success/correct), #dc2626 (errors)
-- Font: Arial, sans-serif, around 14px size
-- Style: Clean, educational, student-friendly
+TECHNICAL SPECIFICATIONS:
+• viewBox STRICTLY "0 0 600 400"
+• Colours (tutor only):
+    #2563eb  new concept / neutral text
+    #16a34a  correct confirmation
+    #dc2626  highlight an error
+  Student strokes are always black (#000000); tutor must NEVER draw in black
+• Font: Arial 14px or 16px, text-anchor="start"
 
-OUTPUT RULES (follow automatically, never repeat):
-- Output ONLY valid SVG markup
-- Start with <svg> tag, end with </svg> tag
-- No explanations or text outside SVG tags
-- The image should no reveal the answer to our teacher response's follow-up question
-- Keep visuals simple, uncluttered, compact
+OUTPUT RULES:
+• Output ONLY valid SVG markup
+• Start with <svg> tag, end with </svg> tag
+• No explanations or text outside SVG tags
+• Keep drawings simple—use blank boxes □, ellipses … or arrows ⬇︎ to reserve space
+• Do NOT draw rigid dashed rectangles that confine student work
+• Never erase or overwrite student ink; add beside or below it
+• Do not show the complete numeric/expanded answer unless explicitly requested
 
-You understand these rules and follow them automatically for all requests.""",
+INTERPRETING THE CANVAS:
+• You receive a full-image PNG of the current board each turn
+• Acknowledge specific student marks when helpful
+• If uncertain what a drawing is, suggest a clarification
+
+SELF-CHECK BEFORE SENDING:
+• Valid XML that fits the viewBox
+• Using only tutor colors (#2563eb, #16a34a, #dc2626), NEVER black
+• No spoilers: full answers hidden unless requested""",
             generation_config=genai.GenerationConfig(
                 temperature=0.3,  # More consistent output
                 top_p=0.8,
@@ -79,6 +104,97 @@ You understand these rules and follow them automatically for all requests.""",
                 'gemini-2.5-flash-preview-05-20',
                 system_instruction="""You are a math tutor. Respond with JSON containing 'response' and 'drawing_commands' fields."""
             )
+        
+        # Combined model for single-prompt AI tutor (new approach)
+        self.combined_model = genai.GenerativeModel(
+            'gemini-2.5-flash-preview-05-20',
+            system_instruction="""You are Socratic‑Tutor, a fast, patient math coach who can DRAW on a shared
+whiteboard and SPEAK concise explanations.  The student sees and hears each
+response in real time.
+
+────────────────  OUTPUT CONTRACT  ────────────────
+• Always reply with **valid JSON** containing EXACTLY these two keys:
+  {
+    "response":    "<tutor's spoken/written line>",
+    "svgContent":  "<complete SVG markup>"  // or null when no drawing needed
+  }
+
+────────────────  STYLE & LENGTH  ────────────────
+• Keep each "response" concise—ideally ≤ 200 words / 25 seconds of speech.  
+• Include **at most one guiding question** (hence ≤ 1 "?") per turn.  
+• Skip filler such as "Let's break this down"; dive straight into substance.
+
+────────────────  TEACHING FLOW  ────────────────
+★ FIRST RESPONSE for any new problem  
+  1. Copy or paraphrase the question on the board.  
+  2. List givens / knowns (e.g., a = …, b = …, n = …).  
+  3. Show a skeleton of the relevant formula with blank spaces or boxes.  
+  4. Invite the student to supply the missing pieces (≤ 1 question).
+
+★ SUBSEQUENT RESPONSES  
+  • Confirm or gently correct student work.  
+  • Reveal only the next step if the student is stuck.  
+  • Give the full answer only when explicitly requested.
+
+────────────────  VISUAL RULES  ────────────────
+• viewBox **strictly** "0 0 600 400".  
+• Colours (tutor only):  
+    #2563eb  new concept / neutral text  
+    #16a34a  correct confirmation  
+    #dc2626  highlight an error  
+  Student strokes are always **black (#000000)**; tutor must never draw in black.  
+• Font: Arial 14 px or 16 px, text‑anchor="start".  
+• Keep drawings simple—use blank boxes □, ellipses … or arrows ⬇︎ to reserve
+  space. Do **not** draw rigid dashed rectangles that confine student work.  
+• Never erase or overwrite student ink; add beside or below it.
+
+────────────────  ANSWER‑HIDING POLICY  ────────────────
+• Do not show the complete numeric/expanded answer in `svgContent`
+  unless the student explicitly asks for it.
+
+────────────────  INTERPRETING THE CANVAS IMAGE  ────────────────
+• You receive a full‑image PNG of the current board each turn.  
+• Acknowledge specific student marks when helpful.  
+• If uncertain what a drawing is, ask a clarifying question.
+
+────────────────  SELF‑CHECK BEFORE SENDING  ────────────────
+1. JSON has exactly the two required keys.  
+2. SVG (if present) is valid XML and fits the viewBox.  
+3. "response" is concise (≈ ≤ 25 s) and has ≤ 1 "?".  
+4. Tutor colours only (#2563eb, #16a34a, #dc2626); no black ink from tutor.  
+5. No spoilers: full answers hidden unless requested.  
+If any check fails, silently fix and re‑emit.
+
+────────────────  FEW‑SHOT EXAMPLES  ────────────────
+Example A — first turn for a binomial expansion  
+{
+  "response": "In (2x + 1)⁴ our givens are a = 2x, b = 1, n = 4. Which row of Pascal's triangle gives those coefficients?",
+  "svgContent": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 600 400\"> \
+    <text x=\"25\" y=\"35\" fill=\"#2563eb\" font-family=\"Arial\" font-size=\"16\">Expand (2x + 1)<tspan dy=\"-5\" font-size=\"11\">4</tspan> in descending powers of x.</text> \
+    <text x=\"25\" y=\"75\" fill=\"#2563eb\" font-family=\"Arial\" font-size=\"16\">Given: a = 2x,  b = 1,  n = 4</text> \
+    <text x=\"25\" y=\"115\" fill=\"#2563eb\" font-family=\"Arial\" font-size=\"16\">(a + b)<tspan dy=\"-5\" font-size=\"11\">n</tspan> = Σ C<tspan dy=\"5\" font-size=\"11\">n</tspan><tspan dy=\"-5\" font-size=\"11\">k</tspan> a<tspan dy=\"-5\" font-size=\"11\">n−k</tspan> b<tspan dy=\"-5\" font-size=\"11\">k</tspan></text> \
+    <rect x=\"155\" y=\"137\" width=\"34\" height=\"25\" fill=\"none\" stroke=\"#2563eb\" stroke-width=\"2\"/> \
+    <text x=\"195\" y=\"155\" fill=\"#2563eb\" font-family=\"Arial\" font-size=\"16\">(2x)<tspan dy=\"-5\" font-size=\"11\">4</tspan> + …</text> \
+    <text x=\"25\" y=\"205\" fill=\"#2563eb\" font-family=\"Arial\" font-size=\"16\">Pascal's Triangle — draw row n = 4 anywhere below ⬇︎</text> \
+    <text x=\"285\" y=\"230\" fill=\"#2563eb\" font-family=\"Arial\" font-size=\"20\">⬇︎</text> \
+  </svg>"
+}
+
+Example B — correcting an exponent  
+{
+  "response": "Check that exponent—you wrote 3; should it be 4?",
+  "svgContent": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 600 400\"> \
+    <line x1=\"100\" y1=\"80\" x2=\"130\" y2=\"80\" stroke=\"#dc2626\" stroke-width=\"2\"/> \
+    <text x=\"135\" y=\"85\" fill=\"#dc2626\" font-family=\"Arial\" font-size=\"14\">← exponent should be 4</text> \
+  </svg>"
+}""",
+            generation_config=genai.GenerationConfig(
+                temperature=0.35,
+                top_p=0.9,
+                max_output_tokens=1000
+            )
+        )
+        
         print(f"GEMINI MODEL: {self.model}")
     
     def format_chat_history(self, chat_history: List[Dict]) -> List[Dict]:
@@ -708,4 +824,276 @@ Remember: You're a tutor helping them learn, not just giving answers.
                 f"Create visual for: {query}\nTeaching context: {teaching_response}",
                 canvas_image
             )
+
+
+    # New combined approach methods
+    async def generate_combined_response(
+        self, 
+        query: str, 
+        canvas_image: Optional[str] = None,
+        chat_history: List[Dict] = None,
+        previous_canvas_image: Optional[str] = None,
+        has_annotation: bool = False
+    ) -> Dict[str, str]:
+        """Generate combined teaching response and SVG content in a single call."""
+        try:
+            # Convert chat history to Gemini format
+            formatted_history = []
+            if chat_history:
+                recent_history = chat_history[-10:] if len(chat_history) > 10 else chat_history
+                for msg in recent_history:
+                    role = "user" if msg.get("role") == "user" else "model"
+                    formatted_history.append({
+                        "role": role,
+                        "parts": [msg.get("content", "")]
+                    })
+            
+            # Start chat with history pre-loaded
+            chat = self.combined_model.start_chat(history=formatted_history)
+            
+            # Build prompt based on annotation context
+            if has_annotation and previous_canvas_image and canvas_image:
+                annotation_context = "IMPORTANT: The student has made new annotations/drawings on the whiteboard since our last interaction. Two images are provided - the previous state and current state. The student is likely referencing their new markings when asking this question. Pay close attention to what they've added."
+                prompt = f"Student asks: \"{query}\"\nCanvas: Has student annotations\n{annotation_context}\nProvide guidance."
+            else:
+                canvas_state = "Has student drawing" if canvas_image else "Empty"
+                prompt = f"Student asks: \"{query}\"\nCanvas: {canvas_state}\nProvide guidance."
+            
+            # Prepare content parts
+            content_parts = [prompt]
+            
+            # Add images if available
+            if has_annotation and previous_canvas_image:
+                try:
+                    if previous_canvas_image.startswith('data:image'):
+                        previous_canvas_image = previous_canvas_image.split(',')[1]
+                    prev_image_data = base64.b64decode(previous_canvas_image)
+                    prev_pil_image = Image.open(io.BytesIO(prev_image_data))
+                    content_parts.append("Previous canvas state:")
+                    content_parts.append(prev_pil_image)
+                except Exception as e:
+                    print(f"Error processing previous canvas image: {e}")
+            
+            if canvas_image:
+                try:
+                    if canvas_image.startswith('data:image'):
+                        canvas_image = canvas_image.split(',')[1]
+                    image_data = base64.b64decode(canvas_image)
+                    pil_image = Image.open(io.BytesIO(image_data))
+                    if has_annotation:
+                        content_parts.append("Current canvas state (with new annotations):")
+                    content_parts.append(pil_image)
+                except Exception as e:
+                    print(f"Error processing canvas image: {e}")
+            
+            # Send request to Gemini
+            response = await chat.send_message_async(content_parts)
+            raw_response = response.text.strip()
+            
+            # Parse and validate response
+            return await self._parse_and_validate_combined_response(raw_response, query, canvas_image, chat_history)
+            
+        except Exception as e:
+            print(f"Critical error in generate_combined_response: {e}")
+            return {
+                "response": "I'm sorry, I encountered an error. Please try again.",
+                "svgContent": None
+            }
+    
+    async def _parse_and_validate_combined_response(
+        self, 
+        raw_response: str, 
+        original_query: str = None,
+        canvas_image: Optional[str] = None,
+        chat_history: List[Dict] = None
+    ) -> Dict[str, str]:
+        """Parse and validate the combined response, with retry logic for SVG errors."""
+        try:
+            # Try to parse as JSON
+            parsed_response = json.loads(raw_response)
+            
+            # Validate required fields
+            if "response" not in parsed_response:
+                raise ValueError("Missing required 'response' field")
+            
+            # Validate and process SVG content
+            svg_content = parsed_response.get("svgContent")
+            svg_content = self._validate_svg_content(svg_content)
+            
+            # If SVG validation failed, try to retry with error feedback
+            if parsed_response.get("svgContent") and svg_content is None:
+                print("SVG validation failed, attempting retry with error feedback")
+                retry_response = await self._retry_with_svg_error_feedback(
+                    raw_response, original_query, canvas_image, chat_history
+                )
+                if retry_response:
+                    return retry_response
+            
+            return {
+                "response": parsed_response["response"],
+                "svgContent": svg_content
+            }
+            
+        except json.JSONDecodeError as e:
+            print(f"JSON parsing error: {e}")
+            print(f"Raw response: {raw_response[:200]}...")
+            
+            # Check if response is too long and retry with shorter request
+            if len(raw_response) > 4000:  # Approximate token limit check
+                print("Response may have exceeded token limits, requesting shorter response")
+                shorter_response = await self._request_shorter_response(original_query, canvas_image, chat_history)
+                if shorter_response:
+                    return shorter_response
+            
+            # Fallback to text-only response
+            return {
+                "response": raw_response,
+                "svgContent": None
+            }
+        except Exception as e:
+            print(f"Error in response validation: {e}")
+            return {
+                "response": "I'm sorry, I encountered an error processing the response. Please try again.",
+                "svgContent": None
+            }
+    
+    def _validate_svg_content(self, svg_content) -> Optional[str]:
+        """Validate SVG content format."""
+        if not svg_content:
+            return None
+        
+        svg_content = str(svg_content).strip()
+        
+        # Handle null/empty values
+        if svg_content.lower() in ["null", "none", ""]:
+            return None
+        
+        # Basic SVG format validation
+        if not svg_content.startswith("<svg"):
+            print(f"Invalid SVG format - doesn't start with <svg: {svg_content[:50]}...")
+            return None
+        
+        if not svg_content.endswith("</svg>"):
+            print(f"Invalid SVG format - doesn't end with </svg>: {svg_content[-50:]}")
+            return None
+        
+        return svg_content
+    
+    async def _retry_with_svg_error_feedback(
+        self, 
+        original_response: str, 
+        query: str,
+        canvas_image: Optional[str] = None,
+        chat_history: List[Dict] = None,
+        max_retries: int = 2
+    ) -> Optional[Dict[str, str]]:
+        """Retry the request with error feedback when SVG generation fails."""
+        try:
+            for attempt in range(max_retries):
+                print(f"SVG retry attempt {attempt + 1}/{max_retries}")
+                
+                # Build retry prompt with error feedback
+                retry_prompt = f"""There was an error with your previous response. The SVG content was invalid or malformed.
+
+Original query: {query}
+Your previous response: {original_response}
+
+Please fix the SVG content and respond again with valid JSON format:
+{{
+  "response": "your teaching response",
+  "svgContent": "valid SVG markup or null"
+}}
+
+Make sure the SVG starts with <svg and ends with </svg>."""
+                
+                # Prepare content parts
+                content_parts = [retry_prompt]
+                if canvas_image:
+                    try:
+                        if canvas_image.startswith('data:image'):
+                            canvas_image = canvas_image.split(',')[1]
+                        image_data = base64.b64decode(canvas_image)
+                        pil_image = Image.open(io.BytesIO(image_data))
+                        content_parts.append(pil_image)
+                    except Exception as e:
+                        print(f"Error processing canvas image in retry: {e}")
+                
+                # Send retry request
+                response = await self.combined_model.generate_content(content_parts)
+                retry_raw_response = response.text.strip()
+                
+                try:
+                    # Parse retry response
+                    retry_parsed = json.loads(retry_raw_response)
+                    if "response" in retry_parsed:
+                        svg_content = self._validate_svg_content(retry_parsed.get("svgContent"))
+                        return {
+                            "response": retry_parsed["response"],
+                            "svgContent": svg_content
+                        }
+                except json.JSONDecodeError:
+                    print(f"Retry attempt {attempt + 1} also failed JSON parsing")
+                    continue
+            
+            print("All retry attempts failed")
+            return None
+            
+        except Exception as e:
+            print(f"Error in retry with SVG feedback: {e}")
+            return None
+    
+    async def _request_shorter_response(
+        self, 
+        query: str,
+        canvas_image: Optional[str] = None,
+        chat_history: List[Dict] = None
+    ) -> Optional[Dict[str, str]]:
+        """Request a shorter response when token limits are exceeded."""
+        try:
+            print("Requesting shorter response due to token limit")
+            
+            # Build shorter prompt
+            shorter_prompt = f"""Student asks: "{query}"
+            
+Please provide a BRIEF response (max 1 paragraph) with JSON format:
+{{
+  "response": "brief teaching response",
+  "svgContent": null
+}}
+
+Focus on text response only, no SVG visual."""
+            
+            # Prepare content parts
+            content_parts = [shorter_prompt]
+            if canvas_image:
+                try:
+                    if canvas_image.startswith('data:image'):
+                        canvas_image = canvas_image.split(',')[1]
+                    image_data = base64.b64decode(canvas_image)
+                    pil_image = Image.open(io.BytesIO(image_data))
+                    content_parts.append(pil_image)
+                except Exception as e:
+                    print(f"Error processing canvas image in shorter request: {e}")
+            
+            # Send request with shorter prompt
+            response = await self.combined_model.generate_content(content_parts)
+            shorter_response = response.text.strip()
+            
+            try:
+                parsed_shorter = json.loads(shorter_response)
+                if "response" in parsed_shorter:
+                    return {
+                        "response": parsed_shorter["response"],
+                        "svgContent": None  # Force no SVG for shorter response
+                    }
+            except json.JSONDecodeError:
+                # If still fails, return as text-only
+                return {
+                    "response": shorter_response,
+                    "svgContent": None
+                }
+            
+        except Exception as e:
+            print(f"Error requesting shorter response: {e}")
+            return None
 

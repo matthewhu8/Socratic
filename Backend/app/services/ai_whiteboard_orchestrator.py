@@ -5,6 +5,7 @@ Coordinates 2-stage AI workflow
 
 import asyncio
 import json
+import os
 from typing import Dict, List, Optional, Any
 class AIWhiteboardOrchestrator:
     def __init__(self, gemini_service):
@@ -19,19 +20,62 @@ class AIWhiteboardOrchestrator:
         has_annotation: bool = False
     ) -> Dict[str, Any]:
         """
-        Orchestrates the processing of student queries - two stage workflow
+        Orchestrates the processing of student queries - supports both single and two-stage workflows
+        """
+        
+        # Feature flag: Use single prompt approach if enabled
+        if os.getenv("USE_SINGLE_PROMPT_AI_TUTOR", "false").lower() == "true":
+            print("Using single-prompt approach")
+            return await self._generate_combined_response(
+                query, canvas_image, chat_history, previous_canvas_image, has_annotation
+            )
+        else:
+            print("Using two-stage approach")
+            return await self._generate_two_stage_response(
+                query, canvas_image, chat_history, previous_canvas_image, has_annotation
+            )
+    
+    async def _generate_combined_response(
+        self, 
+        query: str, 
+        canvas_image: Optional[str],
+        chat_history: List[Dict[str, str]],
+        previous_canvas_image: Optional[str] = None,
+        has_annotation: bool = False
+    ) -> Dict[str, Any]:
+        """
+        Generate combined response using single Gemini call.
+        """
+        
+        result = await self.gemini_service.generate_combined_response(
+            query=query,
+            canvas_image=canvas_image,
+            chat_history=chat_history,
+            previous_canvas_image=previous_canvas_image,
+            has_annotation=has_annotation
+        )
+        
+        print(f"Single-prompt result: {result}")
+        return result
+    
+    async def _generate_two_stage_response(
+        self, 
+        query: str, 
+        canvas_image: Optional[str],
+        chat_history: List[Dict[str, str]],
+        previous_canvas_image: Optional[str] = None,
+        has_annotation: bool = False
+    ) -> Dict[str, Any]:
+        """
+        Generate response using original two-stage workflow (kept for backward compatibility).
         """
         
         teaching_response = await self._generate_teaching_response(query, canvas_image, chat_history, previous_canvas_image, has_annotation)
         print(f"step 1 generated: {teaching_response}")
-        # eventually would like a step to decide if we want new drawing (svg content), annotation on current image (JSON drawing with coordinates), or no drawing at all. For the purposes of speed for now, this step does not exist. 
-        # look into classification models etc.
-
-        # potentially add a parallel step here to generate audio while the svg visuals are generated. and then return the audio along with the response, and svgContent
-
-        svg_content = None
+        
         svg_content = await self._generate_svg_visual(query, canvas_image, teaching_response, chat_history, previous_canvas_image, has_annotation)
         print(f"Step 2: Generated visual for current step with teaching_response: {teaching_response}\n")
+        
         return {
             "response": teaching_response,
             "svgContent": svg_content
