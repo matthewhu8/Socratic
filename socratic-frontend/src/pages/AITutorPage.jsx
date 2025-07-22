@@ -681,7 +681,6 @@ function AITutorPage() {
           ← Back to Home
         </button>
         <h1>AI Tutor</h1>
-        {sessionId && <p className="session-info">Session ID: {sessionId}</p>}
       </div>
 
       <div className="ai-tutor-content">
