@@ -26,6 +26,9 @@ class AIWhiteboardOrchestrator:
         print(f"step 1 generated: {teaching_response}")
         # eventually would like a step to decide if we want new drawing (svg content), annotation on current image (JSON drawing with coordinates), or no drawing at all. For the purposes of speed for now, this step does not exist. 
         # look into classification models etc.
+
+        # potentially add a parallel step here to generate audio while the svg visuals are generated. and then return the audio along with the response, and svgContent
+
         svg_content = None
         svg_content = await self._generate_svg_visual(query, canvas_image, teaching_response, chat_history, previous_canvas_image, has_annotation)
         print(f"Step 2: Generated visual for current step with teaching_response: {teaching_response}\n")
@@ -150,17 +153,6 @@ class AIWhiteboardOrchestrator:
         previous_canvas_image: Optional[str] = None,
         has_annotation: bool = False
     ) -> Optional[str]:
-        """
-        Generate SVG visual using optimized chat history method.
-        """
-        
-        # Use the new optimized SVG generation method
-        return await self.gemini_service.generate_svg_with_chat_history(
-            query=query,
-            teaching_response=teaching_response,
-            chat_history=chat_history,
-            canvas_image=canvas_image
-        )
         """
         Generate SVG visual using optimized chat history method.
         """
