@@ -26,6 +26,7 @@ function AITutorPage() {
   const [previousCanvasImage, setPreviousCanvasImage] = useState(null); // Store previous canvas state
   const [hasNewDrawing, setHasNewDrawing] = useState(false); // Track if user drew since last query
   const [showAnnotationToggle, setShowAnnotationToggle] = useState(false); // Show manual annotation toggle
+  const [aiMode, setAiMode] = useState('jess'); // 'sally' or 'jess' mode
 
   // Initialize speech recognition
   useEffect(() => {
@@ -341,6 +342,7 @@ function AITutorPage() {
       canvasImage: compressedCanvasData,
       previousCanvasImage: compressedPreviousData,
       hasAnnotation: isAnnotationQuery,
+      mode: aiMode,
     };
     console.log('Request payload:', JSON.stringify(requestPayload, null, 2));
 
@@ -787,6 +789,22 @@ function AITutorPage() {
             <button onClick={clearCanvas} className="control-button">
               Clear Board
             </button>
+            <div className="mode-toggle">
+              <button
+                onClick={() => setAiMode('sally')}
+                className={`mode-button ${aiMode === 'sally' ? 'active' : ''}`}
+                title="Sally mode: Single prompt approach"
+              >
+                Sally
+              </button>
+              <button
+                onClick={() => setAiMode('jess')}
+                className={`mode-button ${aiMode === 'jess' ? 'active' : ''}`}
+                title="Jess mode: Two-stage approach"
+              >
+                Jess
+              </button>
+            </div>
             {showAnnotationToggle && (
               <div className="annotation-controls">
                 <button 

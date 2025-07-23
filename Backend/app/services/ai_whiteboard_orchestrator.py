@@ -5,7 +5,6 @@ Coordinates 2-stage AI workflow
 
 import asyncio
 import json
-import os
 from typing import Dict, List, Optional, Any
 class AIWhiteboardOrchestrator:
     def __init__(self, gemini_service):
@@ -17,20 +16,22 @@ class AIWhiteboardOrchestrator:
         canvas_image: Optional[str],
         chat_history: List[Dict[str, str]],
         previous_canvas_image: Optional[str] = None,
-        has_annotation: bool = False
+        has_annotation: bool = False,
+        mode: Optional[str] = "jess"
     ) -> Dict[str, Any]:
         """
         Orchestrates the processing of student queries - supports both single and two-stage workflows
+        Mode: "sally" for single prompt approach, "jess" for two-stage approach
         """
         
-        # Feature flag: Use single prompt approach if enabled
-        if os.getenv("USE_SINGLE_PROMPT_AI_TUTOR", "false").lower() == "true":
-            print("Using single-prompt approach")
+        # Use mode parameter to determine approach
+        if mode == "sally":
+            print("Using single-prompt approach (Sally mode)")
             return await self._generate_combined_response(
                 query, canvas_image, chat_history, previous_canvas_image, has_annotation
             )
         else:
-            print("Using two-stage approach")
+            print("Using two-stage approach (Jess mode)")
             return await self._generate_two_stage_response(
                 query, canvas_image, chat_history, previous_canvas_image, has_annotation
             )
