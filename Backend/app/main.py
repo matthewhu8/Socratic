@@ -1052,6 +1052,7 @@ class AITutorQueryRequest(BaseModel):
     canvasImage: Optional[str] = None  # Base64 encoded image
     previousCanvasImage: Optional[str] = None  # Base64 encoded previous image
     hasAnnotation: bool = False  # Flag indicating annotation-based query
+    mode: Optional[str] = "jess"  # "sally" for single prompt, "jess" for two-stage (default)
 
 @app.post("/api/ai-tutor/create-session", response_model=AITutorSessionResponse)
 async def create_ai_tutor_session(
@@ -1143,7 +1144,8 @@ async def process_ai_tutor_query(
             canvas_image=request.canvasImage,
             chat_history=messages,
             previous_canvas_image=request.previousCanvasImage,
-            has_annotation=request.hasAnnotation
+            has_annotation=request.hasAnnotation,
+            mode=request.mode
         )
         
         print(f"Response from Gemini service: {response_data}\n")

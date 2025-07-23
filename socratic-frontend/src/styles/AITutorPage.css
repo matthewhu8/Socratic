@@ -68,6 +68,7 @@
   z-index: 10;
   display: flex;
   gap: 0.5rem;
+  align-items: center;
 }
 
 .control-button {
@@ -84,6 +85,37 @@
 .control-button:hover {
   background: #f9fafb;
   border-color: #d1d5db;
+}
+
+.mode-toggle {
+  display: flex;
+  gap: 0.25rem;
+  background: #f3f4f6;
+  padding: 0.25rem;
+  border-radius: 8px;
+}
+
+.mode-button {
+  padding: 0.375rem 0.75rem;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #6b7280;
+  transition: all 0.2s;
+}
+
+.mode-button:hover {
+  background: #e5e7eb;
+  color: #374151;
+}
+
+.mode-button.active {
+  background: white;
+  color: #3b82f6;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .analyze-button {
