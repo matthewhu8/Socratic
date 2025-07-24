@@ -22,11 +22,13 @@ function AITutorPage() {
   const [context, setContext] = useState(null);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [currentDrawingY, setCurrentDrawingY] = useState(50); // Track Y position for AI drawings
+  const [currentDrawingX, setCurrentDrawingX] = useState(0);
   const [nextDrawingY, setNextDrawingY] = useState(50); // Track next available Y position
+  const [nextDrawingX, setNextDrawingX] = useState(0);
+  const [currRowMaxY, setMaxRowY] = useState(0) // for each row when we print, we must keep track of maxY amongst images on the row to move the starting point of the next row to here
   const [previousCanvasImage, setPreviousCanvasImage] = useState(null); // Store previous canvas state
   const [hasNewDrawing, setHasNewDrawing] = useState(false); // Track if user drew since last query
   const [showAnnotationToggle, setShowAnnotationToggle] = useState(false); // Show manual annotation toggle
-  const [aiMode, setAiMode] = useState('jess'); // 'sally' or 'jess' mode
 
   // Initialize speech recognition
   useEffect(() => {
@@ -342,7 +344,6 @@ function AITutorPage() {
       canvasImage: compressedCanvasData,
       previousCanvasImage: compressedPreviousData,
       hasAnnotation: isAnnotationQuery,
-      mode: aiMode,
     };
     console.log('Request payload:', JSON.stringify(requestPayload, null, 2));
 
@@ -485,72 +486,8 @@ function AITutorPage() {
       ctx.fillRect(0, drawingY, canvasRef.current.width, drawingAreaHeight);
       ctx.restore();
       
-      // Ensure SVG has proper namespace and encoding
-      let processedSvg = svgContent;
-      if (!svgContent.includes('xmlns=')) {
-        // Add namespace if missing
-        processedSvg = svgContent.replace('<svg', '<svg xmlns="http://www.w3.org/2000/svg"');
-      }
-      
-      // Ensure proper XML declaration
-      if (!processedSvg.startsWith('<?xml')) {
-        processedSvg = '<?xml version="1.0" encoding="UTF-8"?>' + processedSvg;
-      }
-      
-      // Try direct Canvas rendering first
-      try {
-        // Parse SVG and extract text elements for direct canvas rendering
-        const parser = new DOMParser();
-        const svgDoc = parser.parseFromString(processedSvg, 'image/svg+xml');
-        const svgElement = svgDoc.documentElement;
-        
-        // Check for parsing errors
-        if (svgDoc.querySelector('parsererror')) {
-          throw new Error('SVG parsing error');
-        }
-        
-        // Get all text elements
-        const textElements = svgElement.querySelectorAll('text');
-        
-        if (textElements.length > 0) {
-          // Direct canvas rendering for text elements
-          ctx.save();
-          
-          textElements.forEach(textEl => {
-            const x = parseFloat(textEl.getAttribute('x')) || 0;
-            const y = parseFloat(textEl.getAttribute('y')) || 0;
-            const fontSize = textEl.getAttribute('font-size') || '16px';
-            const fontFamily = textEl.getAttribute('font-family') || 'Arial';
-            const fill = textEl.getAttribute('fill') || '#2563eb';
-            const text = textEl.textContent;
-            
-            ctx.font = `${fontSize} ${fontFamily}`;
-            ctx.fillStyle = fill;
-            ctx.fillText(text, x, drawingY + y);
-          });
-          
-          ctx.restore();
-          console.log('SVG rendered directly to canvas using text elements');
-          
-          // Update positions
-          setCurrentDrawingY(drawingY);
-          const actualNextY = drawingY + 300 + 100; // Approximate height
-          setNextDrawingY(prevNext => Math.max(prevNext, actualNextY));
-          
-          // Scroll to the new content
-          const scrollContainer = document.querySelector('.whiteboard-scroll-container');
-          if (scrollContainer) {
-            scrollContainer.scrollTop = drawingY - 200;
-          }
-          
-          return; // Success, exit early
-        }
-      } catch (directRenderError) {
-        console.log('Direct canvas rendering failed, falling back to image method:', directRenderError);
-      }
-      
-      // Fallback to Image-based rendering
-      const svgBlob = new Blob([processedSvg], { type: 'image/svg+xml;charset=utf-8' });
+      // Create SVG blob and convert to image
+      const svgBlob = new Blob([svgContent], { type: 'image/svg+xml' });
       const url = URL.createObjectURL(svgBlob);
       const img = new Image();
       
@@ -559,7 +496,6 @@ function AITutorPage() {
           // Draw the SVG image onto the canvas at the reserved Y position
           ctx.drawImage(img, 0, drawingY);
           console.log('SVG successfully rendered to canvas at Y:', drawingY);
-          console.log('Image dimensions:', img.width, 'x', img.height);
           
           // Update the current Y position for display purposes
           const svgHeight = img.height || 300; // Default height if not available
@@ -587,27 +523,6 @@ function AITutorPage() {
       
       img.onerror = (error) => {
         console.error('Error loading SVG image:', error);
-        console.error('SVG content that failed:', processedSvg);
-        console.error('First 200 chars of SVG:', processedSvg.substring(0, 200));
-        
-        // Try alternative rendering method using foreignObject
-        try {
-          const fallbackSvg = `
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 400">
-              <foreignObject width="600" height="400">
-                <div xmlns="http://www.w3.org/1999/xhtml" style="font-family: Arial; color: #2563eb; padding: 20px;">
-                  <p>Visual content is temporarily unavailable. The AI tutor attempted to show:</p>
-                  <pre style="white-space: pre-wrap;">${svgContent.replace(/<[^>]*>/g, '')}</pre>
-                </div>
-              </foreignObject>
-            </svg>
-          `;
-          
-          console.log('Attempting fallback rendering...');
-        } catch (fallbackError) {
-          console.error('Fallback rendering also failed:', fallbackError);
-        }
-        
         URL.revokeObjectURL(url);
       };
       
@@ -624,7 +539,7 @@ function AITutorPage() {
     try {
       setIsSpeaking(true);
       
-      const apiKey = 'AIzaSyB_lC4glTCt2tmTWxq5yrO4sSNRWLITggI';
+      const apiKey = AIzaSyB_lC4glTCt2tmTWxq5yrO4sSNRWLITggI;
       if (!apiKey) {
         console.log('Google TTS API key not configured, falling back to browser TTS');
         fallbackToSpeechSynthesis(text);
@@ -789,22 +704,6 @@ function AITutorPage() {
             <button onClick={clearCanvas} className="control-button">
               Clear Board
             </button>
-            <div className="mode-toggle">
-              <button
-                onClick={() => setAiMode('sally')}
-                className={`mode-button ${aiMode === 'sally' ? 'active' : ''}`}
-                title="Sally mode: Single prompt approach"
-              >
-                Sally
-              </button>
-              <button
-                onClick={() => setAiMode('jess')}
-                className={`mode-button ${aiMode === 'jess' ? 'active' : ''}`}
-                title="Jess mode: Two-stage approach"
-              >
-                Jess
-              </button>
-            </div>
             {showAnnotationToggle && (
               <div className="annotation-controls">
                 <button 

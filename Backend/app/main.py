@@ -11,6 +11,7 @@ from dotenv import load_dotenv
 import uuid
 import time
 import json
+from pylatexenc.latex2text import LatexNodes2Text
 
 # Import our modules
 from .database.database import get_db, engine
@@ -1102,6 +1103,8 @@ async def create_ai_tutor_session(
         print(f"Error creating AI tutor session: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to create session: {str(e)}")
 
+l2t = LatexNodes2Text()
+
 @app.post("/api/ai-tutor/process-query")
 async def process_ai_tutor_query(
     request: AITutorQueryRequest,
@@ -1158,11 +1161,23 @@ async def process_ai_tutor_query(
             json.dumps(session_info)
         )
         
-        return {
-            "response": response_data["response"],
+        # converting the teacher response's latex raw language to plain
+        try:
+            raw_text = response_data["response"]
+            print(f"raw {raw_text}")
+            plain_text = l2t.latex_to_text(raw_text)
+            print(plain_text)
+            return {
+            "response": plain_text,
             "svgContent": response_data.get("svgContent")
             # this is image is Y height, bump down Y marker by XYZ (juyst an idea)
         }
+        except:
+            return {
+                "response": response_data["response"],
+                "svgContent": response_data.get("svgContent")
+                # this is image is Y height, bump down Y marker by XYZ (juyst an idea)
+            }
         
     except HTTPException:
         raise
