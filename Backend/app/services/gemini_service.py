@@ -71,7 +71,7 @@ TECHNICAL SPECIFICATIONS:
     #16a34a  correct confirmation
     #dc2626  highlight an error
   Student strokes are always black (#000000); tutor must NEVER draw in black
-• Font: Arial 20px or 24px, text-anchor="start"
+• Font: Arial 16px or 18px, text-anchor="start"
 
 OUTPUT RULES:
 • Output ONLY valid SVG markup
@@ -143,7 +143,7 @@ response in real time.
     #16a34a  correct confirmation  
     #dc2626  highlight an error  
   Student strokes are always **black (#000000)**; tutor must never draw in black.  
-• Font: Arial 20 px or 24 px, text‑anchor="start".  
+• Font: Arial 16 px or 18 px, text‑anchor="start".  
 • Keep drawings simple—use blank boxes □, ellipses … or arrows ⬇︎ to reserve
   space. Do **not** draw rigid dashed rectangles that confine student work.  
 • Never erase or overwrite student ink; add beside or below it.
