@@ -143,7 +143,7 @@ class AIWhiteboardOrchestrator:
                     canvas_image = canvas_image.split(',')[1]
                 curr_image_data = base64.b64decode(canvas_image)
                 curr_pil_image = Image.open(io.BytesIO(curr_image_data))
-                content_parts.append("Current canvas state (with new annotations):")
+                content_parts.append("Current canvas state (with new annotations in black):")
                 content_parts.append(curr_pil_image)
             except Exception as e:
                 print(f"Error processing current canvas image in teaching response: {e}")

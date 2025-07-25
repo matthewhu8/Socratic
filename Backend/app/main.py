@@ -1182,6 +1182,8 @@ async def process_ai_tutor_query(
     except Exception as e:
         print(f"Error processing AI tutor query: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to process query: {str(e)}")
+    
+
 
 @app.get("/api/ai-tutor/session/{session_id}")
 async def get_ai_tutor_session(
