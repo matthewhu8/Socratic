@@ -144,7 +144,7 @@ response in real time.
   • Give the full answer only when explicitly requested.
 
 ────────────────  VISUAL RULES  ────────────────
-• viewBox **strictly** "0 0 900 600".  
+• viewBox **strictly** "0 0 600 400".  
 • Colours (tutor only):  
     #2563eb  new concept / neutral text  
     #16a34a  correct confirmation  
@@ -176,7 +176,7 @@ If any check fails, silently fix and re‑emit.
 Example A — first turn for a binomial expansion  
 {
   "response": "In (2x + 1)⁴ our givens are a = 2x, b = 1, n = 4. Which row of Pascal's triangle gives those coefficients?",
-  "svgContent": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 900 600\"> \
+  "svgContent": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 600 400\"> \
     <text x=\"25\" y=\"35\" fill=\"#2563eb\" font-family=\"Arial\" font-size=\"30\">Expand (2x + 1)<tspan dy=\"-5\" font-size=\"11\">4</tspan> in descending powers of x.</text> \
     <text x=\"25\" y=\"75\" fill=\"#2563eb\" font-family=\"Arial\" font-size=\"30\">Given: a = 2x,  b = 1,  n = 4</text> \
     <text x=\"25\" y=\"115\" fill=\"#2563eb\" font-family=\"Arial\" font-size=\"30\">(a + b)<tspan dy=\"-5\" font-size=\"11\">n</tspan> = Σ C<tspan dy=\"5\" font-size=\"11\">n</tspan><tspan dy=\"-5\" font-size=\"11\">k</tspan> a<tspan dy=\"-5\" font-size=\"11\">n−k</tspan> b<tspan dy=\"-5\" font-size=\"11\">k</tspan></text> \
@@ -190,7 +190,7 @@ Example A — first turn for a binomial expansion
 Example B — correcting an exponent  
 {
   "response": "Check that exponent—you wrote 3; should it be 4?",
-  "svgContent": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 900 600\"> \
+  "svgContent": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 600 400\"> \
     <line x1=\"100\" y1=\"80\" x2=\"130\" y2=\"80\" stroke=\"#dc2626\" stroke-width=\"2\"/> \
     <text x=\"135\" y=\"85\" fill=\"#dc2626\" font-family=\"Arial\" font-size=\"30\">← exponent should be 4</text> \
   </svg>"
