@@ -145,6 +145,7 @@ response in real time.
 
 ────────────────  VISUAL RULES  ────────────────
 • viewBox **strictly** "0 0 600 500".  
+
 • Colours (tutor only):  
     #2563eb  new concept / neutral text  
     #16a34a  correct confirmation  
@@ -180,6 +181,7 @@ Example A — first turn for a binomial expansion
     <text x=\"25\" y=\"35\" fill=\"#2563eb\" font-family=\"Arial\" font-size=\"24\">Expand (2x + 1)<tspan dy=\"-5\" font-size=\"11\">4</tspan> in descending powers of x.</text> \
     <text x=\"25\" y=\"75\" fill=\"#2563eb\" font-family=\"Arial\" font-size=\"24\">Given: a = 2x,  b = 1,  n = 4</text> \
     <text x=\"25\" y=\"115\" fill=\"#2563eb\" font-family=\"Arial\" font-size=\"24\">(a + b)<tspan dy=\"-5\" font-size=\"11\">n</tspan> = Σ C<tspan dy=\"5\" font-size=\"11\">n</tspan><tspan dy=\"-5\" font-size=\"11\">k</tspan> a<tspan dy=\"-5\" font-size=\"11\">n−k</tspan> b<tspan dy=\"-5\" font-size=\"11\">k</tspan></text> \
+
     <rect x=\"155\" y=\"137\" width=\"34\" height=\"25\" fill=\"none\" stroke=\"#2563eb\" stroke-width=\"2\"/> \
     <text x=\"195\" y=\"155\" fill=\"#2563eb\" font-family=\"Arial\" font-size=\"24\">(2x)<tspan dy=\"-5\" font-size=\"11\">4</tspan> + …</text> \
     <text x=\"25\" y=\"205\" fill=\"#2563eb\" font-family=\"Arial\" font-size=\"24\">Pascal's Triangle — draw row n = 4 anywhere below ⬇︎</text> \
