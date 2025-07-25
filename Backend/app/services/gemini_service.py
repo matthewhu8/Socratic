@@ -37,7 +37,8 @@ class GeminiService:
 STYLE & LENGTH:
 • Keep each response concise—ideally ≤ 200 words / 25 seconds of speech
 • Include at most one guiding question per turn
-• Skip filler; dive straight into substance
+• Skip filler; dive straight into substance. Do not use asteriks. 
+
 
 TEACHING APPROACH:
 • For new problems:
@@ -108,16 +109,22 @@ SELF-CHECK BEFORE SENDING:
         # Combined model for single-prompt AI tutor (new approach)
         self.combined_model = genai.GenerativeModel(
             'gemini-2.5-flash-preview-05-20',
-            system_instruction="""You are Socratic‑Tutor, a fast, patient math coach who can DRAW on a shared
+            system_instruction="""OUTPUT ONLY VALID JSON. No text before or after the JSON object.
+
+You are Socratic‑Tutor, a fast, patient math coach who can DRAW on a shared
 whiteboard and SPEAK concise explanations.  The student sees and hears each
-response in real time.
+response in real time. 
 
 ────────────────  OUTPUT CONTRACT  ────────────────
-• Always reply with **valid JSON** containing EXACTLY these two keys:
+• Your ENTIRE response must be a single JSON object - nothing else
+• Output EXACTLY this JSON structure:
   {
     "response":    "<tutor's spoken/written line>",
     "svgContent":  "<complete SVG markup>"  // or null when no drawing needed
   }
+• Do NOT include any explanatory text outside the JSON
+• Do NOT wrap the JSON in markdown code blocks
+• Just output the raw JSON object
 
 ────────────────  STYLE & LENGTH  ────────────────
 • Keep each "response" concise—ideally ≤ 200 words / 25 seconds of speech.  
@@ -143,7 +150,7 @@ response in real time.
     #16a34a  correct confirmation  
     #dc2626  highlight an error  
   Student strokes are always **black (#000000)**; tutor must never draw in black.  
-• Font: Arial 16 px or 18 px, text‑anchor="start".  
+• Font: Arial 20 px, text‑anchor="start".  
 • Keep drawings simple—use blank boxes □, ellipses … or arrows ⬇︎ to reserve
   space. Do **not** draw rigid dashed rectangles that confine student work.  
 • Never erase or overwrite student ink; add beside or below it.
@@ -760,71 +767,6 @@ Remember: You're a tutor helping them learn, not just giving answers.
                 canvas_image
             )
     
-    async def generate_svg_with_chat_history(self, query: str, teaching_response: str, 
-                                           chat_history: List[Dict], canvas_image: Optional[str] = None) -> Optional[str]:
-        """Generate SVG content using chat history for context (optimized method)"""
-        try:
-            # Convert chat history to Gemini format (only recent messages)
-            formatted_history = []
-            recent_history = chat_history[-10:] if len(chat_history) > 10 else chat_history
-            
-            for msg in recent_history:
-                role = "user" if msg.get("role") == "user" else "model"
-                formatted_history.append({
-                    "role": role,
-                    "parts": [msg.get("content", "")]
-                })
-            
-            # Start chat with history pre-loaded
-            chat = self.svg_model.start_chat(history=formatted_history)
-            
-            # MINIMAL prompt - all rules are in system instruction
-            minimal_prompt = f"Create visual for: {query}\nTeaching context: {teaching_response}"
-            
-            # Prepare content parts
-            content_parts = [minimal_prompt]
-            
-            # Add canvas image if provided
-            if canvas_image:
-                try:
-                    if canvas_image.startswith('data:image'):
-                        canvas_image = canvas_image.split(',')[1]
-                    image_data = base64.b64decode(canvas_image)
-                    pil_image = Image.open(io.BytesIO(image_data))
-                    content_parts.append(pil_image)
-                except Exception as e:
-                    print(f"Error processing canvas image for optimized SVG generation: {e}")
-            
-            # Send minimal prompt to chat session
-            response = await chat.send_message_async(content_parts)
-            response_text = response.text.strip()
-            
-            # Clean up markdown if present
-            if response_text.startswith('```'):
-                end_index = response_text.rfind('```')
-                if end_index > 3:
-                    response_text = response_text[3:end_index]
-                if response_text.startswith('svg') or response_text.startswith('xml'):
-                    lines = response_text.split('\n')
-                    response_text = '\n'.join(lines[1:])
-                response_text = response_text.strip()
-            
-            # Validate that response contains SVG
-            if not response_text.startswith('<svg') or not response_text.endswith('</svg>'):
-                print(f"Invalid SVG response from optimized method: {response_text[:100]}...")
-                return None
-            
-            return response_text
-            
-        except Exception as e:
-            print(f"Error in optimized SVG generation: {e}")
-            # Fallback to original method
-            print("Falling back to original SVG generation method")
-            return await self.generate_svg_content(
-                f"Create visual for: {query}\nTeaching context: {teaching_response}",
-                canvas_image
-            )
-
 
     # New combined approach methods
     async def generate_combined_response(
@@ -881,7 +823,7 @@ Remember: You're a tutor helping them learn, not just giving answers.
                     image_data = base64.b64decode(canvas_image)
                     pil_image = Image.open(io.BytesIO(image_data))
                     if has_annotation:
-                        content_parts.append("Current canvas state (with new annotations):")
+                        content_parts.append("Current canvas state (with new annotations in black drawing):")
                     content_parts.append(pil_image)
                 except Exception as e:
                     print(f"Error processing canvas image: {e}")
@@ -937,6 +879,26 @@ Remember: You're a tutor helping them learn, not just giving answers.
         except json.JSONDecodeError as e:
             print(f"JSON parsing error: {e}")
             print(f"Raw response: {raw_response[:200]}...")
+            
+            # Check if the response contains embedded JSON
+            if "```json" in raw_response and "```" in raw_response:
+                try:
+                    # Extract JSON from markdown code block
+                    start_idx = raw_response.find("```json") + 7
+                    end_idx = raw_response.find("```", start_idx)
+                    if start_idx > 7 and end_idx > start_idx:
+                        json_content = raw_response[start_idx:end_idx].strip()
+                        parsed_response = json.loads(json_content)
+                        
+                        # Validate and return the extracted JSON
+                        if "response" in parsed_response:
+                            svg_content = self._validate_svg_content(parsed_response.get("svgContent"))
+                            return {
+                                "response": parsed_response["response"],
+                                "svgContent": svg_content
+                            }
+                except (json.JSONDecodeError, ValueError) as extract_error:
+                    print(f"Failed to extract embedded JSON: {extract_error}")
             
             # Check if response is too long and retry with shorter request
             if len(raw_response) > 4000:  # Approximate token limit check
