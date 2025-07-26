@@ -109,7 +109,7 @@ SELF-CHECK BEFORE SENDING:
         # Combined model for single-prompt AI tutor (new approach)
         self.combined_model = genai.GenerativeModel(
             'gemini-2.5-flash-preview-05-20',
-            system_instruction="""OUTPUT ONLY VALID JSON. No text before or after the JSON object.
+            system_instruction="""OUTPUT ONLY VALID JSON. No text before or after the JSON object. Svg mark must go in the svgContent field. No exceptions.
 
 You are Socratic‑Tutor, a fast, patient math coach who can DRAW on a shared
 whiteboard and SPEAK concise explanations.  The student sees and hears each
@@ -145,7 +145,6 @@ response in real time.
 
 ────────────────  VISUAL RULES  ────────────────
 • viewBox **strictly** "0 0 600 500".  
-
 • Colours (tutor only):  
     #2563eb  new concept / neutral text  
     #16a34a  correct confirmation  
@@ -181,7 +180,6 @@ Example A — first turn for a binomial expansion
     <text x=\"25\" y=\"35\" fill=\"#2563eb\" font-family=\"Arial\" font-size=\"24\">Expand (2x + 1)<tspan dy=\"-5\" font-size=\"11\">4</tspan> in descending powers of x.</text> \
     <text x=\"25\" y=\"75\" fill=\"#2563eb\" font-family=\"Arial\" font-size=\"24\">Given: a = 2x,  b = 1,  n = 4</text> \
     <text x=\"25\" y=\"115\" fill=\"#2563eb\" font-family=\"Arial\" font-size=\"24\">(a + b)<tspan dy=\"-5\" font-size=\"11\">n</tspan> = Σ C<tspan dy=\"5\" font-size=\"11\">n</tspan><tspan dy=\"-5\" font-size=\"11\">k</tspan> a<tspan dy=\"-5\" font-size=\"11\">n−k</tspan> b<tspan dy=\"-5\" font-size=\"11\">k</tspan></text> \
-
     <rect x=\"155\" y=\"137\" width=\"34\" height=\"25\" fill=\"none\" stroke=\"#2563eb\" stroke-width=\"2\"/> \
     <text x=\"195\" y=\"155\" fill=\"#2563eb\" font-family=\"Arial\" font-size=\"24\">(2x)<tspan dy=\"-5\" font-size=\"11\">4</tspan> + …</text> \
     <text x=\"25\" y=\"205\" fill=\"#2563eb\" font-family=\"Arial\" font-size=\"24\">Pascal's Triangle — draw row n = 4 anywhere below ⬇︎</text> \
@@ -798,7 +796,7 @@ Remember: You're a tutor helping them learn, not just giving answers.
             # Build prompt based on annotation context
             if has_annotation and previous_canvas_image and canvas_image:
                 annotation_context = "IMPORTANT: The student has made new annotations/drawings on the whiteboard since our last interaction. Two images are provided - the previous state and current state. The student is likely referencing their new markings when asking this question. Pay close attention to what they've added."
-                prompt = f"Student asks: \"{query}\"\nCanvas: Has student annotations\n{annotation_context}\nProvide guidance."
+                prompt = f"Student asks: \"{query}\"\nCanvas: Has student annotations in black\n{annotation_context}\nProvide guidance."
             else:
                 canvas_state = "Has student drawing" if canvas_image else "Empty"
                 prompt = f"Student asks: \"{query}\"\nCanvas: {canvas_state}\nProvide guidance."
@@ -813,7 +811,7 @@ Remember: You're a tutor helping them learn, not just giving answers.
                         previous_canvas_image = previous_canvas_image.split(',')[1]
                     prev_image_data = base64.b64decode(previous_canvas_image)
                     prev_pil_image = Image.open(io.BytesIO(prev_image_data))
-                    content_parts.append("Previous canvas state:")
+                    content_parts.append("Previous canvas state before the student drew anything:")
                     content_parts.append(prev_pil_image)
                 except Exception as e:
                     print(f"Error processing previous canvas image: {e}")
@@ -833,6 +831,7 @@ Remember: You're a tutor helping them learn, not just giving answers.
             # Send request to Gemini
             response = await chat.send_message_async(content_parts)
             raw_response = response.text.strip()
+            print(f"\nraw response straight from the model: {raw_response}\n")
             
             # Parse and validate response
             return await self._parse_and_validate_combined_response(raw_response, query, canvas_image, chat_history)
@@ -860,6 +859,9 @@ Remember: You're a tutor helping them learn, not just giving answers.
             if "response" not in parsed_response:
                 raise ValueError("Missing required 'response' field")
             
+            # Clean asterisks from the response text (for TTS)
+            cleaned_response = self._remove_markdown_asterisks(parsed_response["response"])
+            
             # Validate and process SVG content
             svg_content = parsed_response.get("svgContent")
             svg_content = self._validate_svg_content(svg_content)
@@ -872,15 +874,33 @@ Remember: You're a tutor helping them learn, not just giving answers.
                 )
                 if retry_response:
                     return retry_response
-            
+            print(f"parsed SVG: {svg_content}")
             return {
-                "response": parsed_response["response"],
+                "response": cleaned_response,
                 "svgContent": svg_content
             }
             
         except json.JSONDecodeError as e:
             print(f"JSON parsing error: {e}")
             print(f"Raw response: {raw_response[:200]}...")
+            
+            # Try to extract JSON from plain text (handles text before JSON)
+            extracted_json = self._extract_json_from_text(raw_response)
+            if extracted_json:
+                try:
+                    print("Successfully extracted JSON from mixed text response")
+                    parsed_response = json.loads(extracted_json)
+                    
+                    # Validate and return the extracted JSON
+                    if "response" in parsed_response:
+                        cleaned_response = self._remove_markdown_asterisks(parsed_response["response"])
+                        svg_content = self._validate_svg_content(parsed_response.get("svgContent"))
+                        return {
+                            "response": cleaned_response,
+                            "svgContent": svg_content
+                        }
+                except (json.JSONDecodeError, ValueError) as extract_error:
+                    print(f"Failed to parse extracted JSON: {extract_error}")
             
             # Check if the response contains embedded JSON
             if "```json" in raw_response and "```" in raw_response:
@@ -894,9 +914,10 @@ Remember: You're a tutor helping them learn, not just giving answers.
                         
                         # Validate and return the extracted JSON
                         if "response" in parsed_response:
+                            cleaned_response = self._remove_markdown_asterisks(parsed_response["response"])
                             svg_content = self._validate_svg_content(parsed_response.get("svgContent"))
                             return {
-                                "response": parsed_response["response"],
+                                "response": cleaned_response,
                                 "svgContent": svg_content
                             }
                 except (json.JSONDecodeError, ValueError) as extract_error:
@@ -910,8 +931,9 @@ Remember: You're a tutor helping them learn, not just giving answers.
                     return shorter_response
             
             # Fallback to text-only response
+            cleaned_response = self._remove_markdown_asterisks(raw_response)
             return {
-                "response": raw_response,
+                "response": cleaned_response,
                 "svgContent": None
             }
         except Exception as e:
@@ -942,6 +964,90 @@ Remember: You're a tutor helping them learn, not just giving answers.
             return None
         
         return svg_content
+    
+    def _extract_json_from_text(self, text: str) -> Optional[str]:
+        """Extract JSON object from text that may contain non-JSON content before/after."""
+        try:
+            # Find the first opening brace
+            start_idx = text.find('{')
+            if start_idx == -1:
+                return None
+            
+            # Track brace depth to find matching closing brace
+            brace_depth = 0
+            in_string = False
+            escape_next = False
+            end_idx = start_idx
+            
+            for i in range(start_idx, len(text)):
+                char = text[i]
+                
+                # Handle string literals to avoid counting braces inside strings
+                if not escape_next:
+                    if char == '"' and not in_string:
+                        in_string = True
+                    elif char == '"' and in_string:
+                        in_string = False
+                    elif char == '\\' and in_string:
+                        escape_next = True
+                        continue
+                else:
+                    escape_next = False
+                    continue
+                
+                # Count braces only outside of strings
+                if not in_string:
+                    if char == '{':
+                        brace_depth += 1
+                    elif char == '}':
+                        brace_depth -= 1
+                        if brace_depth == 0:
+                            end_idx = i
+                            break
+            
+            # Extract the JSON substring
+            if brace_depth == 0 and end_idx > start_idx:
+                json_str = text[start_idx:end_idx + 1]
+                # Validate it's actually JSON by trying to parse it
+                json.loads(json_str)
+                return json_str
+            
+            return None
+            
+        except Exception as e:
+            print(f"Error extracting JSON from text: {e}")
+            return None
+    
+    def _remove_markdown_asterisks(self, text: str) -> str:
+        """Remove leading and trailing asterisks from words while preserving multiplication asterisks."""
+        if not text:
+            return text
+        
+        # Split by spaces to get individual words
+        words = text.split(' ')
+        cleaned_words = []
+        
+        for word in words:
+            if not word:  # Handle multiple spaces
+                cleaned_words.append(word)
+                continue
+            
+            # If word is just asterisks, remove it entirely
+            if word == '*' or all(c == '*' for c in word):
+                cleaned_words.append('')
+                continue
+                
+            # Remove leading asterisks
+            while word.startswith('*') and len(word) > 1:
+                word = word[1:]
+            
+            # Remove trailing asterisks  
+            while word.endswith('*') and len(word) > 1:
+                word = word[:-1]
+            
+            cleaned_words.append(word)
+        
+        return ' '.join(cleaned_words)
     
     async def _retry_with_svg_error_feedback(
         self, 
@@ -990,9 +1096,10 @@ Make sure the SVG starts with <svg and ends with </svg>."""
                     # Parse retry response
                     retry_parsed = json.loads(retry_raw_response)
                     if "response" in retry_parsed:
+                        cleaned_response = self._remove_markdown_asterisks(retry_parsed["response"])
                         svg_content = self._validate_svg_content(retry_parsed.get("svgContent"))
                         return {
-                            "response": retry_parsed["response"],
+                            "response": cleaned_response,
                             "svgContent": svg_content
                         }
                 except json.JSONDecodeError:
@@ -1046,14 +1153,16 @@ Focus on text response only, no SVG visual."""
             try:
                 parsed_shorter = json.loads(shorter_response)
                 if "response" in parsed_shorter:
+                    cleaned_response = self._remove_markdown_asterisks(parsed_shorter["response"])
                     return {
-                        "response": parsed_shorter["response"],
+                        "response": cleaned_response,
                         "svgContent": None  # Force no SVG for shorter response
                     }
             except json.JSONDecodeError:
                 # If still fails, return as text-only
+                cleaned_response = self._remove_markdown_asterisks(shorter_response)
                 return {
-                    "response": shorter_response,
+                    "response": cleaned_response,
                     "svgContent": None
                 }
             
