@@ -765,10 +765,33 @@ function AITutorPage() {
     <div className="ai-tutor-container">
       {/* Header */}
       <div className="ai-tutor-header">
-        <button onClick={() => navigate('/student/home')} className="back-button">
-          ← Back to Home
-        </button>
-        <h1>AI Tutor</h1>
+        <div className="header-left">
+          <button onClick={() => navigate('/student/home')} className="back-button">
+            ← Back to Home
+          </button>
+          <h1>AI Tutor</h1>
+        </div>
+        <div className="header-controls">
+          <button onClick={clearCanvas} className="control-button">
+            Clear Board
+          </button>
+          <div className="mode-toggle">
+            <button
+              onClick={() => setAiMode('sally')}
+              className={`mode-button ${aiMode === 'sally' ? 'active' : ''}`}
+              title="Sally mode: Single prompt approach"
+            >
+              Sally
+            </button>
+            <button
+              onClick={() => setAiMode('jess')}
+              className={`mode-button ${aiMode === 'jess' ? 'active' : ''}`}
+              title="Jess mode: Two-stage approach"
+            >
+              Jess
+            </button>
+          </div>
+        </div>
       </div>
 
       <div className="ai-tutor-content">
@@ -785,27 +808,8 @@ function AITutorPage() {
               <button onClick={initializeSession}>Retry</button>
             </div>
           )}
-          <div className="whiteboard-controls">
-            <button onClick={clearCanvas} className="control-button">
-              Clear Board
-            </button>
-            <div className="mode-toggle">
-              <button
-                onClick={() => setAiMode('sally')}
-                className={`mode-button ${aiMode === 'sally' ? 'active' : ''}`}
-                title="Sally mode: Single prompt approach"
-              >
-                Sally
-              </button>
-              <button
-                onClick={() => setAiMode('jess')}
-                className={`mode-button ${aiMode === 'jess' ? 'active' : ''}`}
-                title="Jess mode: Two-stage approach"
-              >
-                Jess
-              </button>
-            </div>
-            {showAnnotationToggle && (
+          {showAnnotationToggle && (
+            <div className="whiteboard-controls">
               <div className="annotation-controls">
                 <button 
                   onClick={() => {
@@ -818,8 +822,8 @@ function AITutorPage() {
                   Send with annotation reference
                 </button>
               </div>
-            )}
-          </div>
+            </div>
+          )}
           <div className="whiteboard-scroll-container">
             <canvas
               ref={canvasRef}
