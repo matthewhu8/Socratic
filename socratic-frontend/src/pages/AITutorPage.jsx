@@ -27,6 +27,9 @@ function AITutorPage() {
   const [hasNewDrawing, setHasNewDrawing] = useState(false); // Track if user drew since last query
   const [showAnnotationToggle, setShowAnnotationToggle] = useState(false); // Show manual annotation toggle
   const [aiMode, setAiMode] = useState('jess'); // 'sally' or 'jess' mode
+  const [toolMode, setToolMode] = useState('draw'); // 'draw' or 'text'
+  const [textInputs, setTextInputs] = useState([]); // Text elements on canvas
+  const [activeTextInput, setActiveTextInput] = useState(null);
 
   // Initialize speech recognition
   useEffect(() => {
@@ -233,6 +236,45 @@ function AITutorPage() {
     setHasNewDrawing(false);
     setPreviousCanvasImage(null);
     setShowAnnotationToggle(false);
+  };
+
+  const handleCanvasClick = (e) => {
+    if (toolMode !== 'text') return;
+    
+    const rect = canvasRef.current.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    
+    // Add new text input
+    const newTextInput = {
+      x: x,
+      y: y,
+      text: ''
+    };
+    
+    setTextInputs([...textInputs, newTextInput]);
+    setActiveTextInput(textInputs.length);
+  };
+  
+  const updateTextInput = (index, text) => {
+    const newTextInputs = [...textInputs];
+    newTextInputs[index].text = text;
+    setTextInputs(newTextInputs);
+  };
+  
+  const finalizeTextInput = (index) => {
+    const textInput = textInputs[index];
+    if (textInput.text.trim() && context) {
+      // Draw text on canvas
+      context.font = '16px Arial';
+      context.fillStyle = '#000000';
+      context.fillText(textInput.text, textInput.x, textInput.y);
+    }
+    
+    // Remove the input
+    const newTextInputs = textInputs.filter((_, i) => i !== index);
+    setTextInputs(newTextInputs);
+    setActiveTextInput(null);
   };
 
   const captureCanvas = () => {
@@ -592,17 +634,6 @@ function AITutorPage() {
         
         // Try alternative rendering method using foreignObject
         try {
-          const fallbackSvg = `
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 400">
-              <foreignObject width="600" height="400">
-                <div xmlns="http://www.w3.org/1999/xhtml" style="font-family: Arial; color: #2563eb; padding: 20px;">
-                  <p>Visual content is temporarily unavailable. The AI tutor attempted to show:</p>
-                  <pre style="white-space: pre-wrap;">${svgContent.replace(/<[^>]*>/g, '')}</pre>
-                </div>
-              </foreignObject>
-            </svg>
-          `;
-          
           console.log('Attempting fallback rendering...');
         } catch (fallbackError) {
           console.error('Fallback rendering also failed:', fallbackError);
@@ -764,38 +795,86 @@ function AITutorPage() {
   return (
     <div className="ai-tutor-container">
       {/* Header */}
-      <div className="ai-tutor-header">
+      <div className="ai-tutor-header animate-slide-up">
         <div className="header-left">
           <button onClick={() => navigate('/student/home')} className="back-button">
-            ← Back to Home
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M19 12H5M12 19l-7-7 7-7"/>
+            </svg>
+            Back to Home
           </button>
+          <div className="header-divider"></div>
           <h1>AI Tutor</h1>
-        </div>
-        <div className="header-controls">
-          <button onClick={clearCanvas} className="control-button">
-            Clear Board
-          </button>
-          <div className="mode-toggle">
-            <button
-              onClick={() => setAiMode('sally')}
-              className={`mode-button ${aiMode === 'sally' ? 'active' : ''}`}
-              title="Sally mode: Single prompt approach"
-            >
-              Sally
-            </button>
-            <button
-              onClick={() => setAiMode('jess')}
-              className={`mode-button ${aiMode === 'jess' ? 'active' : ''}`}
-              title="Jess mode: Two-stage approach"
-            >
-              Jess
-            </button>
-          </div>
         </div>
       </div>
 
       <div className="ai-tutor-content">
         <div className="whiteboard-section">
+          {/* Toolbar */}
+          <div className="toolbar-section animate-slide-up" style={{ animationDelay: '300ms' }}>
+            <div className="tool-buttons">
+              {/* Sally/Jess Toggle */}
+              <button
+                className="tool-button"
+                onClick={() => setAiMode(aiMode === 'sally' ? 'jess' : 'sally')}
+                title={`Switch to ${aiMode === 'sally' ? 'Jess' : 'Sally'} mode`}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                  <circle cx="12" cy="7" r="4"/>
+                </svg>
+                {aiMode === 'sally' ? 'Sally' : 'Jess'}
+              </button>
+              
+              {/* Text Tool */}
+              <button
+                className={`tool-button ${toolMode === 'text' ? 'active' : ''}`}
+                onClick={() => setToolMode('text')}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M4 7V4h16v3M9 20h6M12 4v16"/>
+                </svg>
+                Text
+              </button>
+              
+              {/* Draw Tool */}
+              <button
+                className={`tool-button ${toolMode === 'draw' ? 'active' : ''}`}
+                onClick={() => setToolMode('draw')}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M12 19l7-7 3 3-7 7-3-3z"/>
+                  <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/>
+                  <path d="M2 2l7.586 7.586"/>
+                  <circle cx="11" cy="11" r="2"/>
+                </svg>
+                Draw
+              </button>
+              
+              {/* Stop Speech Button - only shows when AI is speaking */}
+              {isSpeaking && (
+                <button
+                  onClick={stopSpeaking}
+                  className="stop-speech-button"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <rect x="6" y="4" width="4" height="16"/>
+                    <rect x="14" y="4" width="4" height="16"/>
+                  </svg>
+                  Stop Speech
+                </button>
+              )}
+            </div>
+            
+            <button onClick={clearCanvas} className="control-button">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+                <path d="M3 3v5h5"/>
+              </svg>
+              Clear Board
+            </button>
+          </div>
+          
           {isConnecting && (
             <div className="loading-overlay">
               <div className="spinner"></div>
@@ -808,42 +887,94 @@ function AITutorPage() {
               <button onClick={initializeSession}>Retry</button>
             </div>
           )}
-          {showAnnotationToggle && (
-            <div className="whiteboard-controls">
-              <div className="annotation-controls">
-                <button 
-                  onClick={() => {
-                    setShowAnnotationToggle(false);
-                    handleSubmit(userInput, false, true); // Force annotation mode
-                  }}
-                  className="annotation-button"
-                  disabled={!userInput.trim() || isProcessing}
-                >
-                  Send with annotation reference
-                </button>
+          <div className="whiteboard-scroll-container animate-scale-in" style={{ animationDelay: '400ms' }}>
+            {/* Welcome Message - shows when canvas is empty */}
+            {isCanvasEmpty() && (
+              <div className="welcome-message animate-fade-in" style={{ animationDelay: '600ms' }}>
+                <div className="welcome-content">
+                  <div className="welcome-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M4 7V4h16v3M9 20h6M12 4v16"/>
+                    </svg>
+                  </div>
+                  <h3 className="welcome-title">Interactive Learning Space</h3>
+                  <p className="welcome-description">
+                    Start a conversation with your AI tutor or use the drawing tools to visualize concepts together
+                  </p>
+                </div>
               </div>
-            </div>
-          )}
-          <div className="whiteboard-scroll-container">
+            )}
             <canvas
               ref={canvasRef}
-              className="whiteboard-canvas"
-              onMouseDown={startDrawing}
+              className={`whiteboard-canvas ${toolMode === 'text' ? 'text-mode' : ''}`}
+              onMouseDown={toolMode === 'draw' ? startDrawing : handleCanvasClick}
               onMouseMove={draw}
               onMouseUp={stopDrawing}
               onMouseLeave={stopDrawing}
             />
+            {/* Render text inputs */}
+            {textInputs.map((textInput, index) => (
+              <input
+                key={index}
+                type="text"
+                className="canvas-text-input"
+                style={{
+                  left: textInput.x + 'px',
+                  top: textInput.y + 'px',
+                  display: activeTextInput === index ? 'block' : 'none'
+                }}
+                value={textInput.text}
+                onChange={(e) => updateTextInput(index, e.target.value)}
+                onBlur={() => finalizeTextInput(index)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    finalizeTextInput(index);
+                  }
+                }}
+                autoFocus
+              />
+            ))}
           </div>
         </div>
 
-        <div className="chat-section">
+        <div className="chat-section animate-slide-up" style={{ animationDelay: '500ms' }}>
+          {/* Chat Header */}
+          <div className="chat-header">
+            <h3>Chat & Questions</h3>
+            <p>Ask anything or request explanations</p>
+          </div>
+          
           <div className="messages-container">
+            {/* Welcome message from AI */}
+            {messages.length === 0 && (
+              <div className="message assistant animate-fade-in" style={{ animationDelay: '700ms' }}>
+                <div className="message-avatar">AI</div>
+                <div className="message-card">
+                  <p>
+                    Hello! I'm your AI tutor. Feel free to ask me anything or describe what you'd like to learn today. 
+                    I can help explain concepts, solve problems, or guide you through exercises.
+                  </p>
+                </div>
+              </div>
+            )}
+            
             {messages.map((msg, index) => (
               <div key={index} className={`message ${msg.role}`}>
-                <strong>{msg.role === 'user' ? 'You' : 'AI Tutor'}:</strong>
-                <div className="message-content">
-                  <MathText text={msg.content} />
-                </div>
+                {msg.role === 'assistant' ? (
+                  <>
+                    <div className="message-avatar">AI</div>
+                    <div className="message-card">
+                      <MathText text={msg.content} />
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <strong>{msg.role === 'user' ? 'You' : 'AI Tutor'}:</strong>
+                    <div className="message-content">
+                      <MathText text={msg.content} />
+                    </div>
+                  </>
+                )}
               </div>
             ))}
             {isProcessing && (
@@ -855,37 +986,19 @@ function AITutorPage() {
           </div>
 
           <div className="input-section">
-            <textarea
-              value={userInput}
-              onChange={(e) => setUserInput(e.target.value)}
-              onKeyPress={handleKeyPress}
-              placeholder="Ask a question or describe what you need help with..."
-              disabled={isProcessing}
-              rows={2}
-            />
-            <div className="input-actions">
-              <button 
-                onClick={toggleListening} 
-                className={`voice-button ${isListening ? 'listening' : ''}`}
+            <div className="input-wrapper">
+              <textarea
+                value={userInput}
+                onChange={(e) => setUserInput(e.target.value)}
+                onKeyDown={handleKeyPress}
+                placeholder="Ask a question or describe what you need help with..."
                 disabled={isProcessing}
-              >
-                {isListening ? '🔴 Stop' : '🎤 Speak'}
-              </button>
-              {isSpeaking && (
-                <button 
-                  onClick={stopSpeaking}
-                  className="stop-speech-button"
-                >
-                  🔇 Stop AI Voice
-                </button>
-              )}
-              <button 
-                onClick={() => handleSubmit()} 
-                className="submit-button"
-                disabled={!userInput.trim() || isProcessing}
-              >
-                Send
-              </button>
+                rows={1}
+              />
+            </div>
+            <div className="input-info">
+              <span>Press Enter to send, Shift+Enter for new line</span>
+              <span>{userInput.length}/500</span>
             </div>
           </div>
         </div>

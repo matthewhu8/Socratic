@@ -610,7 +610,8 @@ Remember: You're a tutor helping them learn, not just giving answers.
                 print(f"Error processing current image: {e}")
             
             response = self.text_model.generate_content(content_parts)
-            return response.text.strip()
+
+            return self._remove_markdown_asterisks(response.text.strip())
             
         except Exception as e:
             print(f"Error in comparison text response: {e}")
@@ -827,6 +828,8 @@ Remember: You're a tutor helping them learn, not just giving answers.
                     content_parts.append(pil_image)
                 except Exception as e:
                     print(f"Error processing canvas image: {e}")
+
+            content_parts.append('Respond exactly in this JSON format with no text outside the brackets: {"response": "[text response]","svgContent": "<svg [svg content] </svg>"}')
             
             # Send request to Gemini
             response = await chat.send_message_async(content_parts)
@@ -857,6 +860,7 @@ Remember: You're a tutor helping them learn, not just giving answers.
             
             # Validate required fields
             if "response" not in parsed_response:
+                print("response not in the parsed response")
                 raise ValueError("Missing required 'response' field")
             
             # Clean asterisks from the response text (for TTS)
