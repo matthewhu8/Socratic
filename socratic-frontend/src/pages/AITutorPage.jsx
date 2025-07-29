@@ -26,7 +26,7 @@ function AITutorPage() {
   const [previousCanvasImage, setPreviousCanvasImage] = useState(null); // Store previous canvas state
   const [hasNewDrawing, setHasNewDrawing] = useState(false); // Track if user drew since last query
   const [showAnnotationToggle, setShowAnnotationToggle] = useState(false); // Show manual annotation toggle
-  const [aiMode, setAiMode] = useState('jess'); // 'sally' or 'jess' mode
+  const [aiMode, setAiMode] = useState('sally'); // 'sally' or 'jess' mode
   const [toolMode, setToolMode] = useState('draw'); // 'draw' or 'text'
   const [textInputs, setTextInputs] = useState([]); // Text elements on canvas
   const [activeTextInput, setActiveTextInput] = useState(null);
