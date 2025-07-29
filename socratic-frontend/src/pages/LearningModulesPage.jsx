@@ -32,7 +32,17 @@ function LearningModulesPage() {
   // Auto-scroll to bottom when new messages are added
   useEffect(() => {
     if (chatMessagesRef.current) {
-      chatMessagesRef.current.scrollTop = chatMessagesRef.current.scrollHeight;
+      // Add a small delay to ensure content is rendered
+      const scrollToBottom = () => {
+        const element = chatMessagesRef.current;
+        element.scrollTop = element.scrollHeight - element.clientHeight;
+      };
+      
+      // Try immediate scroll
+      scrollToBottom();
+      
+      // Then try again after a delay to catch any late-rendering content
+      setTimeout(scrollToBottom, 150);
     }
   }, [chatMessages, isLoading]);
 

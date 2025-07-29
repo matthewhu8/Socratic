@@ -17,18 +17,22 @@ class GeminiService:
             raise ValueError("GEMINI_API_KEY environment variable is required")
         
         genai.configure(api_key=self.api_key)
-        self.model = genai.GenerativeModel('gemini-2.5-flash-preview-05-20', system_instruction="You are a helpful English AI assistant to answer students' questions about this YouTube video. Please answer in English. The student may also be referencing a specific part from the video transcript around their current video timestamp. The image attached shows the video at the point where the student is currently watching the video. When necessary, you can use the image to help you answer their question.")
+        self.model = genai.GenerativeModel(
+            'gemini-2.5-flash-preview-05-20', 
+            system_instruction="""You are a helpful English AI assistant to answer students' questions about this YouTube video. 
+            Please answer in English. The student may also be referencing a specific part from the video transcript around their current video timestamp. 
+            The image attached shows the video at the point where the student is currently watching the video. 
+            Use your best judgement when using the image to help you answer their question.
+            
+            STYLE & LENGTH:
+• Keep each response concise—ideally. No more than 120 words maximum, the shorter the better.
+• Explain in simple and efficient language, don't over talk. 
+• Skip filler; dive straight into substance. Do not use asteriks. If the student is struggling with the subject, explain with short and to-the-point example. 
+            """)
         self.video_quiz_model = genai.GenerativeModel('gemini-2.5-flash-preview-05-20', system_instruction="You are quiz maker that will test the student's retention of the video. The query will contain a video transcript and a list of their previous messages, create questions in JSON format that tests the user on general subject matter related concepts discussed in the transcript, and place a particular emphasis on the topics the student seemed to be confused about based on the chatlog. Make 5 total questions.")
         self.photo_grading_model = genai.GenerativeModel('gemini-2.5-flash-preview-05-20', system_instruction="You are a detailed oriented CBSE style grader for 10th grade math questions. Utilize the attached question and 'solution' to ensure the student's work is fully correct. The student's work will be provided in the query as a photo. Please provide your response in the JSON format shown in the prompt. Do no hesitate to leave fields blank if there are no comments needed. ")
         self.question_chat_model = genai.GenerativeModel('gemini-2.5-flash-preview-05-20', system_instruction="The student is asking a question about a math problem. Return a short response to the question, addressing the student's concerns and explaining the concept in a simple, understandable way if possible. The student's question will be provided in the query. The math problem will be provided in the query. We will provide the step-by-step solution to the problem in the query but blatantly reveal the solution, it is only so you don't give out incorrect information and guide the student towards the correct path.")
         
-        # Create simplified models for multi-stage processing
-        self.analysis_model = genai.GenerativeModel(
-            'gemini-2.5-flash-preview-05-20',
-            system_instruction="You analyze student queries and canvas images to determine learning context. Always respond with valid JSON only."
-        )
-        
-        # Optimized text model with enhanced system instructions
         # Optimized text model with enhanced system instructions
         self.text_model = genai.GenerativeModel(
             'gemini-1.5-pro', 
@@ -196,8 +200,8 @@ Example B — correcting an exponent
   </svg>"
 }""",
             generation_config=genai.GenerationConfig(
-                temperature=0.35,
-                top_p=0.9,
+                temperature=0.2,
+                top_p=0.4,
                 max_output_tokens=1000
             )
         )
@@ -308,15 +312,6 @@ Respond with ONLY the JSON, no additional text.
                 "corrections": ["Technical error occurred"],
                 "strengths": ["Submitted work for grading"]
             }
-    
-    async def generate_chat_session(self):
-        '''
-        Answer a question about the YouTube video.
-        '''
-        try:    
-            return self.model.start_chat()
-        except: 
-            print("failed to return a chat session")
     
     async def answer_video_question(self, message, session_data, video_context=None):
         '''
@@ -546,76 +541,6 @@ Remember: You're a tutor helping them learn, not just giving answers.
         except Exception as e:
             print(f"Error generating question chat response: {e}")
             return "I'm sorry, I encountered an error while processing your question. Please try again or rephrase your question."
-
-    
-    
-    # New methods for multi-stage processing
-    async def generate_simple_response(self, prompt: str, image: Optional[str] = None) -> Dict:
-        """Generate a simple response for analysis and planning"""
-        try:
-            content_parts = [prompt]
-            if image:
-                try:
-                    if image.startswith('data:image'):
-                        image = image.split(',')[1]
-                    image_data = base64.b64decode(image)
-                    pil_image = Image.open(io.BytesIO(image_data))
-                    content_parts.append(pil_image)
-                except Exception as e:
-                    print(f"Error processing image: {e}")
-            
-            response = self.analysis_model.generate_content(content_parts)
-            response_text = response.text.strip()
-            
-            # Clean up markdown if present
-            if response_text.startswith('```'):
-                end_index = response_text.rfind('```')
-                if end_index > 3:
-                    response_text = response_text[3:end_index]
-                if response_text.startswith('json'):
-                    response_text = response_text[4:]
-                response_text = response_text.strip()
-            
-            return json.loads(response_text)
-            
-        except Exception as e:
-            print(f"Error in simple response: {e}")
-            return {}
-    
-    async def generate_comparison_text_response(self, prompt: str, image1: str, image2: str) -> str:
-        """Generate text response comparing two canvas images"""
-        try:
-            content_parts = [prompt]
-            
-            # Process first image (previous state)
-            try:
-                if image1.startswith('data:image'):
-                    image1 = image1.split(',')[1]
-                image1_data = base64.b64decode(image1)
-                pil_image1 = Image.open(io.BytesIO(image1_data))
-                content_parts.append("Previous canvas state:")
-                content_parts.append(pil_image1)
-            except Exception as e:
-                print(f"Error processing previous image: {e}")
-            
-            # Process second image (current state)
-            try:
-                if image2.startswith('data:image'):
-                    image2 = image2.split(',')[1]
-                image2_data = base64.b64decode(image2)
-                pil_image2 = Image.open(io.BytesIO(image2_data))
-                content_parts.append("Current canvas state (with student's new annotations):")
-                content_parts.append(pil_image2)
-            except Exception as e:
-                print(f"Error processing current image: {e}")
-            
-            response = self.text_model.generate_content(content_parts)
-
-            return self._remove_markdown_asterisks(response.text.strip())
-            
-        except Exception as e:
-            print(f"Error in comparison text response: {e}")
-            return "I can see you've made some annotations! Could you tell me more about what you'd like help with?"
     
     
     async def generate_comparison_response(self, prompt: str, image1: str, image2: str) -> Dict:
@@ -863,6 +788,10 @@ Remember: You're a tutor helping them learn, not just giving answers.
                 print("response not in the parsed response")
                 raise ValueError("Missing required 'response' field")
             
+            if "svgContent" in parsed_response and not parsed_response["svgContent"]:
+                pass
+                # 
+            
             # Clean asterisks from the response text (for TTS)
             cleaned_response = self._remove_markdown_asterisks(parsed_response["response"])
             
@@ -926,13 +855,6 @@ Remember: You're a tutor helping them learn, not just giving answers.
                             }
                 except (json.JSONDecodeError, ValueError) as extract_error:
                     print(f"Failed to extract embedded JSON: {extract_error}")
-            
-            # Check if response is too long and retry with shorter request
-            if len(raw_response) > 4000:  # Approximate token limit check
-                print("Response may have exceeded token limits, requesting shorter response")
-                shorter_response = await self._request_shorter_response(original_query, canvas_image, chat_history)
-                if shorter_response:
-                    return shorter_response
             
             # Fallback to text-only response
             cleaned_response = self._remove_markdown_asterisks(raw_response)
@@ -1117,60 +1039,4 @@ Make sure the SVG starts with <svg and ends with </svg>."""
             print(f"Error in retry with SVG feedback: {e}")
             return None
     
-    async def _request_shorter_response(
-        self, 
-        query: str,
-        canvas_image: Optional[str] = None,
-        chat_history: List[Dict] = None
-    ) -> Optional[Dict[str, str]]:
-        """Request a shorter response when token limits are exceeded."""
-        try:
-            print("Requesting shorter response due to token limit")
-            
-            # Build shorter prompt
-            shorter_prompt = f"""Student asks: "{query}"
-            
-Please provide a BRIEF response (max 1 paragraph) with JSON format:
-{{
-  "response": "brief teaching response",
-  "svgContent": null
-}}
-
-Focus on text response only, no SVG visual."""
-            
-            # Prepare content parts
-            content_parts = [shorter_prompt]
-            if canvas_image:
-                try:
-                    if canvas_image.startswith('data:image'):
-                        canvas_image = canvas_image.split(',')[1]
-                    image_data = base64.b64decode(canvas_image)
-                    pil_image = Image.open(io.BytesIO(image_data))
-                    content_parts.append(pil_image)
-                except Exception as e:
-                    print(f"Error processing canvas image in shorter request: {e}")
-            
-            # Send request with shorter prompt
-            response = await self.combined_model.generate_content(content_parts)
-            shorter_response = response.text.strip()
-            
-            try:
-                parsed_shorter = json.loads(shorter_response)
-                if "response" in parsed_shorter:
-                    cleaned_response = self._remove_markdown_asterisks(parsed_shorter["response"])
-                    return {
-                        "response": cleaned_response,
-                        "svgContent": None  # Force no SVG for shorter response
-                    }
-            except json.JSONDecodeError:
-                # If still fails, return as text-only
-                cleaned_response = self._remove_markdown_asterisks(shorter_response)
-                return {
-                    "response": cleaned_response,
-                    "svgContent": None
-                }
-            
-        except Exception as e:
-            print(f"Error requesting shorter response: {e}")
-            return None
-
+    
