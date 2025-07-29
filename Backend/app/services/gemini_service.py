@@ -110,6 +110,15 @@ SELF-CHECK BEFORE SENDING:
                 system_instruction="""You are a math tutor. Respond with JSON containing 'response' and 'drawing_commands' fields."""
             )
         
+        sally_response_schema = {
+    "type": "object",
+    "properties": {
+        "response": {"type": "string"},
+        "svgContent": {"type": "string"}
+    },
+    "required": ["response", "svgContent"]
+}
+        
         # Combined model for single-prompt AI tutor (new approach)
         self.combined_model = genai.GenerativeModel(
             'gemini-2.5-flash-preview-05-20',
@@ -202,7 +211,9 @@ Example B — correcting an exponent
             generation_config=genai.GenerationConfig(
                 temperature=0.2,
                 top_p=0.4,
-                max_output_tokens=1000
+                max_output_tokens=1000,
+                response_mime_type="application/json",
+                response_schema=sally_response_schema
             )
         )
         
