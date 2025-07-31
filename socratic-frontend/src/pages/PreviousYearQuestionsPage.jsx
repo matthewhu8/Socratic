@@ -470,6 +470,20 @@ const PreviousYearQuestionsPage = () => {
                 <div className="question-text">
                   <MathText text={currentQuestion.question_text} />
                 </div>
+                
+                {currentQuestion.image_url && (
+                  <div className="question-image-container">
+                    <img 
+                      src={currentQuestion.image_url} 
+                      alt="Question diagram"
+                      className="question-image"
+                      onError={(e) => {
+                        e.target.style.display = 'none';
+                        console.error('Failed to load question image:', currentQuestion.image_url);
+                      }}
+                    />
+                  </div>
+                )}
                  
                  {showSolution && currentQuestion.solution && (
                    <div className="solution-container">

@@ -53,6 +53,7 @@ class NcertExamples(Base):
     
     # Question and answer
     question_text = Column(Text, nullable=True)
+    image_url = Column(String, nullable=True)  # Cloudinary URL for question image
     answer = Column(Text, nullable=True)
     difficulty = Column(Float, nullable=True) # e.g., 0.5, 1.0, 1.5
     
@@ -87,6 +88,7 @@ class NcertExercises(Base):
     
     # Question and answer
     question_text = Column(Text, nullable=True)
+    image_url = Column(String, nullable=True)  # Cloudinary URL for question image
     answer = Column(Text, nullable=True)
     difficulty = Column(Float, nullable=True) # e.g., 0.5, 1.0, 1.5
 
@@ -122,6 +124,7 @@ class PYQs(Base):
     
     # Question and answer
     question_text = Column(Text, nullable=True)
+    image_url = Column(String, nullable=True)  # Cloudinary URL for question image
     answer = Column(Text, nullable=True)
     difficulty = Column(Float, nullable=True) # e.g., 0.5, 1.0, 1.5
     

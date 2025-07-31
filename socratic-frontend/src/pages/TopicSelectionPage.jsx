@@ -1,18 +1,27 @@
 import React, { useContext, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { AuthContext } from '../contexts/AuthContext';
 import '../styles/TopicSelectionPage.css';
 
 function TopicSelectionPage() {
-  const { subject, subSubject, optionType } = useParams();
+  const { subject, subSubject, optionType, gradeParam } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const { currentUser } = useContext(AuthContext);
+  
+  // Check if this is Smart Practice based on URL path
+  const isSmartPractice = location.pathname.includes('/smart-practice/');
   
   // State for beta access popup
   const [showBetaPopup, setShowBetaPopup] = useState(false);
 
   // Function to check if a chapter is in beta (chapters 4-14 or Smart Learning)
   const isChapterInBeta = (chapterName) => {
+    // Smart Practice is not beta for Mathematics
+    if (isSmartPractice && subject === 'mathematics') {
+      return false;
+    }
+    
     // Check if it's Smart Learning
     if (optionType === 'smart-learning') {
       return true;
@@ -74,6 +83,23 @@ function TopicSelectionPage() {
         { id: 'weak-areas', name: 'Weak Areas Practice', questionCount: 'Adaptive' },
         { id: 'mixed-practice', name: 'Mixed Topic Practice', questionCount: 'Unlimited' },
         { id: 'exam-simulation', name: 'Board Exam Simulation', questionCount: 35 }
+      ],
+      'smart-practice': [
+        { id: 'mixed-practice', name: 'Mixed Practice', description: 'AI selects from all chapters based on your needs', questionCount: 'Adaptive' },
+        { id: 'ch1', name: 'Chapter 1: Real Numbers', questionCount: 'Adaptive' },
+        { id: 'ch2', name: 'Chapter 2: Polynomials', questionCount: 'Adaptive' },
+        { id: 'ch3', name: 'Chapter 3: Pair of Linear Equations in Two Variables', questionCount: 'Adaptive' },
+        { id: 'ch4', name: 'Chapter 4: Quadratic Equations', questionCount: 'Adaptive' },
+        { id: 'ch5', name: 'Chapter 5: Arithmetic Progressions', questionCount: 'Adaptive' },
+        { id: 'ch6', name: 'Chapter 6: Triangles', questionCount: 'Adaptive' },
+        { id: 'ch7', name: 'Chapter 7: Coordinate Geometry', questionCount: 'Adaptive' },
+        { id: 'ch8', name: 'Chapter 8: Introduction to Trigonometry', questionCount: 'Adaptive' },
+        { id: 'ch9', name: 'Chapter 9: Some Applications of Trigonometry', questionCount: 'Adaptive' },
+        { id: 'ch10', name: 'Chapter 10: Circles', questionCount: 'Adaptive' },
+        { id: 'ch11', name: 'Chapter 11: Areas Related to Circles', questionCount: 'Adaptive' },
+        { id: 'ch12', name: 'Chapter 12: Surface Areas and Volumes', questionCount: 'Adaptive' },
+        { id: 'ch13', name: 'Chapter 13: Statistics', questionCount: 'Adaptive' },
+        { id: 'ch14', name: 'Chapter 14: Probability', questionCount: 'Adaptive' }
       ]
     },
     science: {
@@ -117,7 +143,10 @@ function TopicSelectionPage() {
 
   // Get topics based on current route
   const getTopics = () => {
-    if (subSubject) {
+    if (isSmartPractice) {
+      // For Smart Practice, use 'smart-practice' as the option type
+      return topicsData[subject]?.['smart-practice'] || [];
+    } else if (subSubject) {
       // For science subjects
       return topicsData.science[subSubject]?.[optionType] || [];
     } else {
@@ -136,30 +165,44 @@ function TopicSelectionPage() {
     }
 
     const userGrade = currentUser?.grade || '10'; // Fallback to grade 10 if not set
-    const practiceMode = optionType; // Use the actual practice mode selected
     
-    // Extract the actual topic name from the chapter title
-    // "Chapter 1: Real Numbers" -> "Real Numbers"
-    // "Chapter 10: Light - Reflection and Refraction" -> "Light - Reflection and Refraction"
-    let actualTopicName = topicName;
-    if (topicName.includes(': ')) {
-      actualTopicName = topicName.split(': ')[1];
-    }
-    
-    // Convert topic name to URL-friendly format
-    // "Real Numbers" -> "real-numbers"
-    // "Light - Reflection and Refraction" -> "light-reflection-and-refraction"
-    const urlFriendlyTopic = actualTopicName
-      .toLowerCase()
-      .replace(/\s+/g, '-')
-      .replace(/[^\w-]/g, ''); // Remove special characters except hyphens
-    
-    if (subSubject) {
-      // For science subjects: /student/practice/science/physics/ncert-exercises/real-numbers
-      navigate(`/student/practice/${subject}/${subSubject}/${practiceMode}/${urlFriendlyTopic}`);
+    if (isSmartPractice) {
+      // For Smart Practice, navigate to the Smart Practice page with chapter
+      if (topicId === 'mixed-practice') {
+        // For mixed practice, don't pass a chapter (use 'mixed' as identifier)
+        navigate(`/student/smart-practice/${subject}/grade-${userGrade}/mixed`);
+      } else {
+        // For specific chapters, pass the topic name
+        const actualTopicName = topicName.includes(': ') ? topicName.split(': ')[1] : topicName;
+        const urlFriendlyTopic = actualTopicName
+          .toLowerCase()
+          .replace(/\s+/g, '-')
+          .replace(/[^\w-]/g, '');
+        navigate(`/student/smart-practice/${subject}/grade-${userGrade}/${urlFriendlyTopic}`);
+      }
     } else {
-      // For other subjects: /student/practice/mathematics/ncert-exercises/real-numbers
-      navigate(`/student/practice/${subject}/${practiceMode}/${urlFriendlyTopic}`);
+      // Regular navigation for other practice modes
+      const practiceMode = optionType;
+      
+      // Extract the actual topic name from the chapter title
+      let actualTopicName = topicName;
+      if (topicName.includes(': ')) {
+        actualTopicName = topicName.split(': ')[1];
+      }
+      
+      // Convert topic name to URL-friendly format
+      const urlFriendlyTopic = actualTopicName
+        .toLowerCase()
+        .replace(/\s+/g, '-')
+        .replace(/[^\w-]/g, '');
+      
+      if (subSubject) {
+        // For science subjects
+        navigate(`/student/practice/${subject}/${subSubject}/${practiceMode}/${urlFriendlyTopic}`);
+      } else {
+        // For other subjects
+        navigate(`/student/practice/${subject}/${practiceMode}/${urlFriendlyTopic}`);
+      }
     }
   };
 
@@ -170,6 +213,10 @@ function TopicSelectionPage() {
   };
 
   const getOptionTypeTitle = () => {
+    if (isSmartPractice) {
+      return 'Smart Practice';
+    }
+    
     const titles = {
       'ncert-exercises': 'NCERT Exercises',
       'ncert-examples': 'NCERT Examples',

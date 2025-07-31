@@ -48,6 +48,22 @@
   color: #4a5568;
 }
 
+/* Question Image Styles */
+.question-image-container {
+  margin: 1.5rem 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.question-image {
+  max-width: 100%;
+  max-height: 400px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  object-fit: contain;
+}
+
 .breadcrumbs .separator {
   margin: 0 0.75rem;
   color: #a0aec0;

@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from pydantic import BaseModel, EmailStr
 from typing import List, Dict, Any, Optional
 import os
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from dotenv import load_dotenv
 import uuid
 import time
@@ -1235,3 +1235,270 @@ async def get_student_knowledge_profile(
     except Exception as e:
         print(f"Error getting knowledge profile: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to get profile: {str(e)}")
+
+# Smart Practice Endpoints
+@app.get("/api/smart-practice/next-question")
+async def get_next_smart_question(
+    subject: str = "mathematics",
+    chapter: Optional[str] = None,
+    current_user: StudentUser = Depends(get_current_student),
+    db: Session = Depends(get_db)
+):
+    """Get AI-selected next question for smart practice"""
+    try:
+        # Import here to avoid circular imports
+        from .services.gemini_service import GeminiService
+        
+        # Get Gemini service and select question using MCP
+        gemini_service = GeminiService()
+        result = await gemini_service.select_next_smart_question(
+            student_id=current_user.id,
+            subject=subject,
+            chapter=chapter
+        )
+        
+        # Check for errors in AI response
+        if "error" in result:
+            raise HTTPException(status_code=500, detail=result["error"])
+        
+        # Handle different question sources
+        source_type = result.get('source_type', 'pyqs')
+        question_id = result.get('question_id')
+        
+        if source_type == 'generated':
+            # Use generated question data directly
+            question_data = result.get('question_data', {})
+            if not question_data:
+                raise HTTPException(status_code=500, detail="Generated question data is missing")
+                
+            return {
+                "question": {
+                    "id": question_data.get('question_id', f"generated_{int(datetime.now().timestamp())}"),
+                    "source_type": "generated",
+                    "question_text": question_data.get('question_text', ''),
+                    "difficulty": question_data.get('difficulty', 1.0),
+                    "skills_tested": question_data.get('skills_tested'),
+                    "chapter": question_data.get('chapter', ''),
+                    "topic": question_data.get('topic', ''),
+                    "grade": question_data.get('grade', '10'),
+                    "solution": question_data.get('solution'),
+                    "answer": question_data.get('answer'),
+                    "common_mistakes": question_data.get('common_mistakes'),
+                    "teacher_notes": question_data.get('teacher_notes')
+                },
+                "ai_selection": {
+                    "reasoning": result.get('reasoning', 'Generated to match your specific needs'),
+                    "expected_difficulty": result.get('expected_difficulty', question_data.get('difficulty', 1.0)),
+                    "target_skills": result.get('target_skills', []),
+                    "estimated_time_seconds": result.get('estimated_time_seconds', 300),
+                    "confidence_level": result.get('confidence_level', 'medium')
+                }
+            }
+        
+        else:
+            # Fetch from database based on source type
+            if not question_id:
+                raise HTTPException(status_code=500, detail="No question selected by AI")
+            
+            question = None
+            if source_type == 'ncert_examples':
+                question = db.query(NcertExamples).filter(NcertExamples.id == question_id).first()
+            elif source_type == 'ncert_exercises':
+                question = db.query(NcertExercises).filter(NcertExercises.id == question_id).first()
+            elif source_type == 'pyqs':
+                question = db.query(PYQs).filter(PYQs.id == question_id).first()
+            else:
+                raise HTTPException(status_code=400, detail=f"Unknown source type: {source_type}")
+                
+            if not question:
+                raise HTTPException(status_code=404, detail=f"Selected question not found in {source_type}")
+            
+            # Build response based on source type
+            question_response = {
+                "id": question.id,
+                "source_type": source_type,
+                "question_text": question.question_text,
+                "difficulty": question.difficulty,
+                "skills_tested": question.skills_tested,
+                "chapter": question.chapter,
+                "topic": question.topic,
+                "grade": question.grade if hasattr(question, 'grade') else '10'
+            }
+            
+            # Add source-specific fields
+            if source_type in ['ncert_examples', 'ncert_exercises']:
+                question_response.update({
+                    "solution": question.solution,
+                    "answer": question.answer,
+                    "common_mistakes": question.common_mistakes,
+                    "teacher_notes": question.teacher_notes
+                })
+            elif source_type == 'pyqs':
+                question_response.update({
+                    "max_marks": question.max_marks or question.total_marks or 6,
+                    "year": question.source_year,
+                    "answer": question.answer,
+                    "marking_criteria": question.marking_criteria if hasattr(question, 'marking_criteria') else None,
+                    "common_mistakes": question.common_mistakes,
+                    "teacher_notes": question.teacher_notes
+                })
+            
+            return {
+                "question": question_response,
+                "ai_selection": {
+                    "reasoning": result.get('reasoning', 'No reasoning provided'),
+                    "expected_difficulty": result.get('expected_difficulty', question.difficulty),
+                    "target_skills": result.get('target_skills', []),
+                    "estimated_time_seconds": result.get('estimated_time_seconds', 300),
+                    "confidence_level": result.get('confidence_level', 'medium')
+                }
+            }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error in smart practice question selection: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get smart question: {str(e)}")
+
+@app.post("/api/smart-practice/submit-attempt")
+async def submit_smart_practice_attempt(
+    question_id: str = Form(...),  # Changed to str to handle generated IDs
+    source_type: str = Form("pyqs"),  # Added source type
+    time_spent_seconds: int = Form(...),
+    student_answer: str = Form(""),
+    score: Optional[float] = Form(None),
+    feedback: Optional[str] = Form(""),
+    current_user: StudentUser = Depends(get_current_student),
+    db: Session = Depends(get_db)
+):
+    """Record smart practice attempt and update student profile"""
+    try:
+        
+        # Get question details based on source type
+        question = None
+        if source_type == 'generated':
+            # For generated questions, we don't fetch from DB
+            # The frontend should have the question data already
+            performance = {
+                "question_text": "Generated question",
+                "correct_solution": "",
+                "student_answer": student_answer,
+                "score": score if score is not None else 0.0,
+                "feedback": feedback,
+                "skills_tested": None  # Frontend should provide this if available
+            }
+        else:
+            # Fetch from appropriate table
+            if source_type == 'ncert_examples':
+                question = db.query(NcertExamples).filter(NcertExamples.id == int(question_id)).first()
+            elif source_type == 'ncert_exercises':
+                question = db.query(NcertExercises).filter(NcertExercises.id == int(question_id)).first()
+            elif source_type == 'pyqs':
+                question = db.query(PYQs).filter(PYQs.id == int(question_id)).first()
+            else:
+                raise HTTPException(status_code=400, detail=f"Invalid source type: {source_type}")
+                
+            if not question:
+                raise HTTPException(status_code=404, detail=f"Question not found in {source_type}")
+            
+            # Prepare performance data
+            performance = {
+                "question_text": question.question_text,
+                "correct_solution": question.answer if hasattr(question, 'answer') else "",
+                "student_answer": student_answer,
+                "score": score if score is not None else 0.0,
+                "feedback": feedback,
+                "skills_tested": question.skills_tested
+            }
+        
+        # Record attempt directly in database
+        numeric_question_id = -1
+        if question_id and not question_id.startswith('generated'):
+            try:
+                numeric_question_id = int(question_id)
+            except ValueError:
+                print(f"Could not convert question_id to int: {question_id}")
+        
+        # Create grading session record
+        grading_session = GradingSession(
+            student_id=current_user.id,
+            question_id=numeric_question_id,
+            question_text=performance.get('question_text', ''),
+            correct_solution=performance.get('correct_solution', ''),
+            student_answers=performance.get('student_answer', {}),
+            score=performance.get('score', 0.0),
+            feedback=performance.get('feedback', ''),
+            grading_method='smart_practice',
+            practice_mode='smart-practice',
+            time_spent=time_spent_seconds,
+            skills_tested=performance.get('skills_tested'),
+            created_at=datetime.now(timezone.utc)
+        )
+        
+        db.add(grading_session)
+        
+        # Update knowledge profile
+        if performance.get('score') is not None and performance.get('skills_tested'):
+            grading_result = {
+                'grade': f"{int(performance['score'] * 10)}/10",
+                'feedback': performance.get('feedback', '')
+            }
+            
+            KnowledgeProfileService.update_profile_after_grading(
+                db, current_user.id, numeric_question_id, grading_result, 'smart-practice'
+            )
+        
+        db.commit()
+        
+        return {
+            "status": "success",
+            "message": "Attempt recorded successfully",
+            "session_id": grading_session.id,
+            "profile_updated": True
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error recording smart practice attempt: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to record attempt: {str(e)}")
+
+@app.get("/api/smart-practice/analytics")
+async def get_smart_practice_analytics(
+    time_window_days: int = 14,
+    current_user: StudentUser = Depends(get_current_student),
+    db: Session = Depends(get_db)
+):
+    """Get learning analytics for smart practice"""
+    try:
+        # Import here to avoid circular imports
+        from .services.gemini_service import GeminiService
+        
+        # Get Gemini service with MCP integration
+        gemini_service = GeminiService()
+        mcp_manager = await gemini_service._get_mcp_manager()
+        
+        if not mcp_manager:
+            raise HTTPException(status_code=500, detail="MCP service not available")
+        
+        # Get student profile and learning patterns using MCP
+        profile_data = await mcp_manager.call_tool(
+            "smart_practice", 
+            "get_student_profile", 
+            {"student_id": current_user.id}
+        )
+        pattern_data = await mcp_manager.call_tool(
+            "smart_practice",
+            "analyze_learning_patterns", 
+            {"student_id": current_user.id, "time_window_days": time_window_days}
+        )
+        
+        return {
+            "profile": profile_data,
+            "patterns": pattern_data,
+            "time_window_days": time_window_days
+        }
+        
+    except Exception as e:
+        print(f"Error getting smart practice analytics: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get analytics: {str(e)}")

@@ -55,8 +55,8 @@ function DynamicLearningPage() {
           description: 'Past CBSE board exam questions with solutions'
         },
         { 
-          id: 'smart-learning', 
-          name: 'Smart Learning',
+          id: 'smart-practice', 
+          name: 'Smart Practice',
           description: 'AI-powered adaptive practice tailored to your level'
         }
       ]
@@ -291,8 +291,8 @@ function DynamicLearningPage() {
           description: 'Past English board exam papers with answers'
         },
         { 
-          id: 'smart-learning', 
-          name: 'Smart Learning',
+          id: 'smart-practice', 
+          name: 'Smart Practice',
           description: 'Adaptive grammar and vocabulary building'
         }
       ]
@@ -320,8 +320,8 @@ function DynamicLearningPage() {
           description: 'पिछले वर्षों के बोर्ड परीक्षा प्रश्न'
         },
         { 
-          id: 'smart-learning', 
-          name: 'Smart Learning',
+          id: 'smart-practice', 
+          name: 'Smart Practice',
           description: 'इंटरैक्टिव हिंदी व्याकरण और शब्दावली'
         }
       ]
@@ -333,8 +333,15 @@ function DynamicLearningPage() {
   };
 
   const handleOptionClick = (subject, subSubject, option) => {
-    // Check if this is a premium subject or Smart Learning
-    if (subject.id !== 'mathematics' || option.id === 'smart-learning') {
+    // Handle Smart Practice navigation for Mathematics only
+    if (option.id === 'smart-practice' && subject.id === 'mathematics') {
+      const grade = currentUser?.grade || '10';
+      navigate(`/student/smart-practice/${subject.id}/grade-${grade}/topics`);
+      return;
+    }
+    
+    // Check if this is a premium subject or Smart Practice for other subjects
+    if (subject.id !== 'mathematics' || (option.id === 'smart-practice' && subject.id !== 'mathematics')) {
       setShowPremiumMessage(true);
       return;
     }
@@ -379,7 +386,8 @@ function DynamicLearningPage() {
                 </div>
                 <div className="options-list">
                   {subject.options.map(option => {
-                    const isOptionBeta = option.id === 'smart-learning' || isPremium;
+                    // Smart Practice is only available for Mathematics, premium for others
+                    const isOptionBeta = isPremium || (option.id === 'smart-practice' && subject.id !== 'mathematics');
                     return (
                       <div 
                         key={option.id} 
@@ -389,8 +397,8 @@ function DynamicLearningPage() {
                         <div className="option-content">
                           <h4>{option.name}</h4>
                           <p>{option.description}</p>
-                          {option.id === 'smart-learning' && subject.id === 'mathematics' && (
-                            <span className="beta-tag">🔒 Beta Access</span>
+                          {option.id === 'smart-practice' && subject.id !== 'mathematics' && (
+                            <span className="beta-tag">🔒 Premium</span>
                           )}
                         </div>
                         <svg className="arrow-icon" width="20" height="20" viewBox="0 0 24 24" fill="none">
@@ -414,7 +422,8 @@ function DynamicLearningPage() {
                 </div>
                 <div className="options-list">
                   {subSubject.options.map(option => {
-                    const isOptionBeta = option.id === 'smart-learning' || isPremium;
+                    // Smart Practice is premium for all science subjects
+                    const isOptionBeta = isPremium || option.id === 'smart-practice';
                     return (
                       <div 
                         key={option.id} 
@@ -424,8 +433,8 @@ function DynamicLearningPage() {
                         <div className="option-content">
                           <h4>{option.name}</h4>
                           <p>{option.description}</p>
-                          {option.id === 'smart-learning' && !isPremium && (
-                            <span className="beta-tag">🔒 Beta Access</span>
+                          {option.id === 'smart-practice' && (
+                            <span className="beta-tag">🔒 Premium</span>
                           )}
                         </div>
                         <svg className="arrow-icon" width="20" height="20" viewBox="0 0 24 24" fill="none">

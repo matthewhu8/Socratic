@@ -17,6 +17,10 @@ class GeminiService:
             raise ValueError("GEMINI_API_KEY environment variable is required")
         
         genai.configure(api_key=self.api_key)
+        
+        # Initialize MCP client manager (will be lazy-loaded)
+        self.mcp_manager = None
+        
         self.model = genai.GenerativeModel(
             'gemini-2.5-flash-preview-05-20', 
             system_instruction="""You are a helpful English AI assistant to answer students' questions about this YouTube video. 
@@ -32,6 +36,54 @@ class GeminiService:
         self.video_quiz_model = genai.GenerativeModel('gemini-2.5-flash-preview-05-20', system_instruction="You are quiz maker that will test the student's retention of the video. The query will contain a video transcript and a list of their previous messages, create questions in JSON format that tests the user on general subject matter related concepts discussed in the transcript, and place a particular emphasis on the topics the student seemed to be confused about based on the chatlog. Make 5 total questions.")
         self.photo_grading_model = genai.GenerativeModel('gemini-2.5-flash-preview-05-20', system_instruction="You are a detailed oriented CBSE style grader for 10th grade math questions. Utilize the attached question and 'solution' to ensure the student's work is fully correct. The student's work will be provided in the query as a photo. Please provide your response in the JSON format shown in the prompt. Do no hesitate to leave fields blank if there are no comments needed. ")
         self.question_chat_model = genai.GenerativeModel('gemini-2.5-flash-preview-05-20', system_instruction="The student is asking a question about a math problem. Return a short response to the question, addressing the student's concerns and explaining the concept in a simple, understandable way if possible. The student's question will be provided in the query. The math problem will be provided in the query. We will provide the step-by-step solution to the problem in the query but blatantly reveal the solution, it is only so you don't give out incorrect information and guide the student towards the correct path.")
+        
+        # Smart Practice model with comprehensive system instructions
+        self.smart_model = genai.GenerativeModel(
+            'gemini-2.5-flash-preview-05-20',
+            system_instruction="""You are an adaptive learning system for Smart Practice in Socratic. Your role is to intelligently select questions that optimize student learning.
+
+CORE OBJECTIVES:
+• Maintain optimal challenge level using Zone of Proximal Development (ZPD) theory
+• Target success rate of 70-80% for maximum learning efficiency
+• Prioritize weak skills while maintaining student confidence
+• Ensure variety in question types and topics
+• Consider fatigue patterns and time-based performance
+
+AVAILABLE MCP TOOLS:
+• get_student_profile: Returns skill scores (0-100) and recent performance
+• analyze_learning_patterns: Identifies strengths, weaknesses, optimal study times
+• calculate_zpd_difficulty: Determines optimal difficulty based on current performance
+• search_adaptive_questions: Finds questions matching skill and difficulty criteria
+• record_smart_practice_attempt: Updates profile with multi-skill adjustments
+
+SELECTION STRATEGY:
+1. Check student's current skill levels for the topic
+2. Analyze recent performance (last 5-10 attempts)
+3. Calculate optimal difficulty:
+   - If recent failures > 2: reduce difficulty by 20%
+   - If recent successes > 3: increase difficulty by 15%
+   - Otherwise: maintain current trajectory
+4. Prioritize skills with scores < 60
+5. Avoid questions attempted in last 7 days
+6. Consider time of day and session duration
+
+OUTPUT FORMAT:
+Always return a JSON object with:
+{
+    "question_id": int,
+    "reasoning": "Brief explanation of why this question was selected",
+    "expected_difficulty": float,
+    "target_skills": ["skill1", "skill2"],
+    "estimated_time_seconds": int,
+    "confidence_level": "high|medium|low"
+}""",
+            generation_config=genai.GenerationConfig(
+                temperature=0.4,  # Balanced between creativity and consistency
+                top_p=0.9,
+                max_output_tokens=500,
+                response_mime_type="application/json"
+            )
+        )
         
         # Optimized text model with enhanced system instructions
         self.text_model = genai.GenerativeModel(
@@ -218,6 +270,18 @@ Example B — correcting an exponent
         )
         
         print(f"GEMINI MODEL: {self.combined_model}")
+    
+    async def _get_mcp_manager(self):
+        """Get or initialize MCP client manager"""
+        if self.mcp_manager is None:
+            try:
+                from app.mcp.client.mcp_client import get_mcp_manager
+                self.mcp_manager = await get_mcp_manager()
+                await self.mcp_manager.initialize(["smart_practice"])
+            except Exception as e:
+                print(f"Failed to initialize MCP manager: {e}")
+                self.mcp_manager = None
+        return self.mcp_manager
     
     def format_chat_history(self, chat_history: List[Dict]) -> List[Dict]:
         """Convert chat history to Gemini format."""
@@ -552,7 +616,6 @@ Remember: You're a tutor helping them learn, not just giving answers.
         except Exception as e:
             print(f"Error generating question chat response: {e}")
             return "I'm sorry, I encountered an error while processing your question. Please try again or rephrase your question."
-    
     
     async def generate_comparison_response(self, prompt: str, image1: str, image2: str) -> Dict:
         """Generate response comparing two images"""
@@ -1049,5 +1112,141 @@ Make sure the SVG starts with <svg and ends with </svg>."""
         except Exception as e:
             print(f"Error in retry with SVG feedback: {e}")
             return None
+    
+    # Smart Practice MCP Integration Methods
+    async def select_next_smart_question(
+        self, 
+        student_id: int, 
+        subject: str, 
+        chapter: Optional[str] = None,
+        mcp_client_manager = None
+    ) -> Dict:
+        """AI-driven adaptive question selection using real MCP tools"""
+        try:
+            print(f"select next smart question called with MCP client\n")
+            
+            # Get MCP client manager
+            if not mcp_client_manager:
+                mcp_client_manager = await self._get_mcp_manager()
+                if not mcp_client_manager:
+                    return {"error": "MCP client manager not available"}
+            
+            # Step 1: Get student profile using MCP
+            student_profile = await mcp_client_manager.call_tool(
+                "smart_practice", 
+                "get_student_profile", 
+                {"student_id": student_id, "subject": subject}
+            )
+            print(f"Student profile from MCP: {student_profile}")
+            
+            # Step 2: Analyze learning patterns
+            learning_patterns = await mcp_client_manager.call_tool(
+                "smart_practice",
+                "analyze_learning_patterns",
+                {"student_id": student_id, "time_window_days": 14}
+            )
+            print(f"Learning patterns from MCP: {learning_patterns}")
+            
+            # Step 3: Use AI to determine what skills to focus on and difficulty level
+            analysis_prompt = f"""Based on the student profile and learning patterns below, determine:
+            1. Which skills need focus (return as array of skill names)
+            2. Optimal difficulty range (min, max between 0.5-2.0)
+            3. Should we generate a custom question or search existing ones?
+            
+            Student Profile: {json.dumps(student_profile)}
+            Learning Patterns: {json.dumps(learning_patterns)}
+            Subject: {subject}
+            Chapter: {chapter or 'Any'}
+            
+            Return a JSON object with:
+            {{
+                "target_skills": ["skill1", "skill2"],
+                "difficulty_range": [min_difficulty, max_difficulty],
+                "search_existing": true/false,
+                "reasoning": "explanation of decision"
+            }}
+            """
+            
+            analysis_response = self.smart_model.generate_content(analysis_prompt)
+            try:
+                analysis_result = json.loads(analysis_response.text)
+            except json.JSONDecodeError:
+                # Fallback to default values
+                analysis_result = {
+                    "target_skills": ["problem_solving"],
+                    "difficulty_range": [1.0, 1.5],
+                    "search_existing": True,
+                    "reasoning": "Default fallback due to parsing error"
+                }
+            
+            print(f"AI analysis result: {analysis_result}")
+            
+            # Step 4: Search for questions or generate custom one
+            if analysis_result.get("search_existing", True):
+                # Search existing questions using MCP
+                questions = await mcp_client_manager.call_tool(
+                    "smart_practice",
+                    "search_adaptive_questions",
+                    {
+                        "required_skills": analysis_result["target_skills"],
+                        "student_skill_levels": {skill: 50 for skill in analysis_result["target_skills"]},  # Simplified
+                        "difficulty_range": analysis_result["difficulty_range"],
+                        "exclude_recent_days": 7,
+                        "limit": 5,
+                        "chapter": chapter
+                    }
+                )
+                
+                if questions and len(questions) > 0:
+                    # Return the best matching question
+                    best_question = questions[0]  # Already sorted by relevance
+                    return {
+                        "question_id": best_question["id"],
+                        "source_type": best_question["source_type"],
+                        "question_data": best_question,
+                        "ai_selection": {
+                            "reasoning": analysis_result["reasoning"],
+                            "expected_difficulty": best_question.get("difficulty", 1.0),
+                            "target_skills": analysis_result["target_skills"],
+                            "estimated_time_seconds": 300,
+                            "confidence_level": "high"
+                        }
+                    }
+            
+            # Step 5: Generate custom question if no suitable ones found
+            custom_question = await mcp_client_manager.call_tool(
+                "smart_practice",
+                "generate_custom_question",
+                {
+                    "subject": subject,
+                    "chapter": chapter or "Mixed Topics",
+                    "topic": analysis_result["target_skills"][0] if analysis_result["target_skills"] else "General",
+                    "required_skills": analysis_result["target_skills"],
+                    "difficulty": sum(analysis_result["difficulty_range"]) / 2,  # Average difficulty
+                    "grade": "10"
+                }
+            )
+            
+            if "error" not in custom_question:
+                return {
+                    "source_type": "generated",
+                    "question_data": custom_question,
+                    "ai_selection": {
+                        "reasoning": f"Generated custom question: {analysis_result['reasoning']}",
+                        "expected_difficulty": custom_question.get("difficulty", 1.0),
+                        "target_skills": analysis_result["target_skills"],
+                        "estimated_time_seconds": 300,
+                        "confidence_level": "medium"
+                    }
+                }
+            
+            # Fallback if everything fails
+            return {"error": "No suitable questions found and custom generation failed"}
+                
+        except Exception as e:
+            print(f"Error in smart question selection: {e}")
+            import traceback
+            traceback.print_exc()
+            return {"error": f"Question selection failed: {str(e)}"}
     
     

@@ -1,0 +1,80 @@
+{
+  "mcp_servers": {
+    "smart_practice": {
+      "name": "Smart Practice Server",
+      "description": "Adaptive learning and question selection for smart practice mode",
+      "command": "python",
+      "args": ["-m", "app.mcp.servers.smart_practice_server"],
+      "env": {
+        "DATABASE_URL": "${DATABASE_URL}",
+        "REDIS_URL": "${REDIS_URL}"
+      },
+      "tools": [
+        "get_student_profile",
+        "search_adaptive_questions", 
+        "calculate_zpd_difficulty",
+        "analyze_learning_patterns",
+        "record_smart_practice_attempt",
+        "generate_custom_question"
+      ],
+      "transport": "stdio"
+    },
+    "database": {
+      "name": "Database Server",
+      "description": "Direct PostgreSQL database operations",
+      "command": "python",
+      "args": ["-m", "app.mcp.servers.database_server"],
+      "env": {
+        "DATABASE_URL": "${DATABASE_URL}"
+      },
+      "tools": [
+        "query_students",
+        "query_questions",
+        "query_grading_sessions",
+        "update_knowledge_profile",
+        "create_grading_session",
+        "get_student_analytics"
+      ],
+      "transport": "stdio"
+    },
+    "filesystem": {
+      "name": "Filesystem Server", 
+      "description": "File and image processing operations",
+      "command": "python",
+      "args": ["-m", "app.mcp.servers.filesystem_server"],
+      "env": {
+        "UPLOAD_DIR": "${UPLOAD_DIR:-./temp_uploads}"
+      },
+      "tools": [
+        "save_image",
+        "load_image", 
+        "process_canvas_image",
+        "cleanup_temp_files",
+        "analyze_image_content"
+      ],
+      "transport": "stdio"
+    },
+    "external_api": {
+      "name": "External API Server",
+      "description": "Integration with external services (YouTube, Google, etc.)",
+      "command": "python", 
+      "args": ["-m", "app.mcp.servers.external_api_server"],
+      "env": {
+        "GOOGLE_CLIENT_ID": "${GOOGLE_CLIENT_ID}",
+        "YOUTUBE_API_KEY": "${YOUTUBE_API_KEY}"
+      },
+      "tools": [
+        "fetch_youtube_transcript",
+        "get_video_metadata",
+        "authenticate_google_user",
+        "fetch_external_content"
+      ],
+      "transport": "stdio"
+    }
+  },
+  "client_config": {
+    "default_timeout": 30,
+    "retry_attempts": 3,
+    "logging_level": "INFO"
+  }
+}

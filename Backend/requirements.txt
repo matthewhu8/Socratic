@@ -19,3 +19,7 @@ google-auth>=2.23.0
 Pillow>=10.0.0
 ffmpeg-python>=0.2.0
 pylatexenc
+mcp>=1.0.0
+mcp-server>=0.4.0
+mcp-types>=0.4.0
+numpy
