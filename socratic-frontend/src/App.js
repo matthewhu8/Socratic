@@ -2,17 +2,10 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import HomePage from './pages/HomePage';
-import TeacherDashboardPage from './pages/TeacherDashboardPage';
-import CreateTestPage from './pages/CreateTestPage';
-import CreatePracticeExamPage from './pages/CreatePracticeExamPage';
 import StudentDashboardPage from './pages/StudentDashboardPage';
 import StudentHomePage from './pages/StudentHomePage';
 import MathProgressPage from './pages/MathProgressPage';
-import AssessmentPage from './pages/AssessmentPage';
-import TestPage from './pages/TestPage';
-import TopicProgressPage from './pages/TopicProgressPage';
 import StudentAuthPage from './pages/StudentAuthPage';
-import TeacherAuthPage from './pages/TeacherAuthPage';
 import LearningModulesPage from './pages/LearningModulesPage';
 import DynamicLearningPage from './pages/DynamicLearningPage';
 import GradeSelectionPage from './pages/GradeSelectionPage';
@@ -35,7 +28,6 @@ function App() {
             {/* Public Routes */}
             <Route path="/" element={<HomePage />} />
             <Route path="/student/auth" element={<StudentAuthPage />} />
-            <Route path="/teachers/auth" element={<TeacherAuthPage />} />
             <Route path="/mobile-grade/:sessionId" element={<MobileGradingPage />} />
             
             {/* Student Protected Routes */}
@@ -102,43 +94,9 @@ function App() {
             <Route path="/student/dynamic-learning/:subject/:gradeParam/ncert-topics" element={<ProtectedRoute userType="student"><SubjectPageRouter /></ProtectedRoute>} />
             <Route path="/student/dynamic-learning/:subject/:gradeParam" element={<ProtectedRoute userType="student"><SubjectPageRouter /></ProtectedRoute>} />
             <Route path="/student/dynamic-learning/:subject/:gradeParam/:subtopic" element={<ProtectedRoute userType="student"><PracticeModePage /></ProtectedRoute>} />
-            <Route path="/student/assessment" element={
-              <ProtectedRoute userType="student">
-                <AssessmentPage />
-              </ProtectedRoute>
-            } />
-            <Route path="/test/:testCode" element={
-              <ProtectedRoute userType="student">
-                <TestPage />
-              </ProtectedRoute>
-            } />
-            <Route path="/assessment/:testCode" element={
-              <ProtectedRoute userType="student">
-                <AssessmentPage />
-              </ProtectedRoute>
-            } />
             
-            {/* Teacher Protected Routes */}
-            <Route path="/teacher/dashboard" element={
-              <ProtectedRoute userType="teacher">
-                <TeacherDashboardPage />
-              </ProtectedRoute>
-            } />
-            <Route path="/teacher/create-test" element={
-              <ProtectedRoute userType="teacher">
-                <CreateTestPage />
-              </ProtectedRoute>
-            } />
-            <Route path="/teacher/create-practice-exam" element={
-              <ProtectedRoute userType="teacher">
-                <CreatePracticeExamPage />
-              </ProtectedRoute>
-            } />
-            <Route path="/teacher/topic-progress/:topicName" element={
-              <ProtectedRoute userType="teacher">
-                <TopicProgressPage />
-              </ProtectedRoute>
-            } />
+            
+
             
             
           </Routes>
