@@ -211,7 +211,7 @@ Example B — correcting an exponent
             generation_config=genai.GenerationConfig(
                 temperature=0.2,
                 top_p=0.4,
-                max_output_tokens=1000,
+                max_output_tokens=5000,
                 response_mime_type="application/json",
                 response_schema=sally_response_schema
             )
