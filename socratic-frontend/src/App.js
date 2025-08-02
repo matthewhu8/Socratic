@@ -17,6 +17,7 @@ import MobileGradingPage from './pages/MobileGradingPage';
 import AITutorPage from './pages/AITutorPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import SubjectPageRouter from './components/SubjectPageRouter';
+import FeedbackWidget from './components/FeedbackWidget';
 import { AuthProvider } from './contexts/AuthContext';
 
 function App() {
@@ -100,6 +101,7 @@ function App() {
             
             
           </Routes>
+          <FeedbackWidget />
         </div>
       </Router>
     </AuthProvider>
