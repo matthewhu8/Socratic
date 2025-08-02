@@ -15,7 +15,7 @@ from pylatexenc.latex2text import LatexNodes2Text
 
 # Import our modules
 from .database.database import get_db, engine
-from .database.models import Base, YouTubeQuizResults, StudentUser, TeacherUser, NcertExamples, NcertExercises, PYQs, GradingSession, AITutorSession
+from .database.models import Base, YouTubeQuizResults, StudentUser, TeacherUser, NcertExamples, NcertExercises, PYQs, GradingSession, AITutorSession, UserFeedback
 from .auth.utils import verify_password, get_password_hash, create_access_token, create_refresh_token, SECRET_KEY, ALGORITHM
 from .auth.schemas import TokenResponse, UserLogin, StudentCreate, TeacherCreate, StudentResponse, TeacherResponse, RefreshToken
 from .auth.dependencies import get_current_user, get_current_student, get_current_teacher
@@ -1235,3 +1235,42 @@ async def get_student_knowledge_profile(
     except Exception as e:
         print(f"Error getting knowledge profile: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to get profile: {str(e)}")
+
+# Pydantic model for feedback submission
+class FeedbackCreate(BaseModel):
+    type: str  # suggestion, feature, bug, other
+    description: str
+    email: Optional[str] = None
+    timestamp: Optional[str] = None
+
+@app.post("/api/feedback")
+async def submit_feedback(
+    feedback_data: FeedbackCreate,
+    db: Session = Depends(get_db)
+):
+    """Submit user feedback."""
+    try:
+        
+        # Create feedback entry
+        feedback = UserFeedback(
+            type=feedback_data.type,
+            description=feedback_data.description,
+            email=feedback_data.email,
+            user_id=None,  # Not requiring authentication for feedback
+            timestamp=datetime.utcnow()
+        )
+        
+        db.add(feedback)
+        db.commit()
+        db.refresh(feedback)
+        
+        return {
+            "status": "success",
+            "message": "Thank you for your feedback!",
+            "feedback_id": feedback.id
+        }
+        
+    except Exception as e:
+        db.rollback()
+        print(f"Error submitting feedback: {e}")
+        raise HTTPException(status_code=500, detail="Failed to submit feedback")
