@@ -208,4 +208,21 @@ class AITutorSession(Base):
 
 
 # Add the relationship to StudentUser
-StudentUser.ai_tutor_sessions = relationship("AITutorSession", back_populates="student") 
+StudentUser.ai_tutor_sessions = relationship("AITutorSession", back_populates="student")
+
+class UserFeedback(Base):
+    __tablename__ = "user_feedback"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    type = Column(String, nullable=False)  # suggestion, feature, bug, other
+    description = Column(Text, nullable=False)
+    email = Column(String, nullable=True)
+    timestamp = Column(DateTime, default=datetime.utcnow)
+    user_id = Column(Integer, ForeignKey("student_users.id"), nullable=True)
+    status = Column(String, default="pending")  # pending, reviewed, resolved
+    
+    # Relationship
+    student = relationship("StudentUser", back_populates="feedbacks")
+
+# Add the relationship to StudentUser
+StudentUser.feedbacks = relationship("UserFeedback", back_populates="student") 
