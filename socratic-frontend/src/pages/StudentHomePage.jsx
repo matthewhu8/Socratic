@@ -182,6 +182,12 @@ function StudentHomePage() {
           <h2>AI Tutor</h2>
           <p>Interactive whiteboard sessions with an AI tutor for personalized learning</p>
         </Link>
+
+        <Link to="/student/mcp-agentic-question-generation" className="nav-option">
+          <div className="nav-option-icon"><GiBrain /></div>
+          <h2>IBDP/CBSE Question Generation</h2>
+          <p>Drag and Drop your own questions to work on something similar or simply describe what you want to practice</p>
+        </Link>
       </div>
 
       {/* Premium Message Modal */}

@@ -19,6 +19,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import SubjectPageRouter from './components/SubjectPageRouter';
 import FeedbackWidget from './components/FeedbackWidget';
 import { AuthProvider } from './contexts/AuthContext';
+import AgenticQuestionGeneration from './pages/AgenticQuestionGeneration';
 
 function App() {
   return (
@@ -62,6 +63,14 @@ function App() {
                 <AITutorPage />
               </ProtectedRoute>
             } />
+            <Route path='/student/mcp-agentic-question-generation' element={
+              <ProtectedRoute userType="student">
+                <AgenticQuestionGeneration />
+              </ProtectedRoute>
+            } />
+            
+            {/* New Dynamic Learning Routes */}
+          
             
             {/* New CBSE Dynamic Learning Routes */}
             <Route path="/student/dynamic-learning/:subject/:optionType/topics" element={
