@@ -1250,7 +1250,7 @@ async def submit_feedback(
 ):
     """Submit user feedback."""
     try:
-        
+        print("storing user feedback into production database")
         # Create feedback entry
         feedback = UserFeedback(
             type=feedback_data.type,
@@ -1274,3 +1274,8 @@ async def submit_feedback(
         db.rollback()
         print(f"Error submitting feedback: {e}")
         raise HTTPException(status_code=500, detail="Failed to submit feedback")
+    
+@app.post("/developer-jeeter")
+async def get_user_feedback_dashboard():
+    pass 
+    # ideally a route where devs can go in and check user feedback

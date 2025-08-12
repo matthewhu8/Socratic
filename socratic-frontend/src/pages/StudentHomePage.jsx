@@ -6,6 +6,7 @@ import { FaChalkboardTeacher } from "react-icons/fa";
 import { Link } from 'react-router-dom';
 import { AuthContext } from '../contexts/AuthContext';
 import API_URL from '../config/api';
+import FeedbackWidget from '../components/FeedbackWidget';
 import '../styles/StudentHomePage.css';
 
 function StudentHomePage() {
@@ -223,6 +224,7 @@ function StudentHomePage() {
           </div>
         </div>
       )}
+      <FeedbackWidget />
     </div>
   );
 }
