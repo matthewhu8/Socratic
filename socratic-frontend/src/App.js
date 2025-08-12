@@ -1,5 +1,4 @@
 //// filepath: /Users/matthewhu/Code/SocraticMonoRepo/socratic-frontend/src/App.js
-import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import HomePage from './pages/HomePage';
 import StudentDashboardPage from './pages/StudentDashboardPage';
@@ -17,7 +16,6 @@ import MobileGradingPage from './pages/MobileGradingPage';
 import AITutorPage from './pages/AITutorPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import SubjectPageRouter from './components/SubjectPageRouter';
-import FeedbackWidget from './components/FeedbackWidget';
 import { AuthProvider } from './contexts/AuthContext';
 import AgenticQuestionGeneration from './pages/AgenticQuestionGeneration';
 
@@ -110,7 +108,6 @@ function App() {
             
             
           </Routes>
-          <FeedbackWidget />
         </div>
       </Router>
     </AuthProvider>
