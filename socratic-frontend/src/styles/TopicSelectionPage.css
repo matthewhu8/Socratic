@@ -26,20 +26,25 @@
   background: rgba(255, 255, 255, 0.2);
   border: 1px solid rgba(255, 255, 255, 0.3);
   color: white;
-  width: 32px;
-  height: 32px;
-  border-radius: 6px;
+  padding: 8px 16px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
-  justify-content: center;
+  gap: 8px;
   cursor: pointer;
   transition: all 0.2s ease;
-  margin-right: 4px;
+  margin-right: 8px;
+  font-size: 1rem;
+  font-weight: 500;
 }
 
 .back-button:hover {
   background: rgba(255, 255, 255, 0.3);
   transform: translateX(-2px);
+}
+
+.back-button span {
+  line-height: 1;
 }
 
 .breadcrumb span {
