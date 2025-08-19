@@ -184,10 +184,11 @@ function TopicSelectionPage() {
       <header className="topic-header">
         <div className="breadcrumb">
           <button onClick={() => navigate(-1)} className="back-button">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
               <path d="M19 12H5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
               <path d="M12 19L5 12L12 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
+            <span>Back</span>
           </button>
           <span>{formatSubjectName(subject)}</span>
           {subSubject && (
