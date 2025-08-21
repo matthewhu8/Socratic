@@ -7,11 +7,14 @@ import MathProgressPage from './pages/MathProgressPage';
 import StudentAuthPage from './pages/StudentAuthPage';
 import LearningModulesPage from './pages/LearningModulesPage';
 import DynamicLearningPage from './pages/DynamicLearningPage';
+import CurriculumSelectionPage from './pages/CurriculumSelectionPage';
+import IbDynamicLearningPage from './pages/IbDynamicLearningPage';
 import GradeSelectionPage from './pages/GradeSelectionPage';
 import PracticeModePage from './pages/PracticeModePage';
 import PreviousYearQuestionsPage from './pages/PreviousYearQuestionsPage';
 import TopicSelectionPage from './pages/TopicSelectionPage';
 import SubtopicSelectionPage from './pages/SubtopicSelectionPage';
+import GradeTenTempQuestions from './pages/GradeTenTempQuestions';
 import MobileGradingPage from './pages/MobileGradingPage';
 import AITutorPage from './pages/AITutorPage';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -51,9 +54,19 @@ function App() {
                 <LearningModulesPage />
               </ProtectedRoute>
             } />
+            <Route path="/student/curriculum-selection" element={
+              <ProtectedRoute userType="student">
+                <CurriculumSelectionPage />
+              </ProtectedRoute>
+            } />
             <Route path="/student/dynamic-learning" element={
               <ProtectedRoute userType="student">
                 <DynamicLearningPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/student/ib-dynamic-learning" element={
+              <ProtectedRoute userType="student">
+                <IbDynamicLearningPage />
               </ProtectedRoute>
             } />
             <Route path="/student/ai-tutor" element={
@@ -77,6 +90,18 @@ function App() {
               </ProtectedRoute>
             } />
             <Route path="/student/dynamic-learning/:subject/:subSubject/:optionType/topics" element={
+              <ProtectedRoute userType="student">
+                <TopicSelectionPage />
+              </ProtectedRoute>
+            } />
+            
+            {/* IB Dynamic Learning Routes */}
+            <Route path="/student/ib-dynamic-learning/mathematics/aahl/topics" element={
+              <ProtectedRoute userType="student">
+                <GradeTenTempQuestions />
+              </ProtectedRoute>
+            } />
+            <Route path="/student/ib-dynamic-learning/:subject/:courseType/topics" element={
               <ProtectedRoute userType="student">
                 <TopicSelectionPage />
               </ProtectedRoute>
