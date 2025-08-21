@@ -168,13 +168,13 @@ function StudentHomePage() {
         </Link>
 
         <Link 
-          to="/student/dynamic-learning" 
+          to="/student/curriculum-selection" 
           className="nav-option"
           onClick={handleDynamicLearningClick}
         >
           <div className="nav-option-icon"><GiBrain /></div>
-          <h2>Dynamic Learning</h2>
-          <p>Adaptive AI-powered learning experiences tailored to your progress</p>
+          <h2>Practice Questions</h2>
+          <p>CBSE and IB curriculum-aligned practice questions and exercises</p>
           {currentUser?.grade !== '10' && <span className="grade-badge">Grade 10 Only</span>}
         </Link>
 
