@@ -333,12 +333,20 @@ function DynamicLearningPage() {
   };
 
   const handleOptionClick = (subject, subSubject, option) => {
-    // Check if this is a premium subject or Smart Learning
-    if (subject.id !== 'mathematics' || option.id === 'smart-learning') {
+    // Handle MCP-powered Smart Learning
+    if (option.id === 'smart-learning' && subject.id === 'mathematics') {
+      // Navigate to MCP-powered Smart Practice page
+      const grade = currentUser?.grade || '10';
+      navigate(`/student/smart-practice/${subject.id}/${grade}`);
+      return;
+    }
+
+    // Check if this is a premium subject
+    if (subject.id !== 'mathematics') {
       setShowPremiumMessage(true);
       return;
     }
-    
+
     const subjectPath = subSubject ? `${subject.id}/${subSubject.id}` : subject.id;
     navigate(`/student/dynamic-learning/${subjectPath}/${option.id}/topics`);
   };
@@ -379,10 +387,10 @@ function DynamicLearningPage() {
                 </div>
                 <div className="options-list">
                   {subject.options.map(option => {
-                    const isOptionBeta = option.id === 'smart-learning' || isPremium;
+                    const isOptionBeta = isPremium; // Smart learning is no longer beta
                     return (
-                      <div 
-                        key={option.id} 
+                      <div
+                        key={option.id}
                         className={`option-item ${isOptionBeta ? 'premium-option' : ''}`}
                         onClick={() => handleOptionClick(subject, null, option)}
                       >
@@ -390,7 +398,9 @@ function DynamicLearningPage() {
                           <h4>{option.name}</h4>
                           <p>{option.description}</p>
                           {option.id === 'smart-learning' && subject.id === 'mathematics' && (
-                            <span className="beta-tag">🔒 Beta Access</span>
+                            <span className="beta-tag" style={{background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white'}}>
+                              🤖 MCP Powered
+                            </span>
                           )}
                         </div>
                         <svg className="arrow-icon" width="20" height="20" viewBox="0 0 24 24" fill="none">
@@ -453,7 +463,7 @@ function DynamicLearningPage() {
       <div className="hero-section">
         <h1>{getClassTitle()}</h1>
         <p>The comprehensive platform designed to excel in your CBSE board exams</p>
-        <div className="stats-container">
+        {/* <div className="stats-container">
           <div className="stat-item">
             <h2>95%</h2>
             <p>Students improved their scores</p>
@@ -462,7 +472,7 @@ function DynamicLearningPage() {
             <h2>10,000+</h2>
             <p>Practice questions available</p>
           </div>
-        </div>
+        </div> */}
       </div>
 
       <div className="subjects-container">

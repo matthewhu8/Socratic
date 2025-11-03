@@ -1,0 +1,494 @@
+{
+  "questions": [
+    {
+      "id": "q_math_ch1_q1_aahl_part1",
+      "subject": "mathematics",
+      "chapter": "Topic 1: Number & Algebra",
+      "topic": "Binomial Theorem",
+      "questionType": "IB Math",
+      "source": {
+        "IBmath": "aahl",
+        "questionNumber": 1,
+        "partNumber": 1
+      },
+      "marks": 4,
+      "questionText": "Expand (3x\u202f\u2212\u202f2)\u2074 in descending powers of x and simplify your answer."
+    },
+    {
+      "id": "q_math_ch1_q2_aahl_part1",
+      "subject": "mathematics",
+      "chapter": "Topic 1: Number & Algebra",
+      "topic": "Sequences & Series",
+      "questionType": "IB Math",
+      "source": {
+        "IBmath": "aahl",
+        "questionNumber": 2,
+        "partNumber": 1
+      },
+      "marks": 2,
+      "questionText": "An arithmetic sequence has u\u2081\u00a0=\u00a036, u\u2082\u00a0=\u00a029, u\u2083\u00a0=\u00a022. Find the common difference d."
+    },
+    {
+      "id": "q_math_ch1_q2_aahl_part2",
+      "subject": "mathematics",
+      "chapter": "Topic 1: Number & Algebra",
+      "topic": "Sequences & Series",
+      "questionType": "IB Math",
+      "source": {
+        "IBmath": "aahl",
+        "questionNumber": 2,
+        "partNumber": 2
+      },
+      "marks": 2,
+      "questionText": "For the sequence in part (a), find u\u2088."
+    },
+    {
+      "id": "q_math_ch1_q2_aahl_part3",
+      "subject": "mathematics",
+      "chapter": "Topic 1: Number & Algebra",
+      "topic": "Sequences & Series",
+      "questionType": "IB Math",
+      "source": {
+        "IBmath": "aahl",
+        "questionNumber": 2,
+        "partNumber": 3
+      },
+      "marks": 2,
+      "questionText": "For the sequence in part (a), find S\u2088."
+    },
+    {
+      "id": "q_math_ch1_q3_aahl_part1",
+      "subject": "mathematics",
+      "chapter": "Topic 1: Number & Algebra",
+      "topic": "Sequences & Series",
+      "questionType": "IB Math",
+      "source": {
+        "IBmath": "aahl",
+        "questionNumber": 3,
+        "partNumber": 1
+      },
+      "marks": 2,
+      "questionText": "Consider a geometric sequence with a\u2081\u00a0=\u00a09 and a\u2084\u00a0=\u00a01. Find the common ratio r."
+    },
+    {
+      "id": "q_math_ch1_q3_aahl_part2",
+      "subject": "mathematics",
+      "chapter": "Topic 1: Number & Algebra",
+      "topic": "Probability",
+      "questionType": "IB Math",
+      "source": {
+        "IBmath": "aahl",
+        "questionNumber": 3,
+        "partNumber": 2
+      },
+      "marks": 4,
+      "questionText": "A discrete random variable X has the probability distribution shown in the accompanying table. Find the value of the constant m."
+    },
+    {
+      "id": "q_math_ch1_q4_aahl_part1",
+      "subject": "mathematics",
+      "chapter": "Topic 1: Number & Algebra",
+      "topic": "Exponents & Logs",
+      "questionType": "IB Math",
+      "source": {
+        "IBmath": "aahl",
+        "questionNumber": 4,
+        "partNumber": 1
+      },
+      "marks": 2,
+      "questionText": "Maya invests $9\u202f000 in an account that pays an annual interest rate of 5.2\u00a0%, compounded annually. Write a formula that gives the value of the investment after n years."
+    },
+    {
+      "id": "q_math_ch1_q4_aahl_part2",
+      "subject": "mathematics",
+      "chapter": "Topic 1: Number & Algebra",
+      "topic": "Exponents & Logs",
+      "questionType": "IB Math",
+      "source": {
+        "IBmath": "aahl",
+        "questionNumber": 4,
+        "partNumber": 2
+      },
+      "marks": 2,
+      "questionText": "Using your formula, calculate the amount of money in the account after (i) 1\u00a0year; (ii) 3\u00a0years."
+    },
+    {
+      "id": "q_math_ch1_q4_aahl_part3",
+      "subject": "mathematics",
+      "chapter": "Topic 1: Number & Algebra",
+      "topic": "Exponents & Logs",
+      "questionType": "IB Math",
+      "source": {
+        "IBmath": "aahl",
+        "questionNumber": 4,
+        "partNumber": 3
+      },
+      "marks": 2,
+      "questionText": "Maya hopes to use the investment as part of a $11\u202f000 deposit on a flat. Determine whether she can achieve this within 5\u00a0years."
+    },
+    {
+      "id": "q_math_ch1_q5_aahl_part1",
+      "subject": "mathematics",
+      "chapter": "Topic 1: Number & Algebra",
+      "topic": "Sequences & Series",
+      "questionType": "IB Math",
+      "source": {
+        "IBmath": "aahl",
+        "questionNumber": 5,
+        "partNumber": 1
+      },
+      "marks": 2,
+      "questionText": "Only one of the four sequences below is arithmetic and only one is geometric:\n\na\u2099\u00a0=\u00a0\u00bc,\u00a0\u2155,\u00a0\u2159,\u00a0\u2150,\u00a0\u2026\nb\u2099\u00a0=\u00a03,\u00a06,\u00a09,\u00a012,\u00a0\u2026\nc\u2099\u00a0=\u00a04,\u00a02,\u00a01,\u00a0\u00bd,\u00a0\u2026\nd\u2099\u00a0=\u00a01,\u00a04,\u00a09,\u00a016,\u00a0\u2026\n\nState which sequence is arithmetic and give its common difference."
+    },
+    {
+      "id": "q_math_ch1_q5_aahl_part2",
+      "subject": "mathematics",
+      "chapter": "Topic 1: Number & Algebra",
+      "topic": "Sequences & Series",
+      "questionType": "IB Math",
+      "source": {
+        "IBmath": "aahl",
+        "questionNumber": 5,
+        "partNumber": 2
+      },
+      "marks": 2,
+      "questionText": "State which sequence is geometric and give its common ratio."
+    },
+    {
+      "id": "q_math_ch1_q5_aahl_part3",
+      "subject": "mathematics",
+      "chapter": "Topic 1: Number & Algebra",
+      "topic": "Sequences & Series",
+      "questionType": "IB Math",
+      "source": {
+        "IBmath": "aahl",
+        "questionNumber": 5,
+        "partNumber": 3
+      },
+      "marks": 2,
+      "questionText": "For the geometric sequence identified in part\u00a0(b), find the exact value of the sixth term."
+    },
+    {
+      "id": "q_math_ch1_q6_aahl_part1",
+      "subject": "mathematics",
+      "chapter": "Topic 1: Number & Algebra",
+      "topic": "Binomial Theorem",
+      "questionType": "IB Math",
+      "source": {
+        "IBmath": "aahl",
+        "questionNumber": 6,
+        "partNumber": 1
+      },
+      "marks": 1,
+      "questionText": "Consider the expansion of (x\u00a0+\u00a04)\u2078. Write down the number of terms in the expansion."
+    },
+    {
+      "id": "q_math_ch1_q6_aahl_part2",
+      "subject": "mathematics",
+      "chapter": "Topic 1: Number & Algebra",
+      "topic": "Binomial Theorem",
+      "questionType": "IB Math",
+      "source": {
+        "IBmath": "aahl",
+        "questionNumber": 6,
+        "partNumber": 2
+      },
+      "marks": 4,
+      "questionText": "Find the coefficient of the term in x\u2075 in the expansion of (x\u00a0+\u00a04)\u2078."
+    },
+    {
+      "id": "q_math_ch1_q7_aahl_part1",
+      "subject": "mathematics",
+      "chapter": "Topic 1: Number & Algebra",
+      "topic": "Exponents & Logs",
+      "questionType": "IB Math",
+      "source": {
+        "IBmath": "aahl",
+        "questionNumber": 7,
+        "partNumber": 1
+      },
+      "marks": 2,
+      "questionText": "Find the value of log\u2085\u202f125, giving your answer as an integer."
+    },
+    {
+      "id": "q_math_ch1_q7_aahl_part2",
+      "subject": "mathematics",
+      "chapter": "Topic 1: Number & Algebra",
+      "topic": "Exponents & Logs",
+      "questionType": "IB Math",
+      "source": {
+        "IBmath": "aahl",
+        "questionNumber": 7,
+        "partNumber": 2
+      },
+      "marks": 2,
+      "questionText": "Evaluate log\u2085\u202f45\u00a0+\u00a0log\u2085\u202f3."
+    },
+    {
+      "id": "q_math_ch1_q7_aahl_part3",
+      "subject": "mathematics",
+      "chapter": "Topic 1: Number & Algebra",
+      "topic": "Exponents & Logs",
+      "questionType": "IB Math",
+      "source": {
+        "IBmath": "aahl",
+        "questionNumber": 7,
+        "partNumber": 3
+      },
+      "marks": 3,
+      "questionText": "Calculate log\u2085\u202f8\u00a0\u2212\u00a0log\u2085\u202f80."
+    },
+    {
+      "id": "q_math_ch1_q8_aahl_part1",
+      "subject": "mathematics",
+      "chapter": "Topic 1: Number & Algebra",
+      "topic": "Proofs",
+      "questionType": "IB Math",
+      "source": {
+        "IBmath": "aahl",
+        "questionNumber": 8,
+        "partNumber": 1
+      },
+      "marks": 4,
+      "questionText": "Prove that the sum of four consecutive odd integers is divisible by 4."
+    },
+    {
+      "id": "q_math_ch1_q9_aahl_part1",
+      "subject": "mathematics",
+      "chapter": "Topic 1: Number & Algebra",
+      "topic": "Sequences & Series",
+      "questionType": "IB Math",
+      "source": {
+        "IBmath": "aahl",
+        "questionNumber": 9,
+        "partNumber": 1
+      },
+      "marks": 2,
+      "questionText": "Only one of the following four sequences is arithmetic and only one is geometric:\n\na\u2099\u00a0=\u00a02,\u00a06,\u00a010,\u00a014,\u00a0\u2026\nb\u2099\u00a0=\u00a0\u00bd,\u00a0\u2154,\u00a0\u00be,\u00a0\u215a,\u00a0\u2026\nc\u2099\u00a0=\u00a01.2,\u00a02.4,\u00a03.6,\u00a04.8,\u00a0\u2026\nd\u2099\u00a0=\u00a03,\u00a01,\u00a0\u2153,\u00a0\u2151,\u00a0\u2026\n\nState which sequence is arithmetic and give its common difference."
+    },
+    {
+      "id": "q_math_ch1_q9_aahl_part2",
+      "subject": "mathematics",
+      "chapter": "Topic 1: Number & Algebra",
+      "topic": "Sequences & Series",
+      "questionType": "IB Math",
+      "source": {
+        "IBmath": "aahl",
+        "questionNumber": 9,
+        "partNumber": 2
+      },
+      "marks": 2,
+      "questionText": "State which sequence is geometric and give its common ratio."
+    },
+    {
+      "id": "q_math_ch1_q9_aahl_part3",
+      "subject": "mathematics",
+      "chapter": "Topic 1: Number & Algebra",
+      "topic": "Sequences & Series",
+      "questionType": "IB Math",
+      "source": {
+        "IBmath": "aahl",
+        "questionNumber": 9,
+        "partNumber": 3
+      },
+      "marks": 2,
+      "questionText": "For the geometric sequence identified in part\u00a0(b), find the exact value of the eighth term. Give your answer as a fraction."
+    },
+    {
+      "id": "q_math_ch1_q10_aahl_part1",
+      "subject": "mathematics",
+      "chapter": "Topic 1: Number & Algebra",
+      "topic": "Sequences & Series",
+      "questionType": "IB Math",
+      "source": {
+        "IBmath": "aahl",
+        "questionNumber": 10,
+        "partNumber": 1
+      },
+      "marks": 2,
+      "questionText": "A geometric series has common ratio 4x. State the domain of x for which the sum to infinity exists."
+    },
+    {
+      "id": "q_math_ch1_q10_aahl_part2",
+      "subject": "mathematics",
+      "chapter": "Topic 1: Number & Algebra",
+      "topic": "Sequences & Series",
+      "questionType": "IB Math",
+      "source": {
+        "IBmath": "aahl",
+        "questionNumber": 10,
+        "partNumber": 2
+      },
+      "marks": 2,
+      "questionText": "The sum to infinity of the series is 72 and the first term is 60. Find x."
+    },
+    {
+      "id": "q_math_ch1_q11_aahl_part1",
+      "subject": "mathematics",
+      "chapter": "Topic 1: Number & Algebra",
+      "topic": "Exponents & Logs",
+      "questionType": "IB Math",
+      "source": {
+        "IBmath": "aahl",
+        "questionNumber": 11,
+        "partNumber": 1
+      },
+      "marks": 2,
+      "questionText": "Find the value of log\u2087\u202f7."
+    },
+    {
+      "id": "q_math_ch1_q11_aahl_part2",
+      "subject": "mathematics",
+      "chapter": "Topic 1: Number & Algebra",
+      "topic": "Exponents & Logs",
+      "questionType": "IB Math",
+      "source": {
+        "IBmath": "aahl",
+        "questionNumber": 11,
+        "partNumber": 2
+      },
+      "marks": 2,
+      "questionText": "Evaluate log\u2087\u202f49\u00a0+\u00a0log\u2087\u202f2."
+    },
+    {
+      "id": "q_math_ch1_q11_aahl_part3",
+      "subject": "mathematics",
+      "chapter": "Topic 1: Number & Algebra",
+      "topic": "Exponents & Logs",
+      "questionType": "IB Math",
+      "source": {
+        "IBmath": "aahl",
+        "questionNumber": 11,
+        "partNumber": 3
+      },
+      "marks": 2,
+      "questionText": "Calculate log\u2087\u202f98\u00a0\u2212\u00a0log\u2087\u202f2."
+    },
+    {
+      "id": "q_math_ch1_q12_aahl_part1",
+      "subject": "mathematics",
+      "chapter": "Topic 1: Number & Algebra",
+      "topic": "Proofs",
+      "questionType": "IB Math",
+      "source": {
+        "IBmath": "aahl",
+        "questionNumber": 12,
+        "partNumber": 1
+      },
+      "marks": 4,
+      "questionText": "Let k and k\u00a0+\u00a01 be consecutive positive integers. Show that the difference of their squares equals the sum k\u00a0+\u00a0(k\u00a0+\u00a01)."
+    },
+    {
+      "id": "q_math_ch1_q13_aahl_part1",
+      "subject": "mathematics",
+      "chapter": "Topic 1: Number & Algebra",
+      "topic": "Sequences & Series",
+      "questionType": "IB Math",
+      "source": {
+        "IBmath": "aahl",
+        "questionNumber": 13,
+        "partNumber": 1
+      },
+      "marks": 2,
+      "questionText": "Consider the arithmetic sequence 5,\u00a09,\u00a013,\u00a017,\u00a0\u2026\u00a0. Find the common difference d."
+    },
+    {
+      "id": "q_math_ch1_q13_aahl_part2",
+      "subject": "mathematics",
+      "chapter": "Topic 1: Number & Algebra",
+      "topic": "Sequences & Series",
+      "questionType": "IB Math",
+      "source": {
+        "IBmath": "aahl",
+        "questionNumber": 13,
+        "partNumber": 2
+      },
+      "marks": 2,
+      "questionText": "Find the 10th term of the sequence."
+    },
+    {
+      "id": "q_math_ch1_q13_aahl_part3",
+      "subject": "mathematics",
+      "chapter": "Topic 1: Number & Algebra",
+      "topic": "Sequences & Series",
+      "questionType": "IB Math",
+      "source": {
+        "IBmath": "aahl",
+        "questionNumber": 13,
+        "partNumber": 3
+      },
+      "marks": 2,
+      "questionText": "Find the sum of the first 10 terms of the sequence."
+    },
+    {
+      "id": "q_math_ch1_q14_aahl_part1",
+      "subject": "mathematics",
+      "chapter": "Topic 1: Number & Algebra",
+      "topic": "Sequences & Series",
+      "questionType": "IB Math",
+      "source": {
+        "IBmath": "aahl",
+        "questionNumber": 14,
+        "partNumber": 1
+      },
+      "marks": 2,
+      "questionText": "In a geometric sequence, the fifth term u\u2085 is 162 and the sixth term u\u2086 is 202.5. Find the common ratio r."
+    },
+    {
+      "id": "q_math_ch1_q14_aahl_part2",
+      "subject": "mathematics",
+      "chapter": "Topic 1: Number & Algebra",
+      "topic": "Sequences & Series",
+      "questionType": "IB Math",
+      "source": {
+        "IBmath": "aahl",
+        "questionNumber": 14,
+        "partNumber": 2
+      },
+      "marks": 2,
+      "questionText": "Find u\u2081, the first term of the sequence."
+    },
+    {
+      "id": "q_math_ch1_q14_aahl_part3",
+      "subject": "mathematics",
+      "chapter": "Topic 1: Number & Algebra",
+      "topic": "Sequences & Series",
+      "questionType": "IB Math",
+      "source": {
+        "IBmath": "aahl",
+        "questionNumber": 14,
+        "partNumber": 3
+      },
+      "marks": 2,
+      "questionText": "Calculate the sum of the first 12 terms of the sequence."
+    },
+    {
+      "id": "q_math_ch1_q15_aahl_part1",
+      "subject": "mathematics",
+      "chapter": "Topic 1: Number & Algebra",
+      "topic": "Binomial Theorem",
+      "questionType": "IB Math",
+      "source": {
+        "IBmath": "aahl",
+        "questionNumber": 15,
+        "partNumber": 1
+      },
+      "marks": 1,
+      "questionText": "Write down the number of terms in the expansion of (3x\u00a0\u2212\u00a01)\u2079."
+    },
+    {
+      "id": "q_math_ch1_q15_aahl_part2",
+      "subject": "mathematics",
+      "chapter": "Topic 1: Number & Algebra",
+      "topic": "Binomial Theorem",
+      "questionType": "IB Math",
+      "source": {
+        "IBmath": "aahl",
+        "questionNumber": 15,
+        "partNumber": 2
+      },
+      "marks": 5,
+      "questionText": "Find the coefficient of the term in x\u00b2 in the expansion of (3x\u00a0\u2212\u00a01)\u2079."
+    }
+  ]
+}

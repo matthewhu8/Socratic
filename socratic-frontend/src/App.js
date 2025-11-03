@@ -14,6 +14,7 @@ import TopicSelectionPage from './pages/TopicSelectionPage';
 import SubtopicSelectionPage from './pages/SubtopicSelectionPage';
 import MobileGradingPage from './pages/MobileGradingPage';
 import AITutorPage from './pages/AITutorPage';
+import SmartPracticePage from './pages/SmartPracticePage';
 import ProtectedRoute from './components/ProtectedRoute';
 import SubjectPageRouter from './components/SubjectPageRouter';
 import { AuthProvider } from './contexts/AuthContext';
@@ -66,7 +67,14 @@ function App() {
                 <AgenticQuestionGeneration />
               </ProtectedRoute>
             } />
-            
+
+            {/* MCP-Powered Smart Practice */}
+            <Route path="/student/smart-practice/:subject/:grade" element={
+              <ProtectedRoute userType="student">
+                <SmartPracticePage />
+              </ProtectedRoute>
+            } />
+
             {/* New Dynamic Learning Routes */}
           
             
