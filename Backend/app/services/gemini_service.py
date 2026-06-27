@@ -18,7 +18,7 @@ class GeminiService:
         
         genai.configure(api_key=self.api_key)
         self.model = genai.GenerativeModel(
-            'gemini-2.5-flash-preview-05-20', 
+            'gemini-2.5-flash', 
             system_instruction="""You are a helpful English AI assistant to answer students' questions about this YouTube video. 
             Please answer in English. The student may also be referencing a specific part from the video transcript around their current video timestamp. 
             The image attached shows the video at the point where the student is currently watching the video. 
@@ -29,13 +29,13 @@ class GeminiService:
 • Explain in simple and efficient language, don't over talk. 
 • Skip filler; dive straight into substance. Do not use asteriks. If the student is struggling with the subject, explain with short and to-the-point example. 
             """)
-        self.video_quiz_model = genai.GenerativeModel('gemini-2.5-flash-preview-05-20', system_instruction="You are quiz maker that will test the student's retention of the video. The query will contain a video transcript and a list of their previous messages, create questions in JSON format that tests the user on general subject matter related concepts discussed in the transcript, and place a particular emphasis on the topics the student seemed to be confused about based on the chatlog. Make 5 total questions.")
-        self.photo_grading_model = genai.GenerativeModel('gemini-2.5-flash-preview-05-20', system_instruction="You are a detailed oriented CBSE style grader for 10th grade math questions. Utilize the attached question and 'solution' to ensure the student's work is fully correct. The student's work will be provided in the query as a photo. Please provide your response in the JSON format shown in the prompt. Do no hesitate to leave fields blank if there are no comments needed. ")
-        self.question_chat_model = genai.GenerativeModel('gemini-2.5-flash-preview-05-20', system_instruction="The student is asking a question about a math problem. Return a short response to the question, addressing the student's concerns and explaining the concept in a simple, understandable way if possible. The student's question will be provided in the query. The math problem will be provided in the query. We will provide the step-by-step solution to the problem in the query but blatantly reveal the solution, it is only so you don't give out incorrect information and guide the student towards the correct path.")
+        self.video_quiz_model = genai.GenerativeModel('gemini-2.5-flash', system_instruction="You are quiz maker that will test the student's retention of the video. The query will contain a video transcript and a list of their previous messages, create questions in JSON format that tests the user on general subject matter related concepts discussed in the transcript, and place a particular emphasis on the topics the student seemed to be confused about based on the chatlog. Make 5 total questions.")
+        self.photo_grading_model = genai.GenerativeModel('gemini-2.5-flash', system_instruction="You are a detailed oriented CBSE style grader for 10th grade math questions. Utilize the attached question and 'solution' to ensure the student's work is fully correct. The student's work will be provided in the query as a photo. Please provide your response in the JSON format shown in the prompt. Do no hesitate to leave fields blank if there are no comments needed. ")
+        self.question_chat_model = genai.GenerativeModel('gemini-2.5-flash', system_instruction="The student is asking a question about a math problem. Return a short response to the question, addressing the student's concerns and explaining the concept in a simple, understandable way if possible. The student's question will be provided in the query. The math problem will be provided in the query. We will provide the step-by-step solution to the problem in the query but blatantly reveal the solution, it is only so you don't give out incorrect information and guide the student towards the correct path.")
         
         # Optimized text model with enhanced system instructions
         self.text_model = genai.GenerativeModel(
-            'gemini-1.5-pro', 
+            'gemini-2.5-pro', 
             system_instruction="""You are Socratic‑Tutor, a fast, patient math coach who provides concise explanations.
 
 STYLE & LENGTH:
@@ -66,7 +66,7 @@ TEACHING APPROACH:
         # Optimized SVG model with comprehensive system instructions and generation config
         # Optimized SVG model with comprehensive system instructions and generation config
         self.svg_model = genai.GenerativeModel(
-            'gemini-1.5-pro',
+            'gemini-2.5-pro',
             system_instruction="""You create educational SVG visualizations for math tutoring.
 
 TECHNICAL SPECIFICATIONS:
@@ -106,7 +106,7 @@ SELF-CHECK BEFORE SENDING:
         
         # Keep existing tutor model for backward compatibility
         self.tutor_model = genai.GenerativeModel(
-                'gemini-2.5-flash-preview-05-20',
+                'gemini-2.5-flash',
                 system_instruction="""You are a math tutor. Respond with JSON containing 'response' and 'drawing_commands' fields."""
             )
         
@@ -121,7 +121,7 @@ SELF-CHECK BEFORE SENDING:
         
         # Combined model for single-prompt AI tutor (new approach)
         self.combined_model = genai.GenerativeModel(
-            'gemini-2.5-flash-preview-05-20',
+            'gemini-2.5-flash',
             system_instruction="""OUTPUT ONLY VALID JSON. No text before or after the JSON object. Svg mark must go in the svgContent field. No exceptions.
 
 You are Socratic‑Tutor, a fast, patient math coach who can DRAW on a shared

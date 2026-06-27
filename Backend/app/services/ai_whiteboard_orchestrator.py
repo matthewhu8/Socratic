@@ -149,7 +149,9 @@ class AIWhiteboardOrchestrator:
                 print(f"Error processing current canvas image in teaching response: {e}")
             
             response = await chat.send_message_async(content_parts)
-            return response.text.strip()
+            # Strip markdown asterisks so TTS doesn't read them aloud (Sally's
+            # combined path already does this; keep Jess consistent).
+            return self.gemini_service._remove_markdown_asterisks(response.text.strip())
         else:
             # Use chat history approach for regular queries
             # Convert chat history to Gemini format
@@ -187,7 +189,9 @@ class AIWhiteboardOrchestrator:
                     print(f"Error processing canvas image in teaching response: {e}")
             
             response = await chat.send_message_async(content_parts)
-            return response.text.strip()
+            # Strip markdown asterisks so TTS doesn't read them aloud (Sally's
+            # combined path already does this; keep Jess consistent).
+            return self.gemini_service._remove_markdown_asterisks(response.text.strip())
     
     async def _generate_svg_visual(
         self, 

@@ -1155,29 +1155,28 @@ async def process_ai_tutor_query(
         
         print(f"Response from Gemini service: {response_data}\n")
         
-        # Update session with complete message history
-        session_info["messages"] = messages + [{"role": "assistant", "content": response_data["response"]}]
+        # Convert any LaTeX in the tutor's reply to plain text for display/TTS.
+        # Fall back to the raw text if conversion fails on a malformed string.
+        raw_response = response_data["response"]
+        try:
+            display_response = l2t.latex_to_text(raw_response)
+        except Exception as e:
+            print(f"LaTeX-to-text conversion failed, using raw response: {e}")
+            display_response = raw_response
+
+        # Persist the SAME text the client receives, so GET /session/{id}
+        # replays exactly what the student saw.
+        session_info["messages"] = messages + [{"role": "assistant", "content": display_response}]
         convo_service.redis_client.setex(
             f"ai_tutor:{request.sessionId}",
             3600,
             json.dumps(session_info)
         )
 
-        try: 
-            raw = response_data["response"]
-            print(f"raw text lookin like dis {raw}")
-            better = l2t.latex_to_text(raw)
-            print(f"converted from latex: {better[20]}")
-            return {
-                "response": better,
-                "svgContent": response_data.get("svgContent")
-            }
-        except:
-            return {
-                "response": response_data["response"],
-                "svgContent": response_data.get("svgContent")
-                # this is image is Y height, bump down Y marker by XYZ (juyst an idea)
-            }
+        return {
+            "response": display_response,
+            "svgContent": response_data.get("svgContent")
+        }
         
     except HTTPException:
         raise

@@ -527,71 +527,40 @@ function AITutorPage() {
       ctx.fillRect(0, drawingY, canvasRef.current.width, drawingAreaHeight);
       ctx.restore();
       
-      // Ensure SVG has proper namespace and encoding
+      // Ensure SVG has proper namespace and explicit dimensions so the raster
+      // <img> path renders EVERY element (text, rects, lines, arrows) — not just
+      // <text>. The previous text-only fast path silently dropped all geometry.
       let processedSvg = svgContent;
-      if (!svgContent.includes('xmlns=')) {
+      if (!processedSvg.includes('xmlns=')) {
         // Add namespace if missing
-        processedSvg = svgContent.replace('<svg', '<svg xmlns="http://www.w3.org/2000/svg"');
+        processedSvg = processedSvg.replace('<svg', '<svg xmlns="http://www.w3.org/2000/svg"');
       }
-      
+
+      // Inject width/height from the viewBox when absent. Without them, an SVG
+      // loaded into an Image() has unreliable intrinsic size across browsers —
+      // which is what made the raster path flaky and motivated the text-only hack.
+      if (!/\bwidth=/.test(processedSvg) || !/\bheight=/.test(processedSvg)) {
+        const viewBoxMatch = processedSvg.match(/viewBox=["']\s*[\d.]+\s+[\d.]+\s+([\d.]+)\s+([\d.]+)/);
+        const vbWidth = viewBoxMatch ? viewBoxMatch[1] : '600';
+        const vbHeight = viewBoxMatch ? viewBoxMatch[2] : '400';
+        processedSvg = processedSvg.replace('<svg', `<svg width="${vbWidth}" height="${vbHeight}"`);
+      }
+
       // Ensure proper XML declaration
       if (!processedSvg.startsWith('<?xml')) {
         processedSvg = '<?xml version="1.0" encoding="UTF-8"?>' + processedSvg;
       }
-      
-      // Try direct Canvas rendering first
-      try {
-        // Parse SVG and extract text elements for direct canvas rendering
-        const parser = new DOMParser();
-        const svgDoc = parser.parseFromString(processedSvg, 'image/svg+xml');
-        const svgElement = svgDoc.documentElement;
-        
-        // Check for parsing errors
-        if (svgDoc.querySelector('parsererror')) {
-          throw new Error('SVG parsing error');
-        }
-        
-        // Get all text elements
-        const textElements = svgElement.querySelectorAll('text');
-        
-        if (textElements.length > 0) {
-          // Direct canvas rendering for text elements
-          ctx.save();
-          
-          textElements.forEach(textEl => {
-            const x = parseFloat(textEl.getAttribute('x')) || 0;
-            const y = parseFloat(textEl.getAttribute('y')) || 0;
-            const fontSize = textEl.getAttribute('font-size') || '16px';
-            const fontFamily = textEl.getAttribute('font-family') || 'Arial';
-            const fill = textEl.getAttribute('fill') || '#2563eb';
-            const text = textEl.textContent;
-            
-            ctx.font = `${fontSize} ${fontFamily}`;
-            ctx.fillStyle = fill;
-            ctx.fillText(text, x, drawingY + y);
-          });
-          
-          ctx.restore();
-          console.log('SVG rendered directly to canvas using text elements');
-          
-          // Update positions
-          setCurrentDrawingY(drawingY);
-          const actualNextY = drawingY + 300 + 100; // Approximate height
-          setNextDrawingY(prevNext => Math.max(prevNext, actualNextY));
-          
-          // Scroll to the new content
-          const scrollContainer = document.querySelector('.whiteboard-scroll-container');
-          if (scrollContainer) {
-            scrollContainer.scrollTop = drawingY - 200;
-          }
-          
-          return; // Success, exit early
-        }
-      } catch (directRenderError) {
-        console.log('Direct canvas rendering failed, falling back to image method:', directRenderError);
+
+      // Validate the SVG before rasterizing; on a parse error, skip the draw
+      // rather than rendering a broken image.
+      const parser = new DOMParser();
+      const svgDoc = parser.parseFromString(processedSvg, 'image/svg+xml');
+      if (svgDoc.querySelector('parsererror')) {
+        console.error('SVG parse error — skipping render:', processedSvg.substring(0, 200));
+        return;
       }
-      
-      // Fallback to Image-based rendering
+
+      // Render the complete SVG via an Image (draws text AND geometry)
       const svgBlob = new Blob([processedSvg], { type: 'image/svg+xml;charset=utf-8' });
       const url = URL.createObjectURL(svgBlob);
       const img = new Image();
