@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../contexts/AuthContext';
 import '../styles/AITutorPage.css';
-import API_URL, { fetchWithAuth } from '../config/api';
+import API_URL, { fetchWithAuth, streamWithAuth } from '../config/api';
 import MathText from '../components/MathText';
 
 function AITutorPage() {
@@ -26,7 +26,8 @@ function AITutorPage() {
   const [previousCanvasImage, setPreviousCanvasImage] = useState(null); // Store previous canvas state
   const [hasNewDrawing, setHasNewDrawing] = useState(false); // Track if user drew since last query
   const [showAnnotationToggle, setShowAnnotationToggle] = useState(false); // Show manual annotation toggle
-  const [aiMode, setAiMode] = useState('sally'); // 'sally' or 'jess' mode
+  const [aiMode, setAiMode] = useState('gemini'); // provider: 'gemini' or 'claude'
+  const tutoringStateRef = useRef(null); // latest tutoring-state from SSE (debug/UI)
   const [toolMode, setToolMode] = useState('draw'); // 'draw' or 'text'
   const [textInputs, setTextInputs] = useState([]); // Text elements on canvas
   const [activeTextInput, setActiveTextInput] = useState(null);
@@ -393,8 +394,109 @@ function AITutorPage() {
     setMessages(prev => [...prev, newMessage]);
     setUserInput('');
 
+    // Cancel any speech still playing from a previous turn before we start.
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+    }
+
+    // State local to this streaming turn.
+    let assistantContent = '';   // full assistant text accumulated for the chat bubble
+    let speechBuffer = '';       // spoken text awaiting a sentence boundary
+    let bubbleAdded = false;     // whether the assistant bubble exists yet
+
+    const appendDelta = (delta) => {
+      if (!delta) return;
+      assistantContent += delta;
+
+      if (!bubbleAdded) {
+        bubbleAdded = true;
+        setMessages(prev => [...prev, { role: 'assistant', content: assistantContent }]);
+      } else {
+        setMessages(prev => {
+          const updated = [...prev];
+          updated[updated.length - 1] = { role: 'assistant', content: assistantContent };
+          return updated;
+        });
+      }
+
+      // Buffer speech on sentence boundaries: flush everything up to the last
+      // '.', '!' or '?' so the browser starts talking as soon as a sentence lands.
+      speechBuffer += delta;
+      let lastBoundary = -1;
+      for (let i = 0; i < speechBuffer.length; i++) {
+        const ch = speechBuffer[i];
+        if (ch === '.' || ch === '!' || ch === '?') {
+          lastBoundary = i;
+        }
+      }
+      if (lastBoundary >= 0) {
+        const sentence = speechBuffer.slice(0, lastBoundary + 1);
+        speechBuffer = speechBuffer.slice(lastBoundary + 1);
+        speakSentence(sentence);
+      }
+    };
+
+    const flushRemainingSpeech = () => {
+      if (speechBuffer.trim()) {
+        speakSentence(speechBuffer);
+      }
+      speechBuffer = '';
+    };
+
+    const renderSvg = (svgContent) => {
+      if (!svgContent) return;
+      if (context) {
+        renderSvgToCanvas(svgContent);
+      } else if (canvasRef.current) {
+        const ctx = canvasRef.current.getContext('2d');
+        if (ctx) {
+          setContext(ctx);
+          renderSvgToCanvasWithContext(svgContent, ctx);
+        }
+      }
+    };
+
+    const showStreamError = (message) => {
+      const text = message || 'Sorry, I encountered an error. Please try again.';
+      if (bubbleAdded) {
+        assistantContent += `\n\n${text}`;
+        setMessages(prev => {
+          const updated = [...prev];
+          updated[updated.length - 1] = { role: 'assistant', content: assistantContent };
+          return updated;
+        });
+      } else {
+        setMessages(prev => [...prev, { role: 'assistant', content: text }]);
+      }
+    };
+
+    const handleSSEEvent = (eventName, data) => {
+      switch (eventName) {
+        case 'text':
+          appendDelta(data.delta);
+          break;
+        case 'svg':
+          renderSvg(data.svgContent);
+          break;
+        case 'state':
+          tutoringStateRef.current = data; // stash for UI/debug
+          break;
+        case 'done':
+          flushRemainingSpeech();
+          break;
+        case 'error':
+          flushRemainingSpeech();
+          showStreamError(data.message);
+          break;
+        default:
+          break;
+      }
+    };
+
+    setIsProcessing(true);
+
     try {
-      const response = await fetchWithAuth(`${API_URL}/api/ai-tutor/process-query`, {
+      const response = await streamWithAuth(`${API_URL}/api/ai-tutor/process-query`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -402,59 +504,72 @@ function AITutorPage() {
         body: JSON.stringify(requestPayload),
       });
 
-      if (!response.ok) {
+      if (!response.ok || !response.body) {
         throw new Error('Failed to process query');
       }
 
-      const data = await response.json();
-      console.log('Full response from backend:', JSON.stringify(data, null, 2));
-      
-      // Extract response and SVG content from backend
-      const aiResponse = data.response;
-      const svgContent = data.svgContent;
-      
-      console.log('AI Response:', aiResponse);
-      console.log('SVG Content:', svgContent);
-      
-      // Add AI response to messages
-      setMessages(prev => [...prev, { role: 'assistant', content: aiResponse }]);
+      // Read the SSE stream incrementally. Events are separated by a blank line
+      // ("\n\n"); each event carries an `event:` name line and a `data:` JSON line.
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let sseBuffer = '';
 
-      // Render SVG content if any
-      if (svgContent) {
-        console.log('Rendering SVG content');
-        if (context) {
-          renderSvgToCanvas(svgContent);
-        } else if (canvasRef.current) {
-          const ctx = canvasRef.current.getContext('2d');
-          if (ctx) {
-            setContext(ctx);
-            renderSvgToCanvasWithContext(svgContent, ctx);
+      const processRawEvent = (rawEvent) => {
+        let eventName = 'message';
+        let dataStr = '';
+        for (const line of rawEvent.split('\n')) {
+          if (line.startsWith('event:')) {
+            eventName = line.slice(6).trim();
+          } else if (line.startsWith('data:')) {
+            dataStr += line.slice(5).trim();
           }
         }
-      } else {
-        console.log('No SVG content received');
+        if (!dataStr) return;
+        let data;
+        try {
+          data = JSON.parse(dataStr);
+        } catch (e) {
+          console.error('Failed to parse SSE data:', dataStr);
+          return;
+        }
+        handleSSEEvent(eventName, data);
+      };
+
+      // eslint-disable-next-line no-constant-condition
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        sseBuffer += decoder.decode(value, { stream: true });
+
+        let boundary;
+        while ((boundary = sseBuffer.indexOf('\n\n')) !== -1) {
+          const rawEvent = sseBuffer.slice(0, boundary);
+          sseBuffer = sseBuffer.slice(boundary + 2);
+          if (rawEvent.trim()) {
+            processRawEvent(rawEvent);
+          }
+        }
       }
 
-      // Speak the response
-      if (aiResponse) {
-        speakText(aiResponse);
+      // Flush any trailing buffered event and unspoken sentence.
+      if (sseBuffer.trim()) {
+        processRawEvent(sseBuffer);
       }
-      
-      // Reset drawing state and capture new previous state after AI responds
+      flushRemainingSpeech();
+
+      // Reset drawing state and capture new previous state after AI responds.
       setHasNewDrawing(false);
       setShowAnnotationToggle(false);
-      
-      // Capture the current state as the new "previous" state after AI drawing completes
+
+      // Capture the current state as the new "previous" state after SVG rendering.
       setTimeout(() => {
         captureAndStorePreviousCanvas();
-      }, 1000); // Give time for SVG rendering to complete
+      }, 1000);
 
     } catch (err) {
       console.error('Failed to process query:', err);
-      setMessages(prev => [...prev, { 
-        role: 'assistant', 
-        content: 'Sorry, I encountered an error. Please try again.' 
-      }]);
+      flushRemainingSpeech();
+      showStreamError();
     } finally {
       setIsProcessing(false);
     }
@@ -619,110 +734,33 @@ function AITutorPage() {
     }
   };
 
-  const speakText = async (text) => {
-    // Try Google Cloud TTS first
-    try {
+  // Voice = browser speechSynthesis only. Speaks one sentence at a time so the
+  // tutor starts talking as soon as the first sentence streams in. Utterances are
+  // queued by the browser; isSpeaking stays true until the queue drains.
+  const speakSentence = (sentence) => {
+    if (!('speechSynthesis' in window)) return;
+    const trimmed = (sentence || '').trim();
+    if (!trimmed) return;
+
+    const utterance = new SpeechSynthesisUtterance(trimmed);
+    utterance.rate = 1.0;
+    utterance.pitch = 1.0;
+
+    utterance.onstart = () => {
       setIsSpeaking(true);
-      
-      const apiKey = 'AIzaSyB_lC4glTCt2tmTWxq5yrO4sSNRWLITggI';
-      if (!apiKey) {
-        console.log('Google TTS API key not configured, falling back to browser TTS');
-        fallbackToSpeechSynthesis(text);
-        return;
+    };
+
+    const clearIfDone = () => {
+      // Only drop the speaking flag once nothing else is queued or playing.
+      if (!window.speechSynthesis.speaking && !window.speechSynthesis.pending) {
+        setIsSpeaking(false);
       }
-      
-      // Google Cloud TTS API request
-      const response = await fetch(`https://texttospeech.googleapis.com/v1/text:synthesize?key=${apiKey}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          input: { text },
-          voice: {
-            languageCode: 'en-US',
-            name: 'en-US-Journey-F', // Premium Neural voice - young, friendly female
-            // Alternative voices to try:
-            // 'en-US-Neural2-F' - Standard female neural voice
-            // 'en-US-Neural2-H' - Young female neural voice
-            // 'en-US-Wavenet-F' - Natural female wavenet voice
-            // 'en-US-Journey-D' - Warm male journey voice
-          },
-          audioConfig: {
-            audioEncoding: 'MP3',
-            speakingRate: 1.0, // Range: 0.25 to 4.0 (1.0 is normal speed)
-            pitch: 0, // Range: -20.0 to 20.0 semitones (0 is normal)
-            volumeGainDb: 0, // Range: -96.0 to 16.0 dB (0 is normal)
-          }
-        })
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error('Google TTS API error:', errorData);
-        throw new Error(errorData.error?.message || 'Google TTS request failed');
-      }
-      
-      const data = await response.json();
-      
-      // Create audio element from base64 response
-      const audio = new Audio(`data:audio/mp3;base64,${data.audioContent}`);
-      currentAudioRef.current = audio; // Store reference for stopping
-      
-      // Set up event handlers
-      audio.onloadeddata = () => {
-        console.log('Google TTS audio loaded successfully');
-      };
-      
-      audio.onended = () => {
-        setIsSpeaking(false);
-        currentAudioRef.current = null;
-      };
-      
-      audio.onerror = (error) => {
-        console.error('Google TTS audio playback error:', error);
-        setIsSpeaking(false);
-        currentAudioRef.current = null;
-        // Fallback to browser's speech synthesis
-        fallbackToSpeechSynthesis(text);
-      };
-      
-      // Play the audio
-      await audio.play();
-      console.log('Playing Google TTS audio');
-      
-    } catch (error) {
-      console.error('Failed to use Google TTS:', error);
-      setIsSpeaking(false);
-      currentAudioRef.current = null;
-      // Fallback to browser's speech synthesis
-      fallbackToSpeechSynthesis(text);
-    }
-  };
-  
-  const fallbackToSpeechSynthesis = (text) => {
-    if ('speechSynthesis' in window) {
-      // Cancel any ongoing speech
-      window.speechSynthesis.cancel();
-      
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.rate = 1.0;
-      utterance.pitch = 1.0;
-      
-      utterance.onstart = () => {
-        setIsSpeaking(true);
-      };
-      
-      utterance.onend = () => {
-        setIsSpeaking(false);
-      };
-      
-      utterance.onerror = () => {
-        setIsSpeaking(false);
-      };
-      
-      window.speechSynthesis.speak(utterance);
-    }
+    };
+
+    utterance.onend = clearIfDone;
+    utterance.onerror = clearIfDone;
+
+    window.speechSynthesis.speak(utterance);
   };
   
   const stopSpeaking = () => {
@@ -782,17 +820,17 @@ function AITutorPage() {
           {/* Toolbar */}
           <div className="toolbar-section animate-slide-up" style={{ animationDelay: '300ms' }}>
             <div className="tool-buttons">
-              {/* Sally/Jess Toggle */}
+              {/* Gemini/Claude Provider Toggle */}
               <button
                 className="tool-button"
-                onClick={() => setAiMode(aiMode === 'sally' ? 'jess' : 'sally')}
-                title={`Switch to ${aiMode === 'sally' ? 'Jess' : 'Sally'} mode`}
+                onClick={() => setAiMode(aiMode === 'gemini' ? 'claude' : 'gemini')}
+                title={`Switch to ${aiMode === 'gemini' ? 'Claude' : 'Gemini'} provider`}
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
                   <circle cx="12" cy="7" r="4"/>
                 </svg>
-                {aiMode === 'sally' ? 'Sally' : 'Jess'}
+                {aiMode === 'gemini' ? 'Gemini' : 'Claude'}
               </button>
               
               {/* Text Tool */}

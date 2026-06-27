@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException, Depends, status, Request, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.exceptions import RequestValidationError
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, StreamingResponse
 from sqlalchemy.orm import Session
 from pydantic import BaseModel, EmailStr
 from typing import List, Dict, Any, Optional
@@ -23,6 +23,8 @@ from .services.conversation_service import ConversationService
 from .services.knowledge_profile_service import KnowledgeProfileService
 from .services.education_mcp_server import EducationMCPServer
 from .services.gemini_mcp_client import GeminiMCPClient
+from .services.ai_whiteboard_orchestrator import AIWhiteboardOrchestrator
+from .services.providers.base import TutoringState
 from jose import jwt, JWTError
 
 # Imports for Google Sign-In
@@ -1107,82 +1109,137 @@ async def create_ai_tutor_session(
 
 l2t = LatexNodes2Text()
 
+def _sse_frame(event: str, data: Dict[str, Any]) -> str:
+    """Build one SSE frame. ``data`` must serialize to single-line JSON (no raw newlines)."""
+    return f"event: {event}\ndata: {json.dumps(data)}\n\n"
+
+
+def _persist_ai_tutor_turn(
+    db: Session,
+    session_id: str,
+    session_info: Dict[str, Any],
+    messages: List[Dict[str, str]],
+    display_response: str,
+    new_state: TutoringState,
+) -> None:
+    """Persist the turn to Redis (source of truth) then mirror to the DB row.
+
+    Redis is updated with the appended assistant message and the new tutoring_state.
+    The DB mirror is best-effort: any failure is logged and swallowed so a DB hiccup
+    never breaks the live stream (CONTRACTS.md "Persistence").
+    """
+    updated_messages = messages + [{"role": "assistant", "content": display_response}]
+    session_info["messages"] = updated_messages
+    session_info["tutoring_state"] = new_state.to_dict()
+    convo_service.redis_client.setex(
+        f"ai_tutor:{session_id}",
+        3600,
+        json.dumps(session_info),
+    )
+
+    try:
+        row = (
+            db.query(AITutorSession)
+            .filter(AITutorSession.session_id == session_id)
+            .first()
+        )
+        if row is None:
+            row = AITutorSession(
+                session_id=session_id,
+                user_id=session_info.get("user_id"),
+                room_uuid=session_info.get("room_uuid", ""),
+            )
+            db.add(row)
+
+        row.chat_history = updated_messages
+        row.session_summary = new_state.as_prompt_block()
+
+        if new_state.current_misconception:
+            misconceptions = list(row.identified_misconceptions or [])
+            if not misconceptions or misconceptions[-1] != new_state.current_misconception:
+                misconceptions.append(new_state.current_misconception)
+            row.identified_misconceptions = misconceptions
+
+        db.commit()
+    except Exception as e:
+        print(f"AI tutor DB mirror failed (Redis remains source of truth): {e}")
+        try:
+            db.rollback()
+        except Exception:
+            pass
+
+
 @app.post("/api/ai-tutor/process-query")
 async def process_ai_tutor_query(
     request: AITutorQueryRequest,
+    db: Session = Depends(get_db),
     current_user = Depends(get_current_user)
 ):
-    """Process a query from the AI tutor interface."""
-    try:
-        print(f"Received request: sessionId={request.sessionId}, query={request.query[:50]}...")
-        print(f"Has canvas image: {request.canvasImage is not None}")
-        print(f"Has previous canvas image: {request.previousCanvasImage is not None}")
-        print(f"Has annotation: {request.hasAnnotation}")
-        print(f"Canvas image length: {len(request.canvasImage) if request.canvasImage else 0}")
-        print(f"Previous canvas image length: {len(request.previousCanvasImage) if request.previousCanvasImage else 0}")
-        # Get session from Redis
-        session_data = convo_service.redis_client.get(f"ai_tutor:{request.sessionId}")
-        if not session_data:
-            raise HTTPException(status_code=404, detail="Session not found")
-        
-        session_info = json.loads(session_data)
-        
-        # Verify user owns this session
-        if session_info["user_id"] != current_user.id:
-            raise HTTPException(status_code=403, detail="Unauthorized")
-        
-        # Build complete message history including current query
-        messages = request.messages.copy() if request.messages else []
-        # Add current user query to messages for context
-        messages.append({"role": "user", "content": request.query})
-        print(f"Full message history with current query: {len(messages)} messages")
-        
-        # Import the new orchestrator
-        from app.services.ai_whiteboard_orchestrator import AIWhiteboardOrchestrator
-        
-        # Create orchestrator instance
-        orchestrator = AIWhiteboardOrchestrator(convo_service.gemini_service)
-        
-        # Process query using new multi-stage architecture
-        response_data = await orchestrator.process_student_query(
-            query=request.query,
-            canvas_image=request.canvasImage,
-            chat_history=messages,
-            previous_canvas_image=request.previousCanvasImage,
-            has_annotation=request.hasAnnotation,
-            mode=request.mode
-        )
-        
-        print(f"Response from Gemini service: {response_data}\n")
-        
-        # Convert any LaTeX in the tutor's reply to plain text for display/TTS.
-        # Fall back to the raw text if conversion fails on a malformed string.
-        raw_response = response_data["response"]
+    """Process a query from the AI tutor interface as an SSE stream.
+
+    Streams ``text`` deltas, then a single ``svg`` event, then a ``state`` event, then a
+    terminal ``done`` (or ``error``) event. See CONTRACTS.md "SSE event schema".
+    """
+    print(f"Received request: sessionId={request.sessionId}, query={request.query[:50]}...")
+    print(f"Has canvas image: {request.canvasImage is not None}, mode={request.mode}")
+
+    # Validate session + ownership BEFORE the stream starts so we can return HTTP errors.
+    session_data = convo_service.redis_client.get(f"ai_tutor:{request.sessionId}")
+    if not session_data:
+        raise HTTPException(status_code=404, detail="Session not found")
+
+    session_info = json.loads(session_data)
+    if session_info["user_id"] != current_user.id:
+        raise HTTPException(status_code=403, detail="Unauthorized")
+
+    # Build the message history (existing + current query) for persistence.
+    messages = request.messages.copy() if request.messages else []
+    messages.append({"role": "user", "content": request.query})
+
+    state = TutoringState.from_dict(session_info.get("tutoring_state"))
+    provider = convo_service.make_provider(request.mode)
+    orchestrator = AIWhiteboardOrchestrator()
+
+    async def event_stream():
         try:
-            display_response = l2t.latex_to_text(raw_response)
+            full_text = ""
+            new_state = state
+            async for channel, payload in orchestrator.run_turn(
+                provider=provider,
+                query=request.query,
+                canvas_image=request.canvasImage,
+                previous_canvas_image=request.previousCanvasImage,
+                has_annotation=request.hasAnnotation,
+                state=state,
+            ):
+                if channel == "text":
+                    yield _sse_frame("text", {"delta": payload})
+                elif channel == "svg":
+                    yield _sse_frame("svg", {"svgContent": payload})
+                elif channel == "state":
+                    new_state = payload
+                    yield _sse_frame("state", payload.to_dict())
+                elif channel == "full_text":
+                    full_text = payload
+
+            # Convert LaTeX in the assembled message to plain text for display/TTS,
+            # falling back to raw on any conversion error (matches Phase 0 behavior).
+            try:
+                display_response = l2t.latex_to_text(full_text)
+            except Exception as e:
+                print(f"LaTeX-to-text conversion failed, using raw response: {e}")
+                display_response = full_text
+
+            _persist_ai_tutor_turn(
+                db, request.sessionId, session_info, messages, display_response, new_state
+            )
+
+            yield _sse_frame("done", {"provider": provider.name})
         except Exception as e:
-            print(f"LaTeX-to-text conversion failed, using raw response: {e}")
-            display_response = raw_response
+            print(f"Error processing AI tutor query: {e}")
+            yield _sse_frame("error", {"message": f"Failed to process query: {str(e)}"})
 
-        # Persist the SAME text the client receives, so GET /session/{id}
-        # replays exactly what the student saw.
-        session_info["messages"] = messages + [{"role": "assistant", "content": display_response}]
-        convo_service.redis_client.setex(
-            f"ai_tutor:{request.sessionId}",
-            3600,
-            json.dumps(session_info)
-        )
-
-        return {
-            "response": display_response,
-            "svgContent": response_data.get("svgContent")
-        }
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        print(f"Error processing AI tutor query: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to process query: {str(e)}")
+    return StreamingResponse(event_stream(), media_type="text/event-stream")
     
 
 

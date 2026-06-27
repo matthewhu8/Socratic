@@ -1,218 +1,103 @@
-"""
-AI Whiteboard Orchestrator Service
-Coordinates 2-stage AI workflow 
+"""AI Whiteboard Orchestrator.
+
+Runs ONE provider-agnostic tutoring pipeline per turn (see CONTRACTS.md "Per-turn
+flow"). The provider (Gemini or Claude) is chosen per request by the caller and passed
+into ``run_turn``. The orchestrator:
+
+    1. diagnose -> TeachingPlan
+    2. stream_text -> teaching text deltas (forwarded to the client over SSE)
+    3. generate_svg (only when plan.should_draw)
+    4. apply_state_update -> the new rolling TutoringState (plain Python, no LLM call)
+
+It yields ``(channel, payload)`` tuples so the route layer can translate them into SSE
+frames and persist the result.
 """
 
-import asyncio
-import json
-from typing import Dict, List, Optional, Any
+from typing import Any, AsyncIterator, Optional, Tuple
+
+from .providers.base import TeachingPlan, TutoringState, WhiteboardProvider
+
+
 class AIWhiteboardOrchestrator:
-    def __init__(self, gemini_service):
+    def __init__(self, gemini_service: Optional[Any] = None) -> None:
+        # gemini_service is accepted for back-compat with existing callers but is
+        # unused — the pipeline now runs entirely through the provider interface.
         self.gemini_service = gemini_service
-        
-    async def process_student_query(
-        self, 
-        query: str, 
+
+    async def run_turn(
+        self,
+        provider: WhiteboardProvider,
+        query: str,
         canvas_image: Optional[str],
-        chat_history: List[Dict[str, str]],
-        previous_canvas_image: Optional[str] = None,
-        has_annotation: bool = False,
-        mode: Optional[str] = "jess"
-    ) -> Dict[str, Any]:
+        previous_canvas_image: Optional[str],
+        has_annotation: bool,
+        state: TutoringState,
+    ) -> AsyncIterator[Tuple[str, Any]]:
+        """Run a single tutoring turn, yielding (channel, payload) events.
+
+        Channels, in order:
+            ("text", delta)      — repeated, one per streamed teaching-text chunk
+            ("svg", svg|None)    — once, after the text stream completes
+            ("state", new_state) — once, the updated TutoringState
+            ("full_text", str)   — once, the assembled teaching text
+            ("plan", plan)       — once, the TeachingPlan (for logging/debug)
         """
-        Orchestrates the processing of student queries - supports both single and two-stage workflows
-        Mode: "sally" for single prompt approach, "jess" for two-stage approach
-        """
-        
-        # Use mode parameter to determine approach
-        if mode == "sally":
-            print("Using single-prompt approach (Sally mode)")
-            return await self._generate_combined_response(
-                query, canvas_image, chat_history, previous_canvas_image, has_annotation
+        plan = await provider.diagnose(query, canvas_image, state)
+
+        chunks: list[str] = []
+        async for delta in provider.stream_text(query, canvas_image, state, plan):
+            chunks.append(delta)
+            yield ("text", delta)
+        teaching_text = "".join(chunks)
+
+        svg: Optional[str] = None
+        if plan.should_draw:
+            svg = await provider.generate_svg(
+                query, state, plan, teaching_text, canvas_image
             )
-        else:
-            print("Using two-stage approach (Jess mode)")
-            return await self._generate_two_stage_response(
-                query, canvas_image, chat_history, previous_canvas_image, has_annotation
-            )
-    
-    async def _generate_combined_response(
-        self, 
-        query: str, 
-        canvas_image: Optional[str],
-        chat_history: List[Dict[str, str]],
-        previous_canvas_image: Optional[str] = None,
-        has_annotation: bool = False
-    ) -> Dict[str, Any]:
-        """
-        Generate combined response using single Gemini call.
-        """
-        
-        result = await self.gemini_service.generate_combined_response(
-            query=query,
-            canvas_image=canvas_image,
-            chat_history=chat_history,
-            previous_canvas_image=previous_canvas_image,
-            has_annotation=has_annotation
+        yield ("svg", svg)
+
+        new_state = self.apply_state_update(
+            state, plan, teaching_text, drew=svg is not None
         )
-        
-        print(f"Single-prompt result: {result}")
-        return result
-    
-    async def _generate_two_stage_response(
-        self, 
-        query: str, 
-        canvas_image: Optional[str],
-        chat_history: List[Dict[str, str]],
-        previous_canvas_image: Optional[str] = None,
-        has_annotation: bool = False
-    ) -> Dict[str, Any]:
+        yield ("state", new_state)
+        yield ("full_text", teaching_text)
+        yield ("plan", plan)
+
+    def apply_state_update(
+        self,
+        state: TutoringState,
+        plan: TeachingPlan,
+        full_text: str,
+        drew: bool,
+    ) -> TutoringState:
+        """Fold the TeachingPlan into a new TutoringState (CONTRACTS.md update rules).
+
+        Plain Python, no LLM call. List fields are capped to the last ~8 entries to
+        keep the state small enough to ride in every prompt's volatile suffix.
         """
-        Generate response using original two-stage workflow (kept for backward compatibility).
-        """
-        
-        teaching_response = await self._generate_teaching_response(query, canvas_image, chat_history, previous_canvas_image, has_annotation)
-        print(f"step 1 generated: {teaching_response}")
-        
-        svg_content = await self._generate_svg_visual(query, canvas_image, teaching_response, chat_history, previous_canvas_image, has_annotation)
-        print(f"Step 2: Generated visual for current step with teaching_response: {teaching_response}\n")
-        
-        return {
-            "response": teaching_response,
-            "svgContent": svg_content
-        }
-    
-    
-    async def _generate_teaching_response(
-        self, 
-        query: str, 
-        canvas_image: Optional[str],
-        chat_history: List[Dict[str, str]],
-        previous_canvas_image: Optional[str] = None,
-        has_annotation: bool = False
-    ) -> str:
-        """
-        Generate a teaching response using optimized chat-based approach.
-        Generate a teaching response using optimized chat-based approach.
-        """
-        
-        # Use optimized approach with chat history instead of building prompt
-        if has_annotation and previous_canvas_image and canvas_image:
-            # For annotation queries, use chat history approach with both images
-            # Convert chat history to Gemini format
-            formatted_history = []
-            recent_history = chat_history[-10:] if len(chat_history) > 10 else chat_history
-            
-            for msg in recent_history:
-                role = "user" if msg.get("role") == "user" else "model"
-                formatted_history.append({
-                    "role": role,
-                    "parts": [msg.get("content", "")]
-                })
-            
-            # Start chat with history pre-loaded
-            chat = self.gemini_service.text_model.start_chat(history=formatted_history)
-            
-            # Context for annotation
-            annotation_context = "IMPORTANT: The student has made new annotations/drawings on the whiteboard since our last interaction. Two images are provided - the previous state and current state. The student is likely referencing their new markings when asking this question. Pay close attention to what they've added."
-            
-            minimal_prompt = f"Student asks: \"{query}\"\nCanvas: Has student annotations\n{annotation_context}\nProvide guidance."
-            
-            # Prepare content parts with both images
-            content_parts = [minimal_prompt]
-            
-            # Add previous canvas image
-            try:
-                import base64
-                from PIL import Image
-                import io
-                
-                # Process previous image
-                if previous_canvas_image.startswith('data:image'):
-                    previous_canvas_image = previous_canvas_image.split(',')[1]
-                prev_image_data = base64.b64decode(previous_canvas_image)
-                prev_pil_image = Image.open(io.BytesIO(prev_image_data))
-                content_parts.append("Previous canvas state:")
-                content_parts.append(prev_pil_image)
-            except Exception as e:
-                print(f"Error processing previous canvas image in teaching response: {e}")
-            
-            # Add current canvas image
-            try:
-                if canvas_image.startswith('data:image'):
-                    canvas_image = canvas_image.split(',')[1]
-                curr_image_data = base64.b64decode(canvas_image)
-                curr_pil_image = Image.open(io.BytesIO(curr_image_data))
-                content_parts.append("Current canvas state (with new annotations in black):")
-                content_parts.append(curr_pil_image)
-            except Exception as e:
-                print(f"Error processing current canvas image in teaching response: {e}")
-            
-            response = await chat.send_message_async(content_parts)
-            # Strip markdown asterisks so TTS doesn't read them aloud (Sally's
-            # combined path already does this; keep Jess consistent).
-            return self.gemini_service._remove_markdown_asterisks(response.text.strip())
-        else:
-            # Use chat history approach for regular queries
-            # Convert chat history to Gemini format
-            formatted_history = []
-            recent_history = chat_history[-10:] if len(chat_history) > 10 else chat_history
-            
-            for msg in recent_history:
-                role = "user" if msg.get("role") == "user" else "model"
-                formatted_history.append({
-                    "role": role,
-                    "parts": [msg.get("content", "")]
-                })
-            
-            # Start chat with history pre-loaded
-            chat = self.gemini_service.text_model.start_chat(history=formatted_history)
-            
-            # MINIMAL prompt - system instruction handles the rest
-            canvas_state = "Has student drawing" if canvas_image else "Empty"
-            minimal_prompt = f"Student asks: \"{query}\"\nCanvas: {canvas_state}\nProvide guidance."
-            
-            # Prepare content parts
-            content_parts = [minimal_prompt]
-            if canvas_image:
-                try:
-                    import base64
-                    from PIL import Image
-                    import io
-                    
-                    if canvas_image.startswith('data:image'):
-                        canvas_image = canvas_image.split(',')[1]
-                    image_data = base64.b64decode(canvas_image)
-                    pil_image = Image.open(io.BytesIO(image_data))
-                    content_parts.append(pil_image)
-                except Exception as e:
-                    print(f"Error processing canvas image in teaching response: {e}")
-            
-            response = await chat.send_message_async(content_parts)
-            # Strip markdown asterisks so TTS doesn't read them aloud (Sally's
-            # combined path already does this; keep Jess consistent).
-            return self.gemini_service._remove_markdown_asterisks(response.text.strip())
-    
-    async def _generate_svg_visual(
-        self, 
-        query: str, 
-        canvas_image: Optional[str],
-        teaching_response: str, 
-        chat_history: List[Dict[str, str]],
-        previous_canvas_image: Optional[str] = None,
-        has_annotation: bool = False
-    ) -> Optional[str]:
-        """
-        Generate SVG visual using optimized chat history method.
-        """
-        
-        # Use the new optimized SVG generation method
-        return await self.gemini_service.generate_svg_with_chat_history(
-            query=query,
-            teaching_response=teaching_response,
-            chat_history=chat_history,
-            canvas_image=canvas_image
-        )
-    
-    
- 
+        new_state = TutoringState.from_dict(state.to_dict())
+
+        if plan.problem and not new_state.problem:
+            new_state.problem = plan.problem
+
+        if plan.student_observation:
+            new_state.student_attempts.append(plan.student_observation)
+
+        if plan.misconception:
+            new_state.current_misconception = plan.misconception
+
+        new_state.last_strategy = plan.strategy
+
+        if drew:
+            summary = plan.rationale or f"diagram for: {plan.strategy}"
+            new_state.already_drawn.append(summary)
+
+        new_state.student_attempts = self._cap(new_state.student_attempts)
+        new_state.already_drawn = self._cap(new_state.already_drawn)
+        return new_state
+
+    @staticmethod
+    def _cap(items: list[str], limit: int = 8) -> list[str]:
+        """Keep only the last ``limit`` entries of a rolling list field."""
+        return items[-limit:] if len(items) > limit else items
