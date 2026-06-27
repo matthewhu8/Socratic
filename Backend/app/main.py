@@ -51,6 +51,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:3000",  # React frontend in local development
+        "http://localhost:3100",  # React frontend (fallback port when 3000 is taken)
         "http://localhost:80",    # Frontend in containerized environment
         "http://localhost",       # Frontend in containerized environment (default port 80)
         "http://0.0.0.0:3000",
