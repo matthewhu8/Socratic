@@ -13,7 +13,6 @@ export function useTutorSession({ currentUser, getBoard, speakSentence, cancelSp
   const [error, setError] = useState(null);
   const [messages, setMessages] = useState([]);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [aiMode, setAiMode] = useState('gemini');
 
   // Snapshot of the board right after the previous AI turn — used for the
   // backend's annotation diff (what the student drew on top of).
@@ -61,7 +60,7 @@ export function useTutorSession({ currentUser, getBoard, speakSentence, cancelSp
         canvasImage: currentImage,
         previousCanvasImage: isAnnotation ? previousBoardImageRef.current : null,
         hasAnnotation: isAnnotation,
-        mode: aiMode,
+        mode: 'claude',
       };
 
       setIsProcessing(true);
@@ -168,7 +167,7 @@ export function useTutorSession({ currentUser, getBoard, speakSentence, cancelSp
         setIsProcessing(false);
       }
     },
-    [aiMode, cancelSpeech, getBoard, isProcessing, messages, sessionId, speakSentence]
+    [cancelSpeech, getBoard, isProcessing, messages, sessionId, speakSentence]
   );
 
   return {
@@ -177,8 +176,6 @@ export function useTutorSession({ currentUser, getBoard, speakSentence, cancelSp
     error,
     messages,
     isProcessing,
-    aiMode,
-    setAiMode,
     sendQuery,
     retry: initializeSession,
   };

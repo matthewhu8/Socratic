@@ -28,8 +28,6 @@ function AITutorPage() {
     error,
     messages,
     isProcessing,
-    aiMode,
-    setAiMode,
     sendQuery,
     retry,
   } = useTutorSession({ currentUser, getBoard, speakSentence, cancelSpeech });
@@ -51,8 +49,6 @@ function AITutorPage() {
   return (
     <Box sx={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
       <WhiteboardAppBar
-        aiMode={aiMode}
-        onAiModeChange={setAiMode}
         onClear={handleClear}
         isSpeaking={isSpeaking}
         onStopSpeech={handleStopSpeech}

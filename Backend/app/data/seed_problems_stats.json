@@ -1,0 +1,443 @@
+[
+  {
+    "slug": "stat-desc-001",
+    "kc_ids": ["stat-descriptive"],
+    "content": "The data set is: 3, 7, 7, 8, 9, 10, 12. Find the mean, median, and interquartile range.",
+    "command_term": "find",
+    "ib_topic_ref": "4.1",
+    "domain": "Statistics & Probability",
+    "difficulty_tier": "SL_foundation",
+    "difficulty_estimate": 1.5,
+    "answer": "Mean = 8, Median = 8, IQR = 3",
+    "worked_solution": "Mean = (3+7+7+8+9+10+12)/7 = 56/7 = 8. Median (4th value) = 8. Q1 = median of {3,7,7} = 7. Q3 = median of {9,10,12} = 10. IQR = 10 − 7 = 3.",
+    "distractors": [
+      {"value": "Mean = 8, Median = 7, IQR = 3", "misconception_label": "Took median as the middle of the range instead of the middle data value"},
+      {"value": "Mean = 8, Median = 8, IQR = 9", "misconception_label": "Computed range (12−3=9) instead of IQR"},
+      {"value": "Mean = 8, Median = 8, IQR = 5", "misconception_label": "Used Q3−Q1 = 10−5 (computed Q1 as average of first two values)"}
+    ],
+    "hint_l1": "Arrange the data in order. Median is the middle value. For IQR, split at the median and find Q1 and Q3.",
+    "hint_l2": "7 values → median is 4th value = 8. Lower half {3,7,7}: Q1 = 7. Upper half {9,10,12}: Q3 = 10.",
+    "hint_l3": "Mean = 56/7 = 8. IQR = 10 − 7 = 3.",
+    "re_solve_verified": true
+  },
+  {
+    "slug": "stat-desc-002",
+    "kc_ids": ["stat-descriptive"],
+    "content": "The mean of 5 numbers is 14. A 6th number is added and the new mean is 13. Find the 6th number.",
+    "command_term": "find",
+    "ib_topic_ref": "4.1",
+    "domain": "Statistics & Probability",
+    "difficulty_tier": "SL_foundation",
+    "difficulty_estimate": 2.0,
+    "answer": "The 6th number is 8",
+    "worked_solution": "Sum of 5 numbers = 5 × 14 = 70. New sum of 6 = 6 × 13 = 78. 6th number = 78 − 70 = 8.",
+    "distractors": [
+      {"value": "12", "misconception_label": "Computed 14 − (14−13) = 13 and then guessed, or used 13 − 1 = 12"},
+      {"value": "−1", "misconception_label": "Subtracted new mean from old: 14 − 13 = 1 → −1 via sign error"},
+      {"value": "4", "misconception_label": "Computed 6×13 − 5×14 = 78 − 70 = 8 but made arithmetic error: 6×13=72, 72−70=2... varies"}
+    ],
+    "hint_l1": "Use: sum = mean × count for both cases. The 6th number is the difference in sums.",
+    "hint_l2": "Original sum = 5 × 14. New sum = 6 × 13. 6th number = new sum − original sum.",
+    "hint_l3": "70 to 78: 6th number = 78 − 70 = 8.",
+    "re_solve_verified": true
+  },
+  {
+    "slug": "stat-desc-003",
+    "kc_ids": ["stat-descriptive"],
+    "content": "A data set has mean 6 and standard deviation 2. Each value is multiplied by 3 and then 4 is added. Find the new mean and standard deviation.",
+    "command_term": "find",
+    "ib_topic_ref": "4.1",
+    "domain": "Statistics & Probability",
+    "difficulty_tier": "SL_challenge",
+    "difficulty_estimate": 2.5,
+    "answer": "New mean = 22, new standard deviation = 6",
+    "worked_solution": "For y = 3x + 4: E(y) = 3E(x) + 4 = 3(6) + 4 = 22. SD(y) = |3| × SD(x) = 3 × 2 = 6. (Adding a constant does not affect SD.)",
+    "distractors": [
+      {"value": "New mean = 22, new SD = 10", "misconception_label": "Computed SD as 3×2+4=10 (incorrectly added the constant)"},
+      {"value": "New mean = 18, new SD = 6", "misconception_label": "Forgot to add 4 to the mean"},
+      {"value": "New mean = 22, new SD = 2", "misconception_label": "Left SD unchanged — forgot multiplication scales SD"}
+    ],
+    "hint_l1": "Adding a constant shifts the mean but does not change spread. Multiplying by a constant scales both mean and SD.",
+    "hint_l2": "New mean = 3(6) + 4. New SD = 3 × 2 (the +4 does not affect SD).",
+    "hint_l3": "Mean = 22, SD = 6.",
+    "re_solve_verified": true
+  },
+  {
+    "slug": "stat-prob-001",
+    "kc_ids": ["stat-probability-basics"],
+    "content": "A fair die is rolled. Find P(even number or greater than 4).",
+    "command_term": "find",
+    "ib_topic_ref": "4.3",
+    "domain": "Statistics & Probability",
+    "difficulty_tier": "SL_foundation",
+    "difficulty_estimate": 1.5,
+    "answer": "2/3",
+    "worked_solution": "A = {2,4,6}, B = {5,6}. A∪B = {2,4,5,6}. P(A∪B) = 4/6 = 2/3. Or: P(A)+P(B)−P(A∩B) = 3/6+2/6−1/6 = 4/6 = 2/3.",
+    "distractors": [
+      {"value": "5/6", "misconception_label": "Added P(A)+P(B) without subtracting P(A∩B) = P({6})"},
+      {"value": "1/2", "misconception_label": "Only counted even numbers (P(A)=1/2), ignored >4"},
+      {"value": "1/3", "misconception_label": "Computed P(A∩B) instead of P(A∪B)"}
+    ],
+    "hint_l1": "List the favourable outcomes for each event. Use P(A∪B) = P(A) + P(B) − P(A∩B).",
+    "hint_l2": "A = {2,4,6}, B = {5,6}, A∩B = {6}. P(A∪B) = 3/6 + 2/6 − 1/6.",
+    "hint_l3": "P(A∪B) = 4/6 = 2/3.",
+    "re_solve_verified": true
+  },
+  {
+    "slug": "stat-prob-002",
+    "kc_ids": ["stat-probability-basics"],
+    "content": "P(A) = 0.4, P(B) = 0.3, P(A∪B) = 0.6. Find P(A∩B) and determine whether A and B are mutually exclusive.",
+    "command_term": "find",
+    "ib_topic_ref": "4.3",
+    "domain": "Statistics & Probability",
+    "difficulty_tier": "SL_foundation",
+    "difficulty_estimate": 2.0,
+    "answer": "P(A∩B) = 0.1; not mutually exclusive",
+    "worked_solution": "P(A∩B) = P(A)+P(B)−P(A∪B) = 0.4+0.3−0.6 = 0.1. Since P(A∩B) = 0.1 ≠ 0, the events are not mutually exclusive.",
+    "distractors": [
+      {"value": "P(A∩B) = 0.7, mutually exclusive", "misconception_label": "Used P(A∩B) = P(A)+P(B) (ignored P(A∪B))"},
+      {"value": "P(A∩B) = 0.1, mutually exclusive", "misconception_label": "Correct value but wrong conclusion — mutually exclusive requires P(A∩B)=0"},
+      {"value": "P(A∩B) = 0.5", "misconception_label": "Computed P(A∩B) = P(A∪B)−P(A)−P(B) with sign error: 0.6−0.7=−0.1 → 0.5 via some error"}
+    ],
+    "hint_l1": "Use the addition rule: P(A∪B) = P(A)+P(B)−P(A∩B). Mutually exclusive means P(A∩B)=0.",
+    "hint_l2": "Rearrange: P(A∩B) = P(A)+P(B)−P(A∪B) = 0.4+0.3−0.6.",
+    "hint_l3": "P(A∩B) = 0.1 ≠ 0, so not mutually exclusive.",
+    "re_solve_verified": true
+  },
+  {
+    "slug": "stat-prob-003",
+    "kc_ids": ["stat-probability-basics"],
+    "content": "A bag contains 5 red and 3 blue balls. Two balls are drawn without replacement. Find the probability they are the same colour.",
+    "command_term": "find",
+    "ib_topic_ref": "4.3",
+    "domain": "Statistics & Probability",
+    "difficulty_tier": "SL_challenge",
+    "difficulty_estimate": 2.5,
+    "answer": "13/28",
+    "worked_solution": "P(RR) = (5/8)(4/7) = 20/56. P(BB) = (3/8)(2/7) = 6/56. P(same) = 26/56 = 13/28.",
+    "distractors": [
+      {"value": "25/64", "misconception_label": "Drew with replacement: (5/8)²+(3/8)² = 34/64 ≠ 25/64 — some arithmetic error"},
+      {"value": "1/2", "misconception_label": "Guessed from symmetry without calculating"},
+      {"value": "15/56", "misconception_label": "Computed P(RR) = (5/8)(3/7) — used the wrong second-draw probability for red"}
+    ],
+    "hint_l1": "Without replacement: the second draw depends on the first. Use a tree diagram.",
+    "hint_l2": "P(RR) = (5/8)×(4/7) and P(BB) = (3/8)×(2/7). Add these.",
+    "hint_l3": "20/56 + 6/56 = 26/56 = 13/28.",
+    "re_solve_verified": true
+  },
+  {
+    "slug": "stat-cond-001",
+    "kc_ids": ["stat-conditional"],
+    "content": "P(A) = 0.5, P(B) = 0.4, P(A∩B) = 0.2. Find P(A|B) and determine if A and B are independent.",
+    "command_term": "find",
+    "ib_topic_ref": "4.4",
+    "domain": "Statistics & Probability",
+    "difficulty_tier": "SL_challenge",
+    "difficulty_estimate": 2.0,
+    "answer": "P(A|B) = 0.5; A and B are independent",
+    "worked_solution": "P(A|B) = P(A∩B)/P(B) = 0.2/0.4 = 0.5. Since P(A|B) = P(A) = 0.5, the events are independent.",
+    "distractors": [
+      {"value": "P(A|B) = 0.2, not independent", "misconception_label": "Used P(A∩B) directly instead of dividing by P(B)"},
+      {"value": "P(A|B) = 0.5, but not independent because P(A∩B) ≠ 0", "misconception_label": "Correct value but wrong independence test — independence requires P(A∩B)=P(A)P(B), not P(A∩B)=0"},
+      {"value": "P(A|B) = 0.25", "misconception_label": "Divided P(B) by P(A∩B) instead of vice versa: 0.4/0.2 then inverted"}
+    ],
+    "hint_l1": "P(A|B) = P(A∩B)/P(B). For independence, check if P(A|B) = P(A).",
+    "hint_l2": "P(A|B) = 0.2/0.4 = 0.5. Compare with P(A) = 0.5.",
+    "hint_l3": "Equal, so A and B are independent.",
+    "re_solve_verified": true
+  },
+  {
+    "slug": "stat-cond-002",
+    "kc_ids": ["stat-conditional"],
+    "content": "A bag has 4 red and 6 blue balls. Two balls are drawn with replacement. Find P(exactly one red).",
+    "command_term": "find",
+    "ib_topic_ref": "4.4",
+    "domain": "Statistics & Probability",
+    "difficulty_tier": "SL_challenge",
+    "difficulty_estimate": 2.5,
+    "answer": "12/25",
+    "worked_solution": "P(RB) = (4/10)(6/10) = 24/100. P(BR) = (6/10)(4/10) = 24/100. P(exactly one red) = 48/100 = 12/25.",
+    "distractors": [
+      {"value": "24/100", "misconception_label": "Found P(RB) only, forgot P(BR)"},
+      {"value": "4/10 = 2/5", "misconception_label": "Gave P(red on one draw) instead of P(exactly one red in two draws)"},
+      {"value": "16/25", "misconception_label": "Computed P(at least one red) = 1 − P(BB) = 1 − 36/100 = 64/100 = 16/25 — correct for at least one, wrong question"}
+    ],
+    "hint_l1": "With replacement, draws are independent. Use a tree diagram. Two paths give exactly one red.",
+    "hint_l2": "P(RB) = (4/10)(6/10) and P(BR) = (6/10)(4/10). Add both paths.",
+    "hint_l3": "24/100 + 24/100 = 48/100 = 12/25.",
+    "re_solve_verified": true
+  },
+  {
+    "slug": "stat-cond-003",
+    "kc_ids": ["stat-conditional"],
+    "content": "In a school, 60% of students play sport, 40% play a musical instrument, and 25% do both. A student is chosen at random. Given they play a musical instrument, find the probability they also play sport.",
+    "command_term": "find",
+    "ib_topic_ref": "4.4",
+    "domain": "Statistics & Probability",
+    "difficulty_tier": "SL_challenge",
+    "difficulty_estimate": 2.5,
+    "answer": "5/8",
+    "worked_solution": "P(S|M) = P(S∩M)/P(M) = 0.25/0.40 = 5/8.",
+    "distractors": [
+      {"value": "0.25", "misconception_label": "Used P(S∩M) directly without conditioning on M"},
+      {"value": "3/8", "misconception_label": "Computed P(M|S) = 0.25/0.60 instead of P(S|M)"},
+      {"value": "0.15", "misconception_label": "Computed P(S) − P(S∩M) = 0.60 − 0.25 (sport only) then incorrectly used it"}
+    ],
+    "hint_l1": "Use the conditional probability formula P(A|B) = P(A∩B)/P(B).",
+    "hint_l2": "P(S|M) = P(S∩M)/P(M) = 0.25/0.40.",
+    "hint_l3": "= 5/8.",
+    "re_solve_verified": true
+  },
+  {
+    "slug": "stat-drv-001",
+    "kc_ids": ["stat-discrete-rv"],
+    "content": "X has distribution: P(X=1) = 0.3, P(X=2) = 0.4, P(X=3) = 0.3. Find E(X) and Var(X).",
+    "command_term": "find",
+    "ib_topic_ref": "4.5",
+    "domain": "Statistics & Probability",
+    "difficulty_tier": "SL_challenge",
+    "difficulty_estimate": 2.5,
+    "answer": "E(X) = 2, Var(X) = 0.6",
+    "worked_solution": "E(X) = 1(0.3)+2(0.4)+3(0.3) = 0.3+0.8+0.9 = 2. E(X²) = 1(0.3)+4(0.4)+9(0.3) = 0.3+1.6+2.7 = 4.6. Var(X) = E(X²)−[E(X)]² = 4.6−4 = 0.6.",
+    "distractors": [
+      {"value": "E(X) = 2, Var(X) = 2.6", "misconception_label": "Used E(X²) as Var(X) without subtracting [E(X)]²"},
+      {"value": "E(X) = 6, Var(X) = 0.6", "misconception_label": "Summed the x-values without multiplying by probabilities"},
+      {"value": "E(X) = 2, Var(X) = 0.4", "misconception_label": "Computed E(X²)−E(X) = 4.6−2 = 2.6 → subtraction error giving 0.4 via another route"}
+    ],
+    "hint_l1": "E(X) = Σ x·P(X=x). For Var(X), use Var(X) = E(X²) − [E(X)]².",
+    "hint_l2": "E(X²) = 1²(0.3) + 2²(0.4) + 3²(0.3) = 0.3 + 1.6 + 2.7 = 4.6.",
+    "hint_l3": "Var(X) = 4.6 − 2² = 0.6.",
+    "re_solve_verified": true
+  },
+  {
+    "slug": "stat-drv-002",
+    "kc_ids": ["stat-discrete-rv"],
+    "content": "A random variable X has P(X=0) = k, P(X=1) = 2k, P(X=2) = 3k. Find k and E(X).",
+    "command_term": "find",
+    "ib_topic_ref": "4.5",
+    "domain": "Statistics & Probability",
+    "difficulty_tier": "SL_challenge",
+    "difficulty_estimate": 2.5,
+    "answer": "k = 1/6, E(X) = 4/3",
+    "worked_solution": "Probabilities sum to 1: k+2k+3k = 6k = 1 → k = 1/6. E(X) = 0(1/6)+1(2/6)+2(3/6) = 0 + 2/6 + 6/6 = 8/6 = 4/3.",
+    "distractors": [
+      {"value": "k = 1/3, E(X) = 1", "misconception_label": "Set k+2k = 1 (only two terms)"},
+      {"value": "k = 1/6, E(X) = 1", "misconception_label": "Correct k but computed E(X) as (0+1+2)/3 (unweighted average)"},
+      {"value": "k = 1/6, E(X) = 8/3", "misconception_label": "Did not divide by 6 in E(X): summed 0+2+6 = 8 without denominator"}
+    ],
+    "hint_l1": "The sum of all probabilities must equal 1. Use this to find k, then compute E(X) = Σ x·P(X=x).",
+    "hint_l2": "k + 2k + 3k = 1 → k = 1/6. Then E(X) = 0(1/6) + 1(2/6) + 2(3/6).",
+    "hint_l3": "k = 1/6. E(X) = 8/6 = 4/3.",
+    "re_solve_verified": true
+  },
+  {
+    "slug": "stat-drv-003",
+    "kc_ids": ["stat-discrete-rv"],
+    "content": "X has E(X) = 3 and Var(X) = 2. Find E(2X + 1) and Var(3X − 2).",
+    "command_term": "find",
+    "ib_topic_ref": "4.5",
+    "domain": "Statistics & Probability",
+    "difficulty_tier": "SL_challenge",
+    "difficulty_estimate": 3.0,
+    "answer": "E(2X+1) = 7, Var(3X−2) = 18",
+    "worked_solution": "E(2X+1) = 2E(X)+1 = 2(3)+1 = 7. Var(3X−2) = 3² Var(X) = 9(2) = 18. (Subtracting a constant doesn't change variance.)",
+    "distractors": [
+      {"value": "E(2X+1) = 7, Var(3X−2) = 4", "misconception_label": "Computed Var(3X−2) = Var(3X) = 3×2 = 6 or used 3−2=1 somewhere"},
+      {"value": "E(2X+1) = 7, Var(3X−2) = 20", "misconception_label": "Used Var(3X−2) = 9Var(X) − 2 = 16 or 9(2)+2 = 20"},
+      {"value": "E(2X+1) = 8, Var(3X−2) = 18", "misconception_label": "Computed E(2X+1) = 2(3)+2 = 8 (added 2 instead of 1)"}
+    ],
+    "hint_l1": "Use: E(aX+b) = aE(X)+b and Var(aX+b) = a²Var(X). Adding/subtracting a constant does not change variance.",
+    "hint_l2": "E(2X+1) = 2(3)+1. Var(3X−2) = 3²×Var(X) = 9×2.",
+    "hint_l3": "E = 7, Var = 18.",
+    "re_solve_verified": true
+  },
+  {
+    "slug": "stat-binom-001",
+    "kc_ids": ["stat-binomial"],
+    "content": "X ~ B(10, 0.3). Find P(X = 4) and E(X). Give P(X = 4) to 3 significant figures.",
+    "command_term": "find",
+    "ib_topic_ref": "4.6",
+    "domain": "Statistics & Probability",
+    "difficulty_tier": "SL_challenge",
+    "difficulty_estimate": 2.0,
+    "answer": "P(X=4) ≈ 0.200, E(X) = 3",
+    "worked_solution": "P(X=4) = C(10,4)(0.3)⁴(0.7)⁶ = 210(0.0081)(0.117649) ≈ 0.200. E(X) = np = 10(0.3) = 3.",
+    "distractors": [
+      {"value": "P(X=4) ≈ 0.200, E(X) = 0.3", "misconception_label": "Used E(X) = p instead of np"},
+      {"value": "P(X=4) ≈ 0.0081, E(X) = 3", "misconception_label": "Used only (0.3)⁴ without the binomial coefficient and (0.7)⁶ terms"},
+      {"value": "P(X=4) ≈ 0.200, E(X) = 7", "misconception_label": "Computed E(X) = n(1−p) = 10(0.7) instead of np"}
+    ],
+    "hint_l1": "P(X=r) = C(n,r)p^r(1−p)^(n−r). E(X) = np for a binomial distribution.",
+    "hint_l2": "P(X=4) = C(10,4)(0.3)⁴(0.7)⁶. C(10,4) = 210.",
+    "hint_l3": "P(X=4) ≈ 0.200. E(X) = 10×0.3 = 3.",
+    "re_solve_verified": true
+  },
+  {
+    "slug": "stat-binom-002",
+    "kc_ids": ["stat-binomial"],
+    "content": "A multiple-choice quiz has 8 questions, each with 4 options. A student guesses all answers randomly. Find P(at least 3 correct) to 3 significant figures.",
+    "command_term": "find",
+    "ib_topic_ref": "4.6",
+    "domain": "Statistics & Probability",
+    "difficulty_tier": "SL_challenge",
+    "difficulty_estimate": 2.5,
+    "answer": "P(X ≥ 3) ≈ 0.321",
+    "worked_solution": "X ~ B(8, 0.25). P(X≥3) = 1 − P(X≤2). P(X=0) ≈ 0.1001, P(X=1) ≈ 0.2670, P(X=2) ≈ 0.3115. P(X≤2) ≈ 0.6786. P(X≥3) ≈ 0.321.",
+    "distractors": [
+      {"value": "0.679", "misconception_label": "Computed P(X≤2) instead of P(X≥3)"},
+      {"value": "0.208", "misconception_label": "Computed P(X=3) only instead of P(X≥3)"},
+      {"value": "0.321 but used n=8, p=1/4 → correct", "misconception_label": "Correct answer but p=3/4 (probability of wrong) used incorrectly"}
+    ],
+    "hint_l1": "Identify n and p. Use the complement: P(X≥3) = 1 − P(X≤2).",
+    "hint_l2": "X ~ B(8, 0.25). Calculate P(X=0), P(X=1), P(X=2) and sum them, then subtract from 1.",
+    "hint_l3": "P(X≤2) ≈ 0.679. P(X≥3) ≈ 0.321.",
+    "re_solve_verified": true
+  },
+  {
+    "slug": "stat-binom-003",
+    "kc_ids": ["stat-binomial"],
+    "content": "A fair coin is flipped n times. Given that P(exactly 2 heads) = P(exactly 3 heads), find n.",
+    "command_term": "find",
+    "ib_topic_ref": "4.6",
+    "domain": "Statistics & Probability",
+    "difficulty_tier": "SL_challenge",
+    "difficulty_estimate": 3.0,
+    "answer": "n = 5",
+    "worked_solution": "P(X=2) = C(n,2)(0.5)^n and P(X=3) = C(n,3)(0.5)^n. Setting equal: C(n,2) = C(n,3). n(n−1)/2 = n(n−1)(n−2)/6 → 3 = n−2 → n = 5.",
+    "distractors": [
+      {"value": "n = 6", "misconception_label": "Off-by-one: solved n−2=4 → n=6"},
+      {"value": "n = 5, but solved by trial", "misconception_label": "Correct answer via trial but did not show algebraic method"},
+      {"value": "n = 3", "misconception_label": "Set n−2=1 by incorrectly simplifying the combinatorial equation"}
+    ],
+    "hint_l1": "Since (0.5)^n is common to both probabilities, set C(n,2) = C(n,3).",
+    "hint_l2": "C(n,2)/C(n,3) = 1 → [n!/(2!(n−2)!)] / [n!/(3!(n−3)!)] = 3/(n−2) = 1.",
+    "hint_l3": "n − 2 = 3, so n = 5.",
+    "re_solve_verified": true
+  },
+  {
+    "slug": "stat-normal-001",
+    "kc_ids": ["stat-normal"],
+    "content": "X ~ N(50, 9). Find P(X < 53) and P(47 < X < 53). Give answers to 3 significant figures.",
+    "command_term": "find",
+    "ib_topic_ref": "4.7",
+    "domain": "Statistics & Probability",
+    "difficulty_tier": "SL_challenge",
+    "difficulty_estimate": 2.5,
+    "answer": "P(X < 53) ≈ 0.841, P(47 < X < 53) ≈ 0.682",
+    "worked_solution": "N(50, 9) means μ=50, σ²=9, σ=3. Z = (53−50)/3 = 1. P(Z<1) ≈ 0.841. Z for x=47: (47−50)/3 = −1. P(−1<Z<1) ≈ 0.682.",
+    "distractors": [
+      {"value": "P(X<53) ≈ 0.977, P(47<X<53) ≈ 0.954", "misconception_label": "Used σ=9 (variance) instead of σ=3 (SD), giving z=3/9=0.33 wait no — z=(53−50)/9≈0.33, P≈0.63. Hmm different. Let me use σ²=9 confusion: student uses σ=9, z=(53−50)/9=0.33, P≈0.629"},
+      {"value": "P(X<53) ≈ 0.841, P(47<X<53) ≈ 0.341", "misconception_label": "Computed P(50<X<53) instead of P(47<X<53) — only half the symmetric interval"},
+      {"value": "P(X<53) ≈ 0.159", "misconception_label": "Computed P(X>53) instead of P(X<53)"}
+    ],
+    "hint_l1": "Note: N(50,9) means variance=9, so standard deviation=3. Standardise using Z=(X−μ)/σ.",
+    "hint_l2": "Z for x=53: (53−50)/3=1. Z for x=47: (47−50)/3=−1. Use your GDC or z-tables.",
+    "hint_l3": "P(Z<1)≈0.841. P(−1<Z<1)≈0.682.",
+    "re_solve_verified": true
+  },
+  {
+    "slug": "stat-normal-002",
+    "kc_ids": ["stat-normal"],
+    "content": "X ~ N(μ, 4). Given P(X < 10) = 0.8413, find μ.",
+    "command_term": "find",
+    "ib_topic_ref": "4.7",
+    "domain": "Statistics & Probability",
+    "difficulty_tier": "SL_challenge",
+    "difficulty_estimate": 2.5,
+    "answer": "μ = 8",
+    "worked_solution": "N(μ, 4): σ² = 4, σ = 2. P(X<10) = 0.8413 ≈ P(Z<1). So (10−μ)/2 = 1 → 10−μ = 2 → μ = 8.",
+    "distractors": [
+      {"value": "μ = 6", "misconception_label": "Used σ = 4 instead of σ = 2 (confused variance and SD): (10−μ)/4=1 → μ=6"},
+      {"value": "μ = 10", "misconception_label": "Set μ equal to the given x-value without standardising"},
+      {"value": "μ = 12", "misconception_label": "Solved (10−μ)/2 = −1, placing the probability on the wrong side of the mean"}
+    ],
+    "hint_l1": "Identify what z-value corresponds to a probability of 0.8413. Then use Z = (X−μ)/σ.",
+    "hint_l2": "P(Z<1) ≈ 0.8413. So (10−μ)/2 = 1.",
+    "hint_l3": "μ = 10 − 2 = 8.",
+    "re_solve_verified": true
+  },
+  {
+    "slug": "stat-normal-003",
+    "kc_ids": ["stat-normal"],
+    "content": "Heights of IB students are normally distributed with mean 170 cm and standard deviation 8 cm. Find the height exceeded by the tallest 10% of students, to the nearest cm.",
+    "command_term": "find",
+    "ib_topic_ref": "4.7",
+    "domain": "Statistics & Probability",
+    "difficulty_tier": "SL_challenge",
+    "difficulty_estimate": 3.0,
+    "answer": "Approximately 180 cm",
+    "worked_solution": "P(X > h) = 0.10 → P(X < h) = 0.90 → Z = 1.282. h = 170 + 1.282(8) = 170 + 10.26 ≈ 180 cm.",
+    "distractors": [
+      {"value": "h ≈ 160 cm", "misconception_label": "Used P(X<h)=0.10 (bottom 10%) instead of top 10%"},
+      {"value": "h ≈ 178 cm", "misconception_label": "Used z=1.0 (68% rule) instead of z for 90th percentile"},
+      {"value": "h ≈ 180 cm but used z=1.65", "misconception_label": "Used z=1.65 (95th percentile) — close but gives h=183.2 cm"}
+    ],
+    "hint_l1": "Tallest 10% means P(X > h) = 0.10, so P(X < h) = 0.90. Use inverse normal on your GDC.",
+    "hint_l2": "The z-value for the 90th percentile is approximately 1.282.",
+    "hint_l3": "h = 170 + 1.282 × 8 ≈ 180 cm.",
+    "re_solve_verified": true
+  },
+  {
+    "slug": "stat-corr-001",
+    "kc_ids": ["stat-correlation-regression"],
+    "content": "A data set has Pearson's correlation coefficient r = −0.87. Describe the correlation and comment on causation.",
+    "command_term": "write_down",
+    "ib_topic_ref": "4.2",
+    "domain": "Statistics & Probability",
+    "difficulty_tier": "SL_foundation",
+    "difficulty_estimate": 1.5,
+    "answer": "Strong negative linear correlation. Correlation does not imply causation.",
+    "worked_solution": "|r| = 0.87 indicates strong correlation. The negative sign indicates that as x increases, y tends to decrease. Correlation does not prove a causal relationship.",
+    "distractors": [
+      {"value": "Strong positive correlation", "misconception_label": "Ignored the negative sign of r"},
+      {"value": "Weak negative correlation", "misconception_label": "Described |r|=0.87 as weak (weak is typically |r|<0.5)"},
+      {"value": "r = −0.87 proves causation", "misconception_label": "Confused correlation with causation — a common and important misconception in IB statistics"}
+    ],
+    "hint_l1": "The magnitude |r| tells you the strength, the sign tells you the direction. Consider: what does IB say about causation?",
+    "hint_l2": "|r| = 0.87 → strong. Negative sign → negative direction. Correlation ≠ causation.",
+    "hint_l3": "Strong negative linear correlation. Correlation does not imply causation.",
+    "re_solve_verified": true
+  },
+  {
+    "slug": "stat-corr-002",
+    "kc_ids": ["stat-correlation-regression"],
+    "content": "A regression line is ŷ = 2.4x + 1.8. Interpret the gradient and find the predicted y when x = 5.",
+    "command_term": "find",
+    "ib_topic_ref": "4.2",
+    "domain": "Statistics & Probability",
+    "difficulty_tier": "SL_foundation",
+    "difficulty_estimate": 2.0,
+    "answer": "Gradient: for each unit increase in x, y increases by 2.4 on average. Predicted y = 13.8",
+    "worked_solution": "Gradient = 2.4: for every 1-unit increase in x, y is predicted to increase by 2.4 units. At x=5: ŷ = 2.4(5)+1.8 = 12+1.8 = 13.8.",
+    "distractors": [
+      {"value": "Gradient means y starts at 2.4; predicted y = 13.8", "misconception_label": "Confused gradient (slope) with y-intercept"},
+      {"value": "Predicted y = 12", "misconception_label": "Computed 2.4×5 = 12 and forgot to add the intercept 1.8"},
+      {"value": "Gradient: for every 2.4 increase in x, y increases by 1", "misconception_label": "Inverted the interpretation of the gradient"}
+    ],
+    "hint_l1": "The gradient of ŷ = mx + c represents the rate of change: for each unit increase in x, y changes by m.",
+    "hint_l2": "Gradient = 2.4 → y increases by 2.4 per unit x. Substitute x=5.",
+    "hint_l3": "ŷ = 2.4(5) + 1.8 = 13.8.",
+    "re_solve_verified": true
+  },
+  {
+    "slug": "stat-corr-003",
+    "kc_ids": ["stat-correlation-regression"],
+    "content": "The regression line ŷ = 2x + 2 was found using data with x̄ = 4 and ȳ = 10. A student uses it to predict y when x = 20. Comment on the reliability of this prediction.",
+    "command_term": "determine",
+    "ib_topic_ref": "4.2",
+    "domain": "Statistics & Probability",
+    "difficulty_tier": "SL_challenge",
+    "difficulty_estimate": 2.5,
+    "answer": "The prediction is unreliable — x = 20 is far outside the observed data range (extrapolation). The linear model may not hold beyond the data.",
+    "worked_solution": "x̄ = 4 suggests the data is centred around small x-values. x = 20 is likely well outside the data range. This is extrapolation, which is unreliable as the linear trend may not continue.",
+    "distractors": [
+      {"value": "Prediction is reliable because r is high", "misconception_label": "Confused strong correlation with extrapolation reliability — r only describes fit within the data range"},
+      {"value": "Prediction is reliable because we can substitute x=20 into the equation", "misconception_label": "Confused mathematical validity (you can substitute anything) with statistical reliability"},
+      {"value": "Prediction is unreliable because ŷ = 42 is too large", "misconception_label": "Objected to the magnitude of the prediction rather than the extrapolation issue"}
+    ],
+    "hint_l1": "Consider whether x = 20 is within the range of the original data. What does IB say about extrapolation?",
+    "hint_l2": "With x̄ = 4, the data is likely in a small range around x = 4. x = 20 is extrapolation.",
+    "hint_l3": "Extrapolation is unreliable — the linear relationship may not hold outside the data range.",
+    "re_solve_verified": true
+  }
+]

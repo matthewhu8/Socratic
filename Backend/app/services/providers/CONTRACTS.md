@@ -41,7 +41,7 @@ One stream per `POST /api/ai-tutor/process-query`. Each event is
 | 0..n  | `text`  | `{"delta": "<chunk>"}`                 | append to current assistant bubble; feed to `speechSynthesis` buffered on sentence boundaries (`.!?`) |
 | 1     | `svg`   | `{"svgContent": "<svg…>" \| null}`     | if non-null, call `renderSvgInternal(svgContent)` |
 | 1     | `state` | `{problem, student_attempts, current_misconception, already_drawn, last_strategy}` | optional: stash for UI/debug |
-| 1     | `done`  | `{"provider": "gemini"\|"claude"}`     | finalize turn (stop spinner) |
+| 1     | `done`  | `{"provider": "claude"}`               | finalize turn (stop spinner) |
 | any   | `error` | `{"message": "<text>"}`                | show error; stop spinner |
 
 Notes:
@@ -49,25 +49,21 @@ Notes:
 - Always send exactly one terminal event (`done` or `error`).
 - Keep `data` a single-line JSON string (no raw newlines inside `data:`).
 
-## Request (unchanged shape, `mode` repurposed)
+## Request (unchanged shape; `mode` ignored)
 
 `POST /api/ai-tutor/process-query` body (`AITutorQueryRequest`):
 `{ sessionId, query, messages[], canvasImage?, previousCanvasImage?, hasAnnotation?, mode }`
-- `mode` now carries the **provider**: `"gemini"` | `"claude"`. (Back-compat: treat
-  legacy `"sally"`→`"gemini"`, `"jess"`→`"claude"`; anything else → default `"gemini"`.)
-- Response is now an **SSE stream**, not JSON.
+- Claude is the only provider. `mode` is kept on the payload for back-compat but is
+  **ignored** — every turn runs through `AnthropicProvider`.
+- Response is an **SSE stream**, not JSON.
 
-## mode → provider mapping (factory in `conversation_service.py`)
+## Provider factory (`conversation_service.py`)
 
 ```python
-def make_provider(mode: str | None) -> WhiteboardProvider:
-    m = (mode or os.getenv("LLM_PROVIDER", "gemini")).lower()
-    if m in ("claude", "anthropic", "jess"):
-        return AnthropicProvider()      # providers/anthropic_provider.py
-    return GeminiProvider()             # providers/gemini_provider.py  (gemini/sally/default)
+def make_provider(mode: str | None = None) -> WhiteboardProvider:
+    return AnthropicProvider()          # providers/anthropic_provider.py — sole provider
 ```
-Construct providers once where practical (they hold model clients); a per-request
-factory is fine for v1.
+The instance is cached (it holds a model client); `mode` is accepted but ignored.
 
 ## Tutoring-state update rules (orchestrator, after the turn)
 
@@ -92,20 +88,17 @@ Wrap DB writes in try/except so a DB hiccup never breaks the turn (Redis stays s
 
 ## Provider implementation notes
 
-- **diagnose** output schema (both providers must return this shape):
+- **diagnose** output schema (returned shape):
   `{ strategy: <one of STRATEGIES>, should_draw: bool, reveal_answer: bool,
      misconception: str|null, student_observation: str|null, problem: str|null,
      rationale: str|null }`
-  Gemini: JSON mode (`response_mime_type="application/json"` + `response_schema`).
-  Claude: **strict structured output / strict tool use** — guaranteed shape.
-- **stream_text**: async iterator of str. Gemini: `generate_content(..., stream=True)` /
-  `send_message_async(..., stream=True)`. Claude: `messages.stream(...)` text deltas.
-  Output must be TTS-clean (run Gemini text through `_remove_markdown_asterisks`).
-- **generate_svg**: return validated SVG or None. Reuse `_validate_svg_content` (Gemini).
-  Claude: strict output `{ svgContent: str }`, then validate the same way.
-- **Prompt ordering (both):** stable prefix FIRST (system instruction + few-shot SVG
-  exemplars), volatile suffix LAST (`state.as_prompt_block()` + canvas image + query).
-  Claude: put `cache_control: {"type": "ephemeral"}` on the last stable block.
-- Port the existing tutor system prompts from `gemini_service.py` (combined_model /
-  text_model / svg_model `system_instruction` strings) — they encode the visual rules
-  (viewBox 0 0 600 400, tutor colors, answer-hiding policy). Keep those rules verbatim.
+  Claude: **strict structured output / strict tool use** (`record_teaching_plan`) — guaranteed shape.
+- **stream_text**: async iterator of str via `messages.stream(...)` text deltas. Output is
+  TTS-clean prose (no markdown) by prompt instruction.
+- **generate_svg**: strict tool output `{ svgContent: str }`, then `_validate_svg_content`
+  (start `<svg` / end `</svg>`); return the SVG or None.
+- **Prompt ordering:** stable prefix FIRST (system instruction + visual rules), volatile
+  suffix LAST (`state.as_prompt_block()` + canvas image + query). Put
+  `cache_control: {"type": "ephemeral"}` on the last stable block.
+- The tutor system prompts (viewBox 0 0 600 400, tutor colors, answer-hiding policy) live
+  in `anthropic_provider.py` (`_DIAGNOSE_SYSTEM` / `_TEXT_SYSTEM` / `_SVG_SYSTEM`).

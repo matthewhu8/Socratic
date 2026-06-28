@@ -17,9 +17,7 @@ text to the client over SSE, conditionally draws, then updates the TutoringState
 the TeachingPlan (see CONTRACTS.md "Tutoring-state update rules"). Providers do NOT
 mutate state themselves.
 
-Implementations:
-    GeminiProvider    (providers/gemini_provider.py)    — JSON-mode diagnose/SVG, reuses
-                       the validators in gemini_service.py.
+Implementation (sole provider):
     AnthropicProvider (providers/anthropic_provider.py) — Sonnet 4.6, strict structured
                        output, prompt caching on the stable prefix.
 

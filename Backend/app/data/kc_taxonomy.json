@@ -1,0 +1,388 @@
+{
+  "metadata": {
+    "curriculum": "IB Math Analysis and Approaches (AA) SL",
+    "version": "2019 syllabus (first exams 2021)",
+    "total_kcs": 42,
+    "topics": ["1. Algebra", "2. Functions", "3. Geometry & Trigonometry", "4. Statistics & Probability", "5. Calculus"]
+  },
+  "knowledge_components": [
+    {
+      "id": "alg-sequences-arithmetic",
+      "name": "Arithmetic sequences and series",
+      "ib_topic_ref": "1.2",
+      "domain": "Algebra",
+      "description": "nth term formula (un = u1 + (n-1)d), sum of n terms (Sn = n/2(2u1 + (n-1)d)), recognising and applying arithmetic sequences in context.",
+      "difficulty_tier": "SL_foundation",
+      "prerequisites": []
+    },
+    {
+      "id": "alg-sequences-geometric",
+      "name": "Geometric sequences and series",
+      "ib_topic_ref": "1.3",
+      "domain": "Algebra",
+      "description": "nth term (un = u1 * r^(n-1)), sum of finite geometric series, convergence condition |r| < 1, sum to infinity S∞ = u1/(1-r).",
+      "difficulty_tier": "SL_foundation",
+      "prerequisites": ["alg-sequences-arithmetic"]
+    },
+    {
+      "id": "alg-sigma-notation",
+      "name": "Sigma notation",
+      "ib_topic_ref": "1.1",
+      "domain": "Algebra",
+      "description": "Reading and writing sums in sigma notation, evaluating finite sums, connecting sigma notation to arithmetic and geometric series formulas.",
+      "difficulty_tier": "SL_foundation",
+      "prerequisites": ["alg-sequences-arithmetic", "alg-sequences-geometric"]
+    },
+    {
+      "id": "alg-exponents-laws",
+      "name": "Laws of exponents",
+      "ib_topic_ref": "1.7",
+      "domain": "Algebra",
+      "description": "Product, quotient, power rules; zero and negative exponents; rational exponents (fractional powers as roots); simplifying exponential expressions.",
+      "difficulty_tier": "SL_foundation",
+      "prerequisites": []
+    },
+    {
+      "id": "alg-logarithms",
+      "name": "Logarithms and logarithmic laws",
+      "ib_topic_ref": "1.7",
+      "domain": "Algebra",
+      "description": "Definition as inverse of exponential, log laws (product, quotient, power), change of base formula, solving equations using logs.",
+      "difficulty_tier": "SL_foundation",
+      "prerequisites": ["alg-exponents-laws"]
+    },
+    {
+      "id": "alg-binomial-theorem",
+      "name": "Binomial theorem",
+      "ib_topic_ref": "1.9",
+      "domain": "Algebra",
+      "description": "Expanding (a+b)^n using binomial coefficients nCr, Pascal's triangle, finding specific terms in an expansion.",
+      "difficulty_tier": "SL_challenge",
+      "prerequisites": ["alg-sequences-arithmetic"]
+    },
+    {
+      "id": "alg-systems-equations",
+      "name": "Systems of linear equations",
+      "ib_topic_ref": "1.1",
+      "domain": "Algebra",
+      "description": "Solving 2×2 and 3×3 systems by substitution and elimination, interpreting solutions geometrically, inconsistent and dependent systems.",
+      "difficulty_tier": "SL_foundation",
+      "prerequisites": []
+    },
+    {
+      "id": "alg-quadratics",
+      "name": "Quadratic equations and functions",
+      "ib_topic_ref": "2.6",
+      "domain": "Algebra",
+      "description": "Factoring, completing the square, quadratic formula, discriminant (nature of roots), vertex form, axis of symmetry.",
+      "difficulty_tier": "SL_foundation",
+      "prerequisites": ["alg-exponents-laws"]
+    },
+    {
+      "id": "fn-domain-range",
+      "name": "Domain, range, and function notation",
+      "ib_topic_ref": "2.1",
+      "domain": "Functions",
+      "description": "Function notation f(x), mapping diagrams, identifying domain and range from equations and graphs, restricting domains.",
+      "difficulty_tier": "SL_foundation",
+      "prerequisites": []
+    },
+    {
+      "id": "fn-transformations",
+      "name": "Transformations of functions",
+      "ib_topic_ref": "2.3",
+      "domain": "Functions",
+      "description": "Vertical/horizontal translations f(x)+a and f(x+b), reflections f(-x) and -f(x), vertical/horizontal stretches af(x) and f(bx), composing transformations.",
+      "difficulty_tier": "SL_foundation",
+      "prerequisites": ["fn-domain-range"]
+    },
+    {
+      "id": "fn-inverse",
+      "name": "Inverse functions",
+      "ib_topic_ref": "2.2",
+      "domain": "Functions",
+      "description": "Finding f⁻¹(x) algebraically, verifying f(f⁻¹(x)) = x, graphical relationship (reflection in y = x), domain restriction for invertibility.",
+      "difficulty_tier": "SL_foundation",
+      "prerequisites": ["fn-domain-range"]
+    },
+    {
+      "id": "fn-composite",
+      "name": "Composite functions",
+      "ib_topic_ref": "2.2",
+      "domain": "Functions",
+      "description": "Computing (f∘g)(x) = f(g(x)), domain of composite functions, decomposing a function into components.",
+      "difficulty_tier": "SL_foundation",
+      "prerequisites": ["fn-domain-range"]
+    },
+    {
+      "id": "fn-exponential",
+      "name": "Exponential functions and graphs",
+      "ib_topic_ref": "2.8",
+      "domain": "Functions",
+      "description": "Shape of y = a^x and y = e^x, horizontal asymptote, growth and decay models, solving exponential equations graphically and algebraically.",
+      "difficulty_tier": "SL_foundation",
+      "prerequisites": ["alg-exponents-laws", "fn-domain-range"]
+    },
+    {
+      "id": "fn-logarithmic",
+      "name": "Logarithmic functions and graphs",
+      "ib_topic_ref": "2.8",
+      "domain": "Functions",
+      "description": "Shape of y = log_a(x) and y = ln(x), vertical asymptote, inverse relationship with exponential, solving logarithmic equations.",
+      "difficulty_tier": "SL_foundation",
+      "prerequisites": ["alg-logarithms", "fn-inverse"]
+    },
+    {
+      "id": "fn-rational",
+      "name": "Rational functions",
+      "ib_topic_ref": "2.7",
+      "domain": "Functions",
+      "description": "y = 1/x and y = (ax+b)/(cx+d), vertical and horizontal asymptotes, sketching rational functions, finding intercepts.",
+      "difficulty_tier": "SL_challenge",
+      "prerequisites": ["fn-domain-range", "fn-transformations"]
+    },
+    {
+      "id": "fn-graph-features",
+      "name": "Interpreting and sketching graphs",
+      "ib_topic_ref": "2.4",
+      "domain": "Functions",
+      "description": "Identifying key features: intercepts, turning points, asymptotes, intervals of increase/decrease, using GDC to graph and find features.",
+      "difficulty_tier": "SL_foundation",
+      "prerequisites": ["fn-domain-range", "fn-transformations"]
+    },
+    {
+      "id": "trig-radians",
+      "name": "Radian measure and arc length",
+      "ib_topic_ref": "3.1",
+      "domain": "Geometry & Trigonometry",
+      "description": "Converting between degrees and radians, arc length s = rθ, area of sector A = ½r²θ, area of segment.",
+      "difficulty_tier": "SL_foundation",
+      "prerequisites": []
+    },
+    {
+      "id": "trig-unit-circle",
+      "name": "Unit circle and exact trig values",
+      "ib_topic_ref": "3.2",
+      "domain": "Geometry & Trigonometry",
+      "description": "sin, cos, tan defined on unit circle, exact values at 0, π/6, π/4, π/3, π/2 and their multiples, signs in each quadrant (CAST).",
+      "difficulty_tier": "SL_foundation",
+      "prerequisites": ["trig-radians"]
+    },
+    {
+      "id": "trig-graphs",
+      "name": "Graphs of trigonometric functions",
+      "ib_topic_ref": "3.4",
+      "domain": "Geometry & Trigonometry",
+      "description": "Amplitude, period, phase shift of y = a sin(b(x+c)) + d, sketching transformed trig graphs, identifying parameters from a graph.",
+      "difficulty_tier": "SL_foundation",
+      "prerequisites": ["trig-unit-circle", "fn-transformations"]
+    },
+    {
+      "id": "trig-identities",
+      "name": "Trigonometric identities",
+      "ib_topic_ref": "3.5",
+      "domain": "Geometry & Trigonometry",
+      "description": "Pythagorean identity sin²θ + cos²θ = 1, double angle formulas sin2θ = 2sinθcosθ and cos2θ = cos²θ - sin²θ, proving and applying identities.",
+      "difficulty_tier": "SL_challenge",
+      "prerequisites": ["trig-unit-circle"]
+    },
+    {
+      "id": "trig-equations",
+      "name": "Solving trigonometric equations",
+      "ib_topic_ref": "3.6",
+      "domain": "Geometry & Trigonometry",
+      "description": "Solving sin x = k, cos x = k, tan x = k over given intervals, using identities to simplify before solving, general solution form.",
+      "difficulty_tier": "SL_challenge",
+      "prerequisites": ["trig-identities", "trig-unit-circle"]
+    },
+    {
+      "id": "trig-sine-cosine-rules",
+      "name": "Sine rule and cosine rule",
+      "ib_topic_ref": "3.3",
+      "domain": "Geometry & Trigonometry",
+      "description": "a/sin A = b/sin B = c/sin C, a² = b² + c² - 2bc cos A, area = ½ab sin C, choosing which rule applies, ambiguous case.",
+      "difficulty_tier": "SL_foundation",
+      "prerequisites": ["trig-unit-circle"]
+    },
+    {
+      "id": "stat-descriptive",
+      "name": "Descriptive statistics",
+      "ib_topic_ref": "4.1",
+      "domain": "Statistics & Probability",
+      "description": "Mean, median, mode, range, IQR, standard deviation, variance; interpreting box plots, histograms, cumulative frequency graphs.",
+      "difficulty_tier": "SL_foundation",
+      "prerequisites": []
+    },
+    {
+      "id": "stat-probability-basics",
+      "name": "Basic probability",
+      "ib_topic_ref": "4.3",
+      "domain": "Statistics & Probability",
+      "description": "Sample space, events, P(A), complementary events, combined events P(A∪B) = P(A) + P(B) - P(A∩B), mutually exclusive events.",
+      "difficulty_tier": "SL_foundation",
+      "prerequisites": []
+    },
+    {
+      "id": "stat-conditional",
+      "name": "Conditional probability and independence",
+      "ib_topic_ref": "4.4",
+      "domain": "Statistics & Probability",
+      "description": "P(A|B) = P(A∩B)/P(B), testing independence P(A∩B) = P(A)P(B), tree diagrams, Venn diagrams for combined events.",
+      "difficulty_tier": "SL_challenge",
+      "prerequisites": ["stat-probability-basics"]
+    },
+    {
+      "id": "stat-discrete-rv",
+      "name": "Discrete random variables",
+      "ib_topic_ref": "4.5",
+      "domain": "Statistics & Probability",
+      "description": "Probability distribution tables, E(X) = Σx·P(X=x), Var(X) = E(X²) - [E(X)]², interpreting expected value in context.",
+      "difficulty_tier": "SL_challenge",
+      "prerequisites": ["stat-probability-basics"]
+    },
+    {
+      "id": "stat-binomial",
+      "name": "Binomial distribution",
+      "ib_topic_ref": "4.6",
+      "domain": "Statistics & Probability",
+      "description": "Conditions for binomial model (fixed n, independent trials, constant p), X ~ B(n,p), P(X=r) = nCr p^r (1-p)^(n-r), E(X) = np, Var(X) = np(1-p), GDC use.",
+      "difficulty_tier": "SL_challenge",
+      "prerequisites": ["stat-discrete-rv", "alg-binomial-theorem"]
+    },
+    {
+      "id": "stat-normal",
+      "name": "Normal distribution",
+      "ib_topic_ref": "4.7",
+      "domain": "Statistics & Probability",
+      "description": "Properties of normal curve (symmetric, mean=median=mode), standardising Z = (X-μ)/σ, using GDC to find probabilities and inverse normal, interpreting in context.",
+      "difficulty_tier": "SL_challenge",
+      "prerequisites": ["stat-descriptive"]
+    },
+    {
+      "id": "stat-correlation-regression",
+      "name": "Correlation and linear regression",
+      "ib_topic_ref": "4.2",
+      "domain": "Statistics & Probability",
+      "description": "Pearson's r, interpreting strength and direction, least-squares regression line y = mx + b, using line for prediction, limitations of extrapolation.",
+      "difficulty_tier": "SL_foundation",
+      "prerequisites": ["stat-descriptive"]
+    },
+    {
+      "id": "calc-limits-continuity",
+      "name": "Limits and continuity",
+      "ib_topic_ref": "5.1",
+      "domain": "Calculus",
+      "description": "Intuitive concept of a limit, lim as x→a, limits from a graph and table, continuity at a point, informal understanding (not epsilon-delta proofs).",
+      "difficulty_tier": "SL_foundation",
+      "prerequisites": ["fn-domain-range"]
+    },
+    {
+      "id": "calc-derivative-concept",
+      "name": "Derivative as rate of change",
+      "ib_topic_ref": "5.2",
+      "domain": "Calculus",
+      "description": "Gradient of tangent as limit of gradient of secant, derivative as instantaneous rate of change, notation f'(x) and dy/dx, differentiating from first principles for simple polynomials.",
+      "difficulty_tier": "SL_foundation",
+      "prerequisites": ["calc-limits-continuity"]
+    },
+    {
+      "id": "calc-power-rule",
+      "name": "Power rule and polynomial differentiation",
+      "ib_topic_ref": "5.3",
+      "domain": "Calculus",
+      "description": "d/dx[x^n] = nx^(n-1), differentiating sums and differences, differentiating constants and negative/fractional powers.",
+      "difficulty_tier": "SL_foundation",
+      "prerequisites": ["calc-derivative-concept"]
+    },
+    {
+      "id": "calc-chain-rule",
+      "name": "Chain rule",
+      "ib_topic_ref": "5.4",
+      "domain": "Calculus",
+      "description": "dy/dx = dy/du · du/dx, differentiating composite functions, recognising inner and outer functions, applying to trig, exponential, and log composites.",
+      "difficulty_tier": "SL_challenge",
+      "prerequisites": ["calc-power-rule", "fn-composite"]
+    },
+    {
+      "id": "calc-product-quotient",
+      "name": "Product and quotient rules",
+      "ib_topic_ref": "5.4",
+      "domain": "Calculus",
+      "description": "(uv)' = u'v + uv', (u/v)' = (u'v - uv')/v², choosing the correct rule, combining with chain rule for complex expressions.",
+      "difficulty_tier": "SL_challenge",
+      "prerequisites": ["calc-chain-rule"]
+    },
+    {
+      "id": "calc-trig-exp-log-deriv",
+      "name": "Derivatives of trig, exponential, and log functions",
+      "ib_topic_ref": "5.5",
+      "domain": "Calculus",
+      "description": "d/dx[sin x] = cos x, d/dx[cos x] = -sin x, d/dx[e^x] = e^x, d/dx[ln x] = 1/x, applying these with chain/product/quotient rules.",
+      "difficulty_tier": "SL_challenge",
+      "prerequisites": ["calc-chain-rule", "trig-unit-circle", "fn-exponential", "fn-logarithmic"]
+    },
+    {
+      "id": "calc-tangent-normal",
+      "name": "Tangent and normal lines",
+      "ib_topic_ref": "5.6",
+      "domain": "Calculus",
+      "description": "Finding equation of tangent at a point using y - y1 = f'(x1)(x - x1), normal line has gradient -1/f'(x1), interpreting geometrically.",
+      "difficulty_tier": "SL_foundation",
+      "prerequisites": ["calc-power-rule"]
+    },
+    {
+      "id": "calc-stationary-points",
+      "name": "Stationary points and curve sketching",
+      "ib_topic_ref": "5.7",
+      "domain": "Calculus",
+      "description": "Setting f'(x) = 0 to find stationary points, first and second derivative tests for local max/min, identifying inflection points, sketching curves using calculus features.",
+      "difficulty_tier": "SL_challenge",
+      "prerequisites": ["calc-power-rule", "calc-chain-rule"]
+    },
+    {
+      "id": "calc-optimization",
+      "name": "Optimisation",
+      "ib_topic_ref": "5.8",
+      "domain": "Calculus",
+      "description": "Setting up objective functions from word problems, finding global max/min on closed intervals, verifying nature of stationary points, interpreting answers in context.",
+      "difficulty_tier": "SL_challenge",
+      "prerequisites": ["calc-stationary-points"]
+    },
+    {
+      "id": "calc-antiderivative",
+      "name": "Antiderivatives and indefinite integration",
+      "ib_topic_ref": "5.9",
+      "domain": "Calculus",
+      "description": "Integration as reverse differentiation, ∫x^n dx = x^(n+1)/(n+1) + C, integrating e^x, 1/x, sin x, cos x; finding particular antiderivatives given initial conditions.",
+      "difficulty_tier": "SL_foundation",
+      "prerequisites": ["calc-power-rule", "calc-trig-exp-log-deriv"]
+    },
+    {
+      "id": "calc-definite-integral",
+      "name": "Definite integrals and the fundamental theorem",
+      "ib_topic_ref": "5.10",
+      "domain": "Calculus",
+      "description": "∫[a to b] f(x) dx = F(b) - F(a), evaluating definite integrals, understanding signed area, properties of definite integrals.",
+      "difficulty_tier": "SL_foundation",
+      "prerequisites": ["calc-antiderivative"]
+    },
+    {
+      "id": "calc-area",
+      "name": "Area under and between curves",
+      "ib_topic_ref": "5.11",
+      "domain": "Calculus",
+      "description": "Area between curve and x-axis, dealing with negative areas using |∫f dx|, area between two curves ∫[a to b](f(x) - g(x)) dx, setting up limits of integration from intersection points.",
+      "difficulty_tier": "SL_challenge",
+      "prerequisites": ["calc-definite-integral"]
+    },
+    {
+      "id": "calc-kinematics",
+      "name": "Kinematics with calculus",
+      "ib_topic_ref": "5.12",
+      "domain": "Calculus",
+      "description": "Displacement s(t), velocity v(t) = s'(t), acceleration a(t) = v'(t), integrating to find displacement from velocity, total distance vs displacement.",
+      "difficulty_tier": "SL_challenge",
+      "prerequisites": ["calc-definite-integral", "calc-antiderivative"]
+    }
+  ]
+}
