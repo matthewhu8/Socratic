@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Socratic — Mobile Practice Mockups</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #0F1730;
+    font-family: -apple-system, 'Inter', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 48px 32px;
+    gap: 0;
+  }
+
+  .header {
+    color: #fff;
+    margin-bottom: 40px;
+    text-align: center;
+  }
+  .header h1 { font-size: 22px; font-weight: 700; letter-spacing: -0.5px; margin-bottom: 6px; }
+  .header p  { font-size: 14px; color: #6B728A; }
+
+  .screens-row {
+    display: flex;
+    gap: 40px;
+    align-items: flex-start;
+    justify-content: center;
+  }
+
+  .screen-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+  }
+  .screen-label {
+    color: #6B728A;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+  }
+
+  /* iPhone shell */
+  .phone {
+    width: 390px;
+    height: 844px;
+    background: #fff;
+    border-radius: 54px;
+    box-shadow:
+      0 0 0 2px #2A2D3A,
+      0 0 0 8px #1A1D2A,
+      0 32px 80px rgba(0,0,0,0.6);
+    overflow: hidden;
+    position: relative;
+    flex-shrink: 0;
+  }
+
+  /* ── COMMON ─────────────────────────────────── */
+  .status-bar {
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    font-size: 15px;
+    font-weight: 600;
+  }
+  .status-dots { font-size: 11px; color: #BCC0CB; letter-spacing: 2px; }
+
+  .top-nav {
+    height: 52px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px;
+  }
+  .streak-pill {
+    background: #FFF2D8;
+    color: #F49E12;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 6px 14px;
+    border-radius: 20px;
+  }
+  .profile-circle {
+    width: 36px; height: 36px;
+    background: #EAE9FE;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 700; color: #4E46E5;
+  }
+
+  .topic-label {
+    font-size: 12px;
+    color: #BCC0CB;
+    padding: 0 16px;
+    margin-bottom: 10px;
+  }
+
+  .progress-dots {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 0 16px;
+    margin-bottom: 16px;
+  }
+  .progress-dots span {
+    display: block;
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: #E5E6EA;
+  }
+  .progress-dots span.active {
+    width: 10px; height: 10px;
+    background: #4E46E5;
+  }
+
+  /* ── CARD ───────────────────────────────────── */
+  .card {
+    background: #fff;
+    border-radius: 28px;
+    margin: 0 24px;
+    box-shadow: 0 8px 36px rgba(0,0,0,0.08);
+    border: 1px solid #E5E6EA;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .card-inner { padding: 20px 24px; }
+
+  .mark-badge {
+    display: inline-block;
+    background: #EAE9FE;
+    color: #4E46E5;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 5px 12px;
+    border-radius: 20px;
+    margin-bottom: 16px;
+  }
+
+  .question {
+    font-size: 22px;
+    font-weight: 600;
+    color: #0F1730;
+    line-height: 1.45;
+    margin-bottom: 20px;
+  }
+
+  .card-divider {
+    height: 1px;
+    background: #E5E6EA;
+    margin: 0 0 16px;
+  }
+
+  .work-label {
+    font-size: 12px;
+    color: #BCC0CB;
+    margin-bottom: 10px;
+  }
+
+  .work-lines {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+    margin-bottom: 20px;
+  }
+  .work-lines span {
+    display: block;
+    height: 1px;
+    background: #E5E6EA;
+  }
+
+  .answer-field {
+    background: #EAE9FE;
+    border: 1px solid #4E46E5;
+    border-radius: 14px;
+    padding: 14px 16px;
+    font-size: 14px;
+    color: #BCC0CB;
+  }
+
+  /* ── BOTTOM ACTIONS ──────────────────────────── */
+  .bottom-actions {
+    display: flex;
+    gap: 10px;
+    padding: 16px 16px 0;
+    justify-content: center;
+  }
+  .action-btn {
+    flex: 1;
+    padding: 14px 0;
+    border-radius: 24px;
+    font-size: 14px;
+    font-weight: 600;
+    text-align: center;
+    border: 1.5px solid;
+    cursor: pointer;
+  }
+  .btn-hard   { background: #FEE5E5; color: #F55252; border-color: #F55252; }
+  .btn-hint   { background: #fff;    color: #6B728A; border-color: #E5E6EA; }
+  .btn-got-it { background: #DCF8EE; color: #1DC58A; border-color: #1DC58A; }
+
+  .home-indicator {
+    width: 134px; height: 5px;
+    background: rgba(0,0,0,0.2);
+    border-radius: 3px;
+    margin: 12px auto 0;
+  }
+
+  /* ── SCREEN 1 ───────────────────────────────── */
+  .s1 { background: #F5F5F8; }
+  .s1 .status-bar { color: #0F1730; }
+
+  /* ── SCREEN 2: Swipe Right ──────────────────── */
+  .s2 { background: #EEF9F4; }
+  .s2 .status-bar { color: #0F1730; }
+
+  .card-tilted {
+    transform: rotate(-10deg) translateX(12px);
+    transform-origin: bottom center;
+    border: 2px solid #1DC58A !important;
+    box-shadow: 0 16px 48px rgba(29,197,138,0.22) !important;
+  }
+  .card-green-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(29,197,138,0.10);
+    border-radius: 28px;
+    pointer-events: none;
+  }
+  .got-it-stamp {
+    position: absolute;
+    top: 80px; left: 50%;
+    transform: translateX(-50%) rotate(-10deg);
+    background: #DCF8EE;
+    border: 3px solid #1DC58A;
+    border-radius: 12px;
+    padding: 12px 24px;
+    font-size: 26px;
+    font-weight: 700;
+    color: #1DC58A;
+    white-space: nowrap;
+    z-index: 10;
+  }
+  .peek-card {
+    background: #EBEBEE;
+    border-radius: 24px;
+    margin: 0 30px;
+    height: 440px;
+    position: absolute;
+    left: 0; right: 0;
+    top: 152px;
+    z-index: 0;
+  }
+  .card-s2-wrap {
+    position: relative;
+    z-index: 2;
+  }
+  .swipe-feedback {
+    text-align: center;
+    font-size: 15px;
+    font-weight: 600;
+    color: #1DC58A;
+    padding: 16px 0 0;
+  }
+
+  /* ── SCREEN 3: Hint ──────────────────────────── */
+  .s3 { background: #F5F5F8; }
+
+  .hint-panel {
+    background: #EAE9FE;
+    border-radius: 16px;
+    padding: 16px;
+    margin-top: 0;
+  }
+  .hint-header {
+    font-size: 12px;
+    font-weight: 600;
+    color: #4E46E5;
+    margin-bottom: 12px;
+  }
+  .hint-text {
+    font-size: 15px;
+    color: #0F1730;
+    line-height: 1.6;
+    margin-bottom: 16px;
+  }
+  .hint-divider { height: 1px; background: rgba(79,70,229,0.2); margin: 12px 0; }
+  .hint-locked {
+    font-size: 13px;
+    color: rgba(79,70,229,0.5);
+    padding: 4px 0;
+  }
+  .hint-wb-link {
+    font-size: 13px;
+    font-weight: 600;
+    color: #4E46E5;
+    padding: 6px 0 2px;
+  }
+  .hint-wb-sub {
+    font-size: 11px;
+    color: rgba(79,70,229,0.6);
+  }
+  .hint-skip {
+    font-size: 13px;
+    color: #F55252;
+    margin-top: 8px;
+  }
+
+  /* ── SCREEN 4: Progress Beat ─────────────────── */
+  .s4 { background: #0F1730; }
+  .s4 .status-bar { color: #fff; }
+
+  .ambient-text {
+    padding: 16px 24px 20px;
+  }
+  .ambient-title {
+    font-size: 26px;
+    font-weight: 700;
+    color: #fff;
+    line-height: 1.3;
+    margin-bottom: 10px;
+  }
+  .ambient-sub {
+    font-size: 15px;
+    color: #6B728A;
+    line-height: 1.55;
+  }
+
+  .result-card {
+    background: #fff;
+    border-radius: 28px;
+    margin: 0 24px;
+    box-shadow: 0 24px 60px rgba(0,0,0,0.4);
+    overflow: hidden;
+  }
+  .result-inner { padding: 24px; }
+
+  .big-check {
+    font-size: 52px;
+    text-align: center;
+    margin-bottom: 8px;
+    line-height: 1;
+  }
+  .result-title {
+    text-align: center;
+    font-size: 20px;
+    font-weight: 700;
+    color: #0F1730;
+    margin-bottom: 4px;
+  }
+  .result-sub {
+    text-align: center;
+    font-size: 13px;
+    color: #6B728A;
+    margin-bottom: 20px;
+  }
+
+  .stats-row {
+    display: flex;
+    gap: 0;
+    padding: 16px 0;
+    border-top: 1px solid #E5E6EA;
+    border-bottom: 1px solid #E5E6EA;
+    margin-bottom: 16px;
+  }
+  .stat-item {
+    flex: 1;
+    text-align: center;
+    position: relative;
+  }
+  .stat-item + .stat-item::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 4px; bottom: 4px;
+    width: 1px;
+    background: #E5E6EA;
+  }
+  .stat-val  { font-size: 18px; font-weight: 700; color: #4E46E5; display: block; }
+  .stat-lbl  { font-size: 11px; color: #6B728A; display: block; margin-top: 2px; }
+
+  .skill-update {
+    background: #DCF8EE;
+    border-radius: 10px;
+    padding: 12px 16px;
+    margin-bottom: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .skill-update-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #1DC58A;
+  }
+  .skill-bar-track {
+    height: 5px;
+    background: rgba(29,197,138,0.2);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .skill-bar-fill {
+    height: 100%;
+    background: #1DC58A;
+    border-radius: 3px;
+    width: 74%;
+  }
+
+  .continue-btn {
+    background: #4E46E5;
+    color: #fff;
+    border-radius: 14px;
+    padding: 16px;
+    text-align: center;
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 12px;
+  }
+  .breakdown-link {
+    text-align: center;
+    font-size: 12px;
+    color: #BCC0CB;
+  }
+
+  .s4 .home-indicator { background: rgba(255,255,255,0.2); }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Socratic — Practice Problems</h1>
+  <p>Mobile swipe flow · 4 states</p>
+</div>
+
+<div class="screens-row">
+
+  <!-- ── SCREEN 1: Problem Card ─────────────────── -->
+  <div class="screen-wrap">
+    <span class="screen-label">1 · Problem Card</span>
+    <div class="phone s1">
+      <div class="status-bar">
+        <span>9:41</span>
+        <span class="status-dots">●●●</span>
+      </div>
+      <div class="top-nav">
+        <span class="streak-pill">🔥 7</span>
+        <div class="profile-circle">A</div>
+      </div>
+      <div class="topic-label">Calculus  ·  Integration</div>
+      <div class="progress-dots">
+        <span></span><span></span><span class="active"></span>
+        <span></span><span></span><span></span><span></span><span></span>
+      </div>
+
+      <div class="card">
+        <div class="card-inner">
+          <div class="mark-badge">4 marks</div>
+          <div class="question">Find ∫(2x + 1)⁵ dx using the substitution u&nbsp;=&nbsp;2x&nbsp;+&nbsp;1.</div>
+          <div class="card-divider"></div>
+          <div class="work-label">Your working</div>
+          <div class="work-lines">
+            <span></span><span></span><span></span>
+            <span></span><span></span><span></span><span></span>
+          </div>
+          <div class="answer-field">Final answer…</div>
+        </div>
+      </div>
+
+      <div class="bottom-actions">
+        <div class="action-btn btn-hard">← Hard</div>
+        <div class="action-btn btn-hint">💡 Hint</div>
+        <div class="action-btn btn-got-it">Got it →</div>
+      </div>
+      <div class="home-indicator"></div>
+    </div>
+  </div>
+
+  <!-- ── SCREEN 2: Swipe Right ─────────────────── -->
+  <div class="screen-wrap">
+    <span class="screen-label">2 · Got It →</span>
+    <div class="phone s2">
+      <div class="status-bar">
+        <span>9:41</span>
+        <span class="status-dots">●●●</span>
+      </div>
+      <div class="top-nav">
+        <span class="streak-pill">🔥 7</span>
+        <div class="profile-circle">A</div>
+      </div>
+      <div class="topic-label">Calculus  ·  Integration</div>
+      <div class="progress-dots">
+        <span></span><span></span><span class="active" style="background:#1DC58A"></span>
+        <span></span><span></span><span></span><span></span><span></span>
+      </div>
+
+      <div style="position:relative;">
+        <div class="peek-card"></div>
+        <div class="got-it-stamp">✓&nbsp;&nbsp;GOT IT</div>
+        <div class="card-s2-wrap">
+          <div class="card card-tilted">
+            <div class="card-green-overlay"></div>
+            <div class="card-inner">
+              <div class="mark-badge">4 marks</div>
+              <div class="question">Find ∫(2x + 1)⁵ dx using the substitution u&nbsp;=&nbsp;2x&nbsp;+&nbsp;1.</div>
+              <div class="card-divider"></div>
+              <div class="work-label">Your working</div>
+              <div class="work-lines">
+                <span></span><span></span><span></span>
+                <span></span><span></span>
+              </div>
+              <div class="answer-field">Final answer…</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="swipe-feedback">Nice — mastery +3% 🎉</div>
+      <div class="home-indicator"></div>
+    </div>
+  </div>
+
+  <!-- ── SCREEN 3: Hint Expanded ───────────────── -->
+  <div class="screen-wrap">
+    <span class="screen-label">3 · Hint Tapped</span>
+    <div class="phone s3">
+      <div class="status-bar" style="color:#0F1730">
+        <span>9:41</span>
+        <span class="status-dots">●●●</span>
+      </div>
+      <div class="top-nav">
+        <span class="streak-pill">🔥 7</span>
+        <div class="profile-circle">A</div>
+      </div>
+      <div class="topic-label">Calculus  ·  Integration</div>
+      <div class="progress-dots">
+        <span></span><span></span><span class="active"></span>
+        <span></span><span></span><span></span><span></span><span></span>
+      </div>
+
+      <div class="card" style="border-color:#4E46E5; border-width:1.5px;">
+        <div class="card-inner">
+          <div class="mark-badge">4 marks</div>
+          <div class="question" style="font-size:19px;">Find ∫(2x + 1)⁵ dx using the substitution u&nbsp;=&nbsp;2x&nbsp;+&nbsp;1.</div>
+          <div class="card-divider"></div>
+          <div class="hint-panel">
+            <div class="hint-header">💡 Hint 1 of 3</div>
+            <div class="hint-text">What does u = 2x+1 tell you about dx? Write out du/dx and solve for dx.</div>
+            <div class="hint-divider"></div>
+            <div class="hint-locked">Hint 2  ·  tap to reveal</div>
+            <div class="hint-divider"></div>
+            <div class="hint-locked">Hint 3  ·  tap to reveal</div>
+            <div class="hint-divider"></div>
+            <div class="hint-wb-link">🖥️  Full walkthrough on Whiteboard →</div>
+            <div class="hint-wb-sub">Step-by-step with diagrams</div>
+            <div class="hint-divider"></div>
+            <div class="hint-skip">Too hard — skip</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bottom-actions" style="padding-top:12px;">
+        <div class="action-btn btn-hard" style="flex:none; width:160px;">← Hard</div>
+        <div class="action-btn btn-got-it" style="flex:none; width:160px;">Got it →</div>
+      </div>
+      <div class="home-indicator"></div>
+    </div>
+  </div>
+
+  <!-- ── SCREEN 4: Progress Beat ───────────────── -->
+  <div class="screen-wrap">
+    <span class="screen-label">4 · Session Done</span>
+    <div class="phone s4">
+      <div class="status-bar">
+        <span>9:41</span>
+        <span class="status-dots" style="color:#3A3D4A;">●●●</span>
+      </div>
+
+      <div class="ambient-text">
+        <div class="ambient-title">You're on a roll,<br>Arjun.</div>
+        <div class="ambient-sub">2 more sessions to reach 80% mastery in Calculus.</div>
+      </div>
+
+      <div class="result-card">
+        <div class="result-inner">
+          <div class="big-check">✓</div>
+          <div class="result-title">Session Complete</div>
+          <div class="result-sub">8 problems  ·  12 minutes</div>
+
+          <div class="stats-row">
+            <div class="stat-item">
+              <span class="stat-val">6/8</span>
+              <span class="stat-lbl">Correct</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-val">+5%</span>
+              <span class="stat-lbl">Mastery gain</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-val">🔥 8</span>
+              <span class="stat-lbl">Day streak</span>
+            </div>
+          </div>
+
+          <div class="skill-update">
+            <div class="skill-update-label">u-substitution  61% → 74%</div>
+            <div class="skill-bar-track">
+              <div class="skill-bar-fill"></div>
+            </div>
+          </div>
+
+          <div class="continue-btn">Continue →</div>
+          <div class="breakdown-link">Tap to see full breakdown</div>
+        </div>
+      </div>
+
+      <div class="home-indicator" style="background:rgba(255,255,255,0.18); margin-top:16px;"></div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

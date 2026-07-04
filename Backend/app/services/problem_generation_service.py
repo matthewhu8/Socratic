@@ -37,6 +37,36 @@ BlueprintFn = Callable[[int], ProblemVariant]
 _BLUEPRINTS: dict[str, BlueprintFn] = {}
 
 
+def _poly_term(coef: int, var: str, leading: bool = False) -> str:
+    """Format a polynomial term for display, e.g. coef=−3, var='x' → '− 3x'.
+
+    When `leading` is True the term is the first in the expression (no leading sign shown for positive).
+    When False the term is interior and always prefixed with '+ ' or '− '.
+    """
+    if coef == 0:
+        return ""
+    abs_c = abs(coef)
+    coef_str = "" if abs_c == 1 else str(abs_c)
+    term = f"{coef_str}{var}"
+    if leading:
+        return f"−{coef_str}{var}" if coef < 0 else term
+    return f"− {coef_str}{var}" if coef < 0 else f"+ {term}"
+
+
+def _format_quadratic(a: int, b: int, c: int) -> str:
+    """Return a clean quadratic string like '3x² − 2x + 5' or 'x² − 4'."""
+    parts: list[str] = []
+    # Leading ax² term (a is always positive in our blueprints)
+    a_str = "" if a == 1 else str(a)
+    parts.append(f"{a_str}x²")
+    if b != 0:
+        parts.append(_poly_term(b, "x"))
+    if c != 0:
+        sign = "+ " if c > 0 else "− "
+        parts.append(f"{sign}{abs(c)}")
+    return " ".join(parts)
+
+
 def blueprint(slug: str) -> Callable[[BlueprintFn], BlueprintFn]:
     """Decorator that registers a CBIT blueprint for a seed problem slug."""
     def decorator(fn: BlueprintFn) -> BlueprintFn:
@@ -369,23 +399,31 @@ def _calc_tangent_001(seed: int) -> ProblemVariant:
     b = rng.randint(-5, 5)
     c = rng.randint(-5, 5)
     x0 = rng.randint(1, 4)
-    # y = ax² + bx + c; y'(x0) = 2ax0 + b; y(x0) = ax0²+bx0+c
     m = 2 * a * x0 + b
     y0 = a * x0**2 + b * x0 + c
-    # y − y0 = m(x − x0) → y = mx + (y0 − m*x0)
     intercept = y0 - m * x0
-    b_str = f"+ {intercept}" if intercept >= 0 else f"− {-intercept}"
+
+    curve = _format_quadratic(a, b, c)
+    deriv = _format_quadratic(2 * a, 0, b).replace("x²", "x")  # 2ax + b
+    # Format answer line: y = mx ± |intercept|
+    intercept_str = (
+        f"+ {intercept}" if intercept > 0
+        else f"− {-intercept}" if intercept < 0
+        else ""
+    )
+    answer_line = f"y = {m}x {intercept_str}".strip()
+
     return ProblemVariant(
-        content=f"Find the equation of the tangent to y = {a}x² + {b}x + {c} at x = {x0}.",
-        answer=f"y = {m}x {b_str}",
+        content=f"Find the equation of the tangent to y = {curve} at x = {x0}.",
+        answer=answer_line,
         worked_solution=(
-            f"y({x0}) = {a}({x0})² + {b}({x0}) + {c} = {y0}. "
-            f"y' = {2*a}x + {b}. Gradient at x={x0}: {m}. "
-            f"Tangent: y − {y0} = {m}(x − {x0}) → y = {m}x {b_str}."
+            f"y({x0}) = {y0}. "
+            f"y' = {deriv}. Gradient at x={x0}: m = {m}. "
+            f"Tangent: y − {y0} = {m}(x − {x0}) → {answer_line}."
         ),
         hint_l1="Find y(x₀) and y'(x₀). Use y − y₀ = m(x − x₀).",
-        hint_l2=f"y'({x0}) = {2*a}({x0}) + {b} = {m}. y({x0}) = {y0}.",
-        hint_l3=f"y = {m}x {b_str}.",
+        hint_l2=f"y'({x0}) = {m}. y({x0}) = {y0}.",
+        hint_l3=answer_line,
         difficulty_estimate=2.0,
         re_solve_verified=True,
         source_slug="calc-tangent-001",
