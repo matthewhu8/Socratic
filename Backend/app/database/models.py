@@ -1,8 +1,91 @@
-from sqlalchemy import Boolean, Column, Integer, String, Float, JSON, ForeignKey, DateTime, Text
+from sqlalchemy import Boolean, Column, Integer, String, Float, JSON, ForeignKey, DateTime, Text, Table, Enum
 from sqlalchemy.orm import relationship, declarative_base
 from datetime import datetime
+import enum
 
 Base = declarative_base()
+
+
+# ── IB Math Content Layer ────────────────────────────────────────────────────
+
+class DifficultyTier(str, enum.Enum):
+    SL_FOUNDATION = "SL_foundation"
+    SL_CHALLENGE = "SL_challenge"
+
+
+class CommandTerm(str, enum.Enum):
+    FIND = "find"
+    CALCULATE = "calculate"
+    HENCE = "hence"
+    DEDUCE = "deduce"
+    SHOW = "show"
+    WRITE_DOWN = "write_down"
+    DETERMINE = "determine"
+    SOLVE = "solve"
+
+
+seed_problem_kc = Table(
+    "seed_problem_kc",
+    Base.metadata,
+    Column("seed_problem_id", Integer, ForeignKey("seed_problems.id"), primary_key=True),
+    Column("knowledge_component_id", Integer, ForeignKey("knowledge_components.id"), primary_key=True),
+)
+
+kc_prerequisite = Table(
+    "kc_prerequisite",
+    Base.metadata,
+    Column("kc_id", Integer, ForeignKey("knowledge_components.id"), primary_key=True),
+    Column("prereq_id", Integer, ForeignKey("knowledge_components.id"), primary_key=True),
+)
+
+
+class KnowledgeComponent(Base):
+    __tablename__ = "knowledge_components"
+
+    id = Column(Integer, primary_key=True, index=True)
+    slug = Column(String, unique=True, index=True, nullable=False)
+    name = Column(String, nullable=False)
+    ib_topic_ref = Column(String, nullable=False)
+    domain = Column(String, nullable=False)
+    description = Column(Text, nullable=False)
+    difficulty_tier = Column(String, nullable=False)
+    curriculum = Column(String, nullable=False, default="IB_Math_AA_SL")
+
+    prerequisites = relationship(
+        "KnowledgeComponent",
+        secondary=kc_prerequisite,
+        primaryjoin=id == kc_prerequisite.c.kc_id,
+        secondaryjoin=id == kc_prerequisite.c.prereq_id,
+        backref="dependents",
+    )
+    seed_problems = relationship("SeedProblem", secondary=seed_problem_kc, back_populates="knowledge_components")
+
+
+class SeedProblem(Base):
+    __tablename__ = "seed_problems"
+
+    id = Column(Integer, primary_key=True, index=True)
+    slug = Column(String, unique=True, index=True, nullable=False)
+    content = Column(Text, nullable=False)
+    command_term = Column(String, nullable=False)
+    ib_topic_ref = Column(String, nullable=False)
+    domain = Column(String, nullable=False)
+    difficulty_tier = Column(String, nullable=False)
+    difficulty_estimate = Column(Float, nullable=False)  # 1.0–5.0
+    answer = Column(Text, nullable=False)
+    worked_solution = Column(Text, nullable=False)
+    distractors = Column(JSON, nullable=True)  # list of {value, misconception_label}
+    hint_l1 = Column(Text, nullable=False)
+    hint_l2 = Column(Text, nullable=False)
+    hint_l3 = Column(Text, nullable=False)
+    re_solve_verified = Column(Boolean, nullable=False, default=False)
+    curriculum = Column(String, nullable=False, default="IB_Math_AA_SL")
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    knowledge_components = relationship("KnowledgeComponent", secondary=seed_problem_kc, back_populates="seed_problems")
+
+
+# ── Existing models ───────────────────────────────────────────────────────────
 
 # New models for authentication
 class StudentUser(Base):

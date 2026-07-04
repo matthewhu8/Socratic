@@ -106,4 +106,24 @@ export const fetchWithAuth = async (url, options = {}) => {
   return response;
 };
 
-export default API_URL; 
+// Streaming-capable variant of fetchWithAuth for Server-Sent Events (SSE).
+//
+// Approach: returns the RAW `Response` (it never calls `.json()`), so the caller
+// is responsible for reading the body, e.g.:
+//   const res = await streamWithAuth(url, { method: 'POST', body });
+//   const reader = res.body.getReader();
+//
+// It reuses fetchWithAuth's Bearer-token + 401-refresh-with-queuing logic verbatim
+// (delegating to it) so the auth behavior stays in one place. fetchWithAuth already
+// returns the raw Response untouched, which is exactly what an SSE caller needs.
+export const streamWithAuth = async (url, options = {}) => {
+  return fetchWithAuth(url, {
+    ...options,
+    headers: {
+      'Accept': 'text/event-stream',
+      ...options.headers,
+    },
+  });
+};
+
+export default API_URL;

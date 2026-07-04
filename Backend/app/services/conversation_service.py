@@ -5,6 +5,8 @@ from redis import Redis
 import traceback
 from .gemini_service import GeminiService
 from .youtube_service import YouTubeTranscriptService
+from .providers.base import WhiteboardProvider
+from .providers.anthropic_provider import AnthropicProvider
 import yt_dlp
 import redis
 import os
@@ -25,7 +27,26 @@ class ConversationService:
         
         self.gemini_service = GeminiService()
         self.youtube_service = YouTubeTranscriptService()
-    
+
+        # Whiteboard providers hold model clients; cache one instance per provider
+        # name so we don't rebuild them on every request.
+        self._provider_cache: Dict[str, WhiteboardProvider] = {}
+
+    def make_provider(self, mode: Optional[str] = None) -> WhiteboardProvider:
+        """Resolve the whiteboard provider for a turn.
+
+        Claude is the only provider now; ``mode`` is accepted for caller
+        back-compat but ignored. The instance is cached because it holds a
+        model client.
+        """
+        cached = self._provider_cache.get("claude")
+        if cached is not None:
+            return cached
+
+        provider: WhiteboardProvider = AnthropicProvider()
+        self._provider_cache["claude"] = provider
+        return provider
+
     def _get_session_key(self, user_id: str, test_id: str, question_id: str) -> str:
         """Generate Redis key for a specific test session."""
         return f"test_session:{user_id}:{test_id}:{question_id}"

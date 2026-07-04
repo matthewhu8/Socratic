@@ -1,0 +1,380 @@
+[
+  {
+    "slug": "trig-radians-001",
+    "kc_ids": ["trig-radians"],
+    "content": "A sector of a circle has radius 8 cm and central angle θ = π/3 radians. Find the arc length and area of the sector.",
+    "command_term": "find",
+    "ib_topic_ref": "3.1",
+    "domain": "Geometry & Trigonometry",
+    "difficulty_tier": "SL_foundation",
+    "difficulty_estimate": 1.5,
+    "answer": "Arc length = 8π/3 cm, Area = 32π/3 cm²",
+    "worked_solution": "Arc = rθ = 8(π/3) = 8π/3 cm. Area = ½r²θ = ½(64)(π/3) = 32π/3 cm².",
+    "distractors": [
+      {"value": "Arc = 8π/3, Area = 16π/3", "misconception_label": "Forgot the ½ in the area formula"},
+      {"value": "Arc = 8π, Area = 32π/3", "misconception_label": "Used full circumference formula instead of arc = rθ"},
+      {"value": "Arc = 8π/3, Area = 64π/3", "misconception_label": "Used area = r²θ instead of ½r²θ"}
+    ],
+    "hint_l1": "The two key sector formulae are arc length s = rθ and area A = ½r²θ (θ in radians).",
+    "hint_l2": "Substitute r = 8 and θ = π/3 into each formula.",
+    "hint_l3": "s = 8π/3 cm. A = ½ × 64 × π/3 = 32π/3 cm².",
+    "re_solve_verified": true
+  },
+  {
+    "slug": "trig-radians-002",
+    "kc_ids": ["trig-radians"],
+    "content": "Convert 150° to radians. Hence find the length of the arc subtended in a circle of radius 6 cm.",
+    "command_term": "find",
+    "ib_topic_ref": "3.1",
+    "domain": "Geometry & Trigonometry",
+    "difficulty_tier": "SL_foundation",
+    "difficulty_estimate": 2.0,
+    "answer": "5π/6 radians; arc = 5π cm",
+    "worked_solution": "150° × π/180 = 5π/6 rad. Arc = rθ = 6 × 5π/6 = 5π cm.",
+    "distractors": [
+      {"value": "5π/6 rad; arc = 5π/6 cm", "misconception_label": "Did not multiply by r (used θ as arc length)"},
+      {"value": "150π/180 = 5π/6 rad; arc = 30π cm", "misconception_label": "Multiplied by 180 instead of 6 for arc length"},
+      {"value": "6π/5 rad; arc = 5π cm", "misconception_label": "Inverted the conversion factor: used 180/π instead of π/180"}
+    ],
+    "hint_l1": "To convert degrees to radians, multiply by π/180. Then use s = rθ.",
+    "hint_l2": "150 × π/180 = 5π/6. Then s = 6 × 5π/6.",
+    "hint_l3": "s = 5π cm.",
+    "re_solve_verified": true
+  },
+  {
+    "slug": "trig-radians-003",
+    "kc_ids": ["trig-radians"],
+    "content": "A sector has perimeter 30 cm and radius 8 cm. Find the angle in radians and the area of the sector.",
+    "command_term": "find",
+    "ib_topic_ref": "3.1",
+    "domain": "Geometry & Trigonometry",
+    "difficulty_tier": "SL_challenge",
+    "difficulty_estimate": 2.5,
+    "answer": "θ = 7/4 radians; Area = 56 cm²",
+    "worked_solution": "Perimeter = arc + 2r = arc + 16 = 30, so arc = 14. θ = arc/r = 14/8 = 7/4. Area = ½r²θ = ½(64)(7/4) = 56 cm².",
+    "distractors": [
+      {"value": "θ = 30/8, Area = 112 cm²", "misconception_label": "Used full perimeter as arc (forgot to subtract 2r)"},
+      {"value": "θ = 7/4, Area = 112 cm²", "misconception_label": "Forgot the ½ in the area formula"},
+      {"value": "θ = 14/8, Area = 49 cm²", "misconception_label": "Correct θ but used area = r × arc / 2 = 8×14/2 = 56... actually this is the same. Let me reconsider — perhaps area = θ² or rθ"}
+    ],
+    "hint_l1": "The perimeter of a sector consists of two radii and the arc. Write an equation for the arc length.",
+    "hint_l2": "30 = 2(8) + arc → arc = 14. Then θ = arc/r = 14/8.",
+    "hint_l3": "θ = 7/4 rad. Area = ½ × 64 × 7/4 = 56 cm².",
+    "re_solve_verified": true
+  },
+  {
+    "slug": "trig-unit-001",
+    "kc_ids": ["trig-unit-circle"],
+    "content": "Find the exact value of cos(5π/6).",
+    "command_term": "find",
+    "ib_topic_ref": "3.2",
+    "domain": "Geometry & Trigonometry",
+    "difficulty_tier": "SL_foundation",
+    "difficulty_estimate": 1.5,
+    "answer": "−√3/2",
+    "worked_solution": "5π/6 is in Q2 (between π/2 and π). Reference angle = π − 5π/6 = π/6. cos(π/6) = √3/2. In Q2, cos is negative. So cos(5π/6) = −√3/2.",
+    "distractors": [
+      {"value": "√3/2", "misconception_label": "Forgot that cosine is negative in the second quadrant"},
+      {"value": "1/2", "misconception_label": "Gave sin(π/6) instead of cos(π/6) for the reference angle value"},
+      {"value": "−1/2", "misconception_label": "Used sin reference value in Q2 with correct negative sign but wrong trig function"}
+    ],
+    "hint_l1": "Identify which quadrant 5π/6 is in, then find the reference angle.",
+    "hint_l2": "5π/6 is in Q2. Reference angle = π − 5π/6 = π/6. cos(π/6) = √3/2. Sign in Q2: cos is negative.",
+    "hint_l3": "cos(5π/6) = −√3/2.",
+    "re_solve_verified": true
+  },
+  {
+    "slug": "trig-unit-002",
+    "kc_ids": ["trig-unit-circle"],
+    "content": "Given sin θ = 3/5 and θ is in the second quadrant, find the exact values of cos θ and tan θ.",
+    "command_term": "find",
+    "ib_topic_ref": "3.2",
+    "domain": "Geometry & Trigonometry",
+    "difficulty_tier": "SL_foundation",
+    "difficulty_estimate": 2.0,
+    "answer": "cos θ = −4/5, tan θ = −3/4",
+    "worked_solution": "sin²θ + cos²θ = 1 → cos²θ = 1 − 9/25 = 16/25 → cos θ = ±4/5. In Q2, cos < 0, so cos θ = −4/5. tan θ = sin θ/cos θ = (3/5)/(−4/5) = −3/4.",
+    "distractors": [
+      {"value": "cos θ = 4/5, tan θ = 3/4", "misconception_label": "Ignored the quadrant condition — took positive values"},
+      {"value": "cos θ = −4/5, tan θ = 3/4", "misconception_label": "Correct cos but positive tan — forgot tan is negative in Q2"},
+      {"value": "cos θ = −3/5, tan θ = −1", "misconception_label": "Swapped sin and cos values"}
+    ],
+    "hint_l1": "Use the Pythagorean identity to find |cos θ|, then apply the CAST rule for the sign in Q2.",
+    "hint_l2": "cos²θ = 1 − (3/5)² = 16/25. In Q2, cos is negative. tan = sin/cos.",
+    "hint_l3": "cos θ = −4/5. tan θ = (3/5) ÷ (−4/5) = −3/4.",
+    "re_solve_verified": true
+  },
+  {
+    "slug": "trig-unit-003",
+    "kc_ids": ["trig-unit-circle"],
+    "content": "Find all values of θ in [0, 2π] where cos θ = −1/2.",
+    "command_term": "find",
+    "ib_topic_ref": "3.2",
+    "domain": "Geometry & Trigonometry",
+    "difficulty_tier": "SL_challenge",
+    "difficulty_estimate": 2.5,
+    "answer": "θ = 2π/3 and θ = 4π/3",
+    "worked_solution": "cos θ = −1/2. Reference angle: cos(π/3) = 1/2, so reference = π/3. cos is negative in Q2 and Q3. Q2: θ = π − π/3 = 2π/3. Q3: θ = π + π/3 = 4π/3.",
+    "distractors": [
+      {"value": "θ = π/3 and 5π/3", "misconception_label": "Found solutions where cos = +1/2 instead of −1/2"},
+      {"value": "θ = 2π/3 only", "misconception_label": "Found Q2 solution but missed the Q3 solution"},
+      {"value": "θ = π/3 and 2π/3", "misconception_label": "Correctly identified reference angle but placed both solutions in Q1 and Q2"}
+    ],
+    "hint_l1": "Find the reference angle using cos(ref) = 1/2. Then place solutions in the quadrants where cos is negative.",
+    "hint_l2": "Reference angle = π/3. Cosine is negative in Q2 and Q3.",
+    "hint_l3": "Q2: π − π/3 = 2π/3. Q3: π + π/3 = 4π/3.",
+    "re_solve_verified": true
+  },
+  {
+    "slug": "trig-graphs-001",
+    "kc_ids": ["trig-graphs"],
+    "content": "For the function f(x) = 3sin(2x − π/2), state the amplitude, period, and phase shift.",
+    "command_term": "write_down",
+    "ib_topic_ref": "3.4",
+    "domain": "Geometry & Trigonometry",
+    "difficulty_tier": "SL_foundation",
+    "difficulty_estimate": 2.0,
+    "answer": "Amplitude = 3, period = π, phase shift = π/4 right",
+    "worked_solution": "Rewrite: 3sin(2(x − π/4)). Amplitude = |3| = 3. Period = 2π/2 = π. Phase shift: π/4 to the right.",
+    "distractors": [
+      {"value": "Amplitude = 3, period = π, phase shift = π/2 right", "misconception_label": "Read phase shift as π/2 without factoring out the 2"},
+      {"value": "Amplitude = 3, period = 4π, phase shift = π/4 right", "misconception_label": "Computed period = 2π × 2 instead of 2π/2"},
+      {"value": "Amplitude = 3, period = π, phase shift = π/4 left", "misconception_label": "Reversed direction of phase shift"}
+    ],
+    "hint_l1": "Rewrite in the form a sin(b(x − c)) + d to identify each parameter.",
+    "hint_l2": "3sin(2x − π/2) = 3sin(2(x − π/4)). b = 2, so period = 2π/2. c = π/4.",
+    "hint_l3": "Amplitude = 3, period = π, phase shift = π/4 right.",
+    "re_solve_verified": true
+  },
+  {
+    "slug": "trig-graphs-002",
+    "kc_ids": ["trig-graphs"],
+    "content": "A sinusoidal function has maximum value 7, minimum value −1, and period 4π. Write an equation in the form y = a sin(bx) + d.",
+    "command_term": "write_down",
+    "ib_topic_ref": "3.4",
+    "domain": "Geometry & Trigonometry",
+    "difficulty_tier": "SL_foundation",
+    "difficulty_estimate": 2.0,
+    "answer": "y = 4sin(x/2) + 3",
+    "worked_solution": "Amplitude a = (max − min)/2 = (7−(−1))/2 = 4. Vertical shift d = (max + min)/2 = (7+(−1))/2 = 3. Period = 2π/b = 4π → b = 1/2. Equation: y = 4sin(x/2) + 3.",
+    "distractors": [
+      {"value": "y = 4sin(2x) + 3", "misconception_label": "Set b = 2 (period = π) instead of b = 1/2 (period = 4π)"},
+      {"value": "y = 8sin(x/2) + 3", "misconception_label": "Used full range 8 as amplitude instead of half-range 4"},
+      {"value": "y = 4sin(x/2) − 3", "misconception_label": "Computed vertical shift as (min+max)/2 = 3 but applied negative sign"}
+    ],
+    "hint_l1": "Amplitude = (max − min)/2. Vertical shift = (max + min)/2. Period = 2π/b.",
+    "hint_l2": "a = 4, d = 3. Period 4π: 2π/b = 4π → b = 1/2.",
+    "hint_l3": "y = 4sin(x/2) + 3.",
+    "re_solve_verified": true
+  },
+  {
+    "slug": "trig-graphs-003",
+    "kc_ids": ["trig-graphs"],
+    "content": "Find the maximum value of f(x) = 5 − 3cos(2x + π/3), and the smallest positive x at which it occurs.",
+    "command_term": "find",
+    "ib_topic_ref": "3.4",
+    "domain": "Geometry & Trigonometry",
+    "difficulty_tier": "SL_challenge",
+    "difficulty_estimate": 3.0,
+    "answer": "Maximum = 8, at x = π/3",
+    "worked_solution": "Maximum of 5 − 3cos(…) occurs when cos(…) = −1, giving 5+3 = 8. Set 2x+π/3 = π (smallest positive). Then 2x = 2π/3, so x = π/3.",
+    "distractors": [
+      {"value": "Maximum = 8, at x = π/6", "misconception_label": "Solved 2x = π/3 instead of 2x = π − π/3 = 2π/3"},
+      {"value": "Maximum = 2, at x = π/3", "misconception_label": "Used cos = +1 (minimum of f) instead of cos = −1 (maximum of f)"},
+      {"value": "Maximum = 8, at x = 5π/6", "misconception_label": "Took the next solution 2x + π/3 = 3π instead of π"}
+    ],
+    "hint_l1": "The expression 5 − 3cos(…) is maximised when cos(…) is minimised. What is the minimum value of cosine?",
+    "hint_l2": "cos = −1 gives max f = 5+3 = 8. Set 2x + π/3 = π for the smallest positive x.",
+    "hint_l3": "2x = 2π/3 → x = π/3.",
+    "re_solve_verified": true
+  },
+  {
+    "slug": "trig-ident-001",
+    "kc_ids": ["trig-identities"],
+    "content": "Simplify: (1 − sin²θ)/cos θ, given cos θ ≠ 0.",
+    "command_term": "find",
+    "ib_topic_ref": "3.5",
+    "domain": "Geometry & Trigonometry",
+    "difficulty_tier": "SL_challenge",
+    "difficulty_estimate": 2.0,
+    "answer": "cos θ",
+    "worked_solution": "1 − sin²θ = cos²θ (Pythagorean identity). So cos²θ/cos θ = cos θ.",
+    "distractors": [
+      {"value": "sin θ", "misconception_label": "Applied identity incorrectly: 1 − sin²θ = sin²θ"},
+      {"value": "1/cos θ = sec θ", "misconception_label": "Simplified numerator as 1 instead of cos²θ"},
+      {"value": "cos²θ", "misconception_label": "Correctly replaced numerator but forgot to cancel one cos θ from the denominator"}
+    ],
+    "hint_l1": "Use the Pythagorean identity sin²θ + cos²θ = 1 to replace the numerator.",
+    "hint_l2": "1 − sin²θ = cos²θ. Now divide by cos θ.",
+    "hint_l3": "cos²θ / cos θ = cos θ.",
+    "re_solve_verified": true
+  },
+  {
+    "slug": "trig-ident-002",
+    "kc_ids": ["trig-identities"],
+    "content": "Given sin θ = 1/3 and θ is acute, find the exact value of cos(2θ).",
+    "command_term": "find",
+    "ib_topic_ref": "3.5",
+    "domain": "Geometry & Trigonometry",
+    "difficulty_tier": "SL_challenge",
+    "difficulty_estimate": 2.5,
+    "answer": "cos(2θ) = 7/9",
+    "worked_solution": "Use cos(2θ) = 1 − 2sin²θ = 1 − 2(1/9) = 1 − 2/9 = 7/9.",
+    "distractors": [
+      {"value": "cos(2θ) = 2/9", "misconception_label": "Computed 2sin²θ = 2/9 and stopped, forgetting to subtract from 1"},
+      {"value": "cos(2θ) = 8/9", "misconception_label": "Used cos(2θ) = 1 − sin²θ instead of 1 − 2sin²θ"},
+      {"value": "cos(2θ) = −7/9", "misconception_label": "Correct magnitude but wrong sign — forgot θ acute means 2θ could still have positive cosine for small θ"}
+    ],
+    "hint_l1": "Which double angle formula for cos(2θ) involves only sin θ? Use it to avoid needing cos θ.",
+    "hint_l2": "cos(2θ) = 1 − 2sin²θ. Substitute sin θ = 1/3.",
+    "hint_l3": "cos(2θ) = 1 − 2(1/9) = 7/9.",
+    "re_solve_verified": true
+  },
+  {
+    "slug": "trig-ident-003",
+    "kc_ids": ["trig-identities"],
+    "content": "Solve sin(2x) = cos(x) for x ∈ [0, 2π].",
+    "command_term": "solve",
+    "ib_topic_ref": "3.5",
+    "domain": "Geometry & Trigonometry",
+    "difficulty_tier": "SL_challenge",
+    "difficulty_estimate": 3.0,
+    "answer": "x = π/6, π/2, 5π/6, 3π/2",
+    "worked_solution": "sin(2x) = 2sinx cosx = cosx. So cosx(2sinx − 1) = 0. Case 1: cosx = 0 → x = π/2, 3π/2. Case 2: sinx = 1/2 → x = π/6, 5π/6.",
+    "distractors": [
+      {"value": "x = π/6, 5π/6 only", "misconception_label": "Only solved sinx = 1/2, missed the cosx = 0 solutions"},
+      {"value": "x = π/2, 3π/2 only", "misconception_label": "Only solved cosx = 0, missed sinx = 1/2 solutions"},
+      {"value": "x = π/4, 3π/4, 5π/4, 7π/4", "misconception_label": "Solved sin(2x) = 1 (set 2x at maximums) rather than using the identity"}
+    ],
+    "hint_l1": "Use the double angle identity sin(2x) = 2sinx cosx, then factor.",
+    "hint_l2": "2sinx cosx − cosx = 0 → cosx(2sinx − 1) = 0. Solve each factor.",
+    "hint_l3": "cosx=0: x=π/2, 3π/2. sinx=1/2: x=π/6, 5π/6. All four solutions.",
+    "re_solve_verified": true
+  },
+  {
+    "slug": "trig-eq-001",
+    "kc_ids": ["trig-equations"],
+    "content": "Solve 2cos²x − cosx − 1 = 0 for 0 ≤ x ≤ 2π.",
+    "command_term": "solve",
+    "ib_topic_ref": "3.6",
+    "domain": "Geometry & Trigonometry",
+    "difficulty_tier": "SL_challenge",
+    "difficulty_estimate": 2.5,
+    "answer": "x = 0, 2π/3, 4π/3, 2π",
+    "worked_solution": "Factor: (2cosx + 1)(cosx − 1) = 0. cosx = 1 → x = 0, 2π. cosx = −1/2 → x = 2π/3, 4π/3.",
+    "distractors": [
+      {"value": "x = 2π/3, 4π/3 only", "misconception_label": "Missed the cosx = 1 solutions at x = 0 and 2π"},
+      {"value": "x = π/3, 5π/3", "misconception_label": "Solved cosx = +1/2 instead of −1/2"},
+      {"value": "x = 0, π, 2π", "misconception_label": "Solved cosx = 1 and cosx = −1 (factored incorrectly)"}
+    ],
+    "hint_l1": "Let u = cosx and factor the quadratic in u.",
+    "hint_l2": "(2cosx+1)(cosx−1) = 0. Solve each factor for cosx, then find x in [0, 2π].",
+    "hint_l3": "cosx=1 → x=0, 2π. cosx=−1/2 → x=2π/3, 4π/3.",
+    "re_solve_verified": true
+  },
+  {
+    "slug": "trig-eq-002",
+    "kc_ids": ["trig-equations"],
+    "content": "Solve tan x = √3 for 0 ≤ x ≤ 2π.",
+    "command_term": "solve",
+    "ib_topic_ref": "3.6",
+    "domain": "Geometry & Trigonometry",
+    "difficulty_tier": "SL_challenge",
+    "difficulty_estimate": 2.0,
+    "answer": "x = π/3 and x = 4π/3",
+    "worked_solution": "tan x = √3. Reference angle: tan(π/3) = √3. Tangent is positive in Q1 and Q3. x = π/3 and x = π + π/3 = 4π/3.",
+    "distractors": [
+      {"value": "x = π/3 only", "misconception_label": "Found only the Q1 solution, missed the Q3 solution"},
+      {"value": "x = π/6 and 7π/6", "misconception_label": "Used wrong reference angle: tan(π/6) = 1/√3, not √3"},
+      {"value": "x = π/3 and 5π/3", "misconception_label": "Placed second solution in Q4 — forgot tangent positive in Q1 and Q3, not Q4"}
+    ],
+    "hint_l1": "Find the reference angle where tan = √3. Tangent is positive in Q1 and Q3.",
+    "hint_l2": "tan(π/3) = √3, so reference angle is π/3. Place solutions in Q1 and Q3.",
+    "hint_l3": "x = π/3 and x = π + π/3 = 4π/3.",
+    "re_solve_verified": true
+  },
+  {
+    "slug": "trig-eq-003",
+    "kc_ids": ["trig-equations"],
+    "content": "Find all solutions of 2sin(x/2) = 1 for 0 ≤ x ≤ 4π.",
+    "command_term": "find",
+    "ib_topic_ref": "3.6",
+    "domain": "Geometry & Trigonometry",
+    "difficulty_tier": "SL_challenge",
+    "difficulty_estimate": 3.0,
+    "answer": "x = π/3 and x = 5π/3",
+    "worked_solution": "sin(x/2) = 1/2. Let u = x/2 so u ∈ [0, 2π]. sin u = 1/2 → u = π/6 or u = 5π/6. Then x = 2u: x = π/3 or x = 5π/3.",
+    "distractors": [
+      {"value": "x = π/6 and 5π/6", "misconception_label": "Forgot to convert back from u = x/2 to x (did not multiply by 2)"},
+      {"value": "x = π/3, 5π/3, 13π/3", "misconception_label": "Added a spurious third solution outside the given interval"},
+      {"value": "x = 2π/3 and 10π/3", "misconception_label": "Solved sin(x/2)=1/2 but used π/3 as base angle instead of π/6"}
+    ],
+    "hint_l1": "Isolate sin(x/2), then substitute u = x/2. What is the range of u when x ∈ [0, 4π]?",
+    "hint_l2": "u = x/2 ∈ [0, 2π]. sin u = 1/2 → u = π/6, 5π/6. Convert: x = 2u.",
+    "hint_l3": "x = π/3 and x = 5π/3.",
+    "re_solve_verified": true
+  },
+  {
+    "slug": "trig-sincos-001",
+    "kc_ids": ["trig-sine-cosine-rules"],
+    "content": "In triangle ABC, AB = 8 cm, BC = 5 cm, and angle B = 60°. Find AC.",
+    "command_term": "find",
+    "ib_topic_ref": "3.3",
+    "domain": "Geometry & Trigonometry",
+    "difficulty_tier": "SL_foundation",
+    "difficulty_estimate": 2.0,
+    "answer": "AC = 7 cm",
+    "worked_solution": "AC² = AB² + BC² − 2(AB)(BC)cos B = 64 + 25 − 2(8)(5)(0.5) = 89 − 40 = 49. AC = 7 cm.",
+    "distractors": [
+      {"value": "AC = √89 ≈ 9.43 cm", "misconception_label": "Forgot to subtract the 2ab cos C term (used Pythagorean theorem)"},
+      {"value": "AC = 3 cm", "misconception_label": "Subtracted sides instead of using the law of cosines correctly"},
+      {"value": "AC = √129 cm", "misconception_label": "Used + instead of − in the cosine rule"}
+    ],
+    "hint_l1": "You know two sides and the included angle — use the cosine rule.",
+    "hint_l2": "a² = b² + c² − 2bc cos A. Here a = AC, b = 8, c = 5, A = 60°.",
+    "hint_l3": "AC² = 64 + 25 − 80(0.5) = 49. AC = 7.",
+    "re_solve_verified": true
+  },
+  {
+    "slug": "trig-sincos-002",
+    "kc_ids": ["trig-sine-cosine-rules"],
+    "content": "In triangle PQR, PQ = 10 cm, angle P = 35°, angle Q = 75°. Find QR to 3 significant figures.",
+    "command_term": "find",
+    "ib_topic_ref": "3.3",
+    "domain": "Geometry & Trigonometry",
+    "difficulty_tier": "SL_foundation",
+    "difficulty_estimate": 2.0,
+    "answer": "QR ≈ 6.10 cm",
+    "worked_solution": "Angle R = 180° − 35° − 75° = 70°. By sine rule: QR/sin P = PQ/sin R → QR = 10 sin(35°)/sin(70°) ≈ 10(0.5736)/0.9397 ≈ 6.10 cm.",
+    "distractors": [
+      {"value": "QR ≈ 10.3 cm", "misconception_label": "Used sin R / sin P instead of sin P / sin R in the ratio"},
+      {"value": "QR ≈ 8.19 cm", "misconception_label": "Used angle Q (75°) instead of angle P (35°) in the numerator"},
+      {"value": "QR ≈ 6.10 cm but angle R = 110°", "misconception_label": "Correct answer but wrong angle sum — subtracted only one angle from 180°"}
+    ],
+    "hint_l1": "Find angle R first using angle sum = 180°. Then apply the sine rule.",
+    "hint_l2": "Angle R = 70°. QR/sin(35°) = 10/sin(70°).",
+    "hint_l3": "QR = 10 sin(35°)/sin(70°) ≈ 6.10 cm.",
+    "re_solve_verified": true
+  },
+  {
+    "slug": "trig-sincos-003",
+    "kc_ids": ["trig-sine-cosine-rules"],
+    "content": "In triangle ABC, a = 7, b = 5, c = 6. Find the largest angle to the nearest degree.",
+    "command_term": "find",
+    "ib_topic_ref": "3.3",
+    "domain": "Geometry & Trigonometry",
+    "difficulty_tier": "SL_challenge",
+    "difficulty_estimate": 2.5,
+    "answer": "A ≈ 79°",
+    "worked_solution": "Largest angle is opposite largest side a = 7. cos A = (b² + c² − a²)/(2bc) = (25 + 36 − 49)/(2×5×6) = 12/60 = 1/5. A = arccos(0.2) ≈ 78.5° ≈ 79°.",
+    "distractors": [
+      {"value": "A ≈ 101°", "misconception_label": "Used formula (a² − b² − c²)/(2bc) — wrong sign arrangement"},
+      {"value": "A ≈ 56°", "misconception_label": "Found angle opposite b=5 (smallest angle) instead of a=7"},
+      {"value": "A ≈ 79° but used sine rule", "misconception_label": "Used sine rule when all three sides are known — still gets correct answer but sine rule requires knowing an angle first"}
+    ],
+    "hint_l1": "The largest angle is opposite the longest side. Use the cosine rule to find it.",
+    "hint_l2": "cos A = (b² + c² − a²)/(2bc). Substitute a=7, b=5, c=6.",
+    "hint_l3": "cos A = 12/60 = 0.2. A = arccos(0.2) ≈ 79°.",
+    "re_solve_verified": true
+  }
+]

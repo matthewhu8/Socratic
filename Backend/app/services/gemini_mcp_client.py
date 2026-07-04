@@ -35,7 +35,7 @@ class GeminiMCPClient:
 
         # Create model with function calling capabilities
         self.model = genai.GenerativeModel(
-            'gemini-2.5-flash-preview-05-20',
+            'gemini-2.5-flash',
             tools=gemini_tools,
             system_instruction="""You are an adaptive learning assistant that helps select optimal practice questions for students.
 
