@@ -213,45 +213,39 @@ class EducationMCPServer:
     # ==================== MOCKED TOOL IMPLEMENTATIONS ====================
 
     def _get_student_profile(self, user_id: int) -> Dict:
-        """MOCKED: Get student's knowledge profile"""
-        # Realistic mocked data
+        """Real L1 knowledge state: decayed per-KC mastery plus the persona and
+        recent event-memory banks. Falls back to empty lists for a new student."""
+        from app.services.mastery_service import current_mastery
+        from app.database.models import StudentPersona, StudentMemoryEvent, StudentUser
+
+        user = self.db.query(StudentUser).filter(StudentUser.id == user_id).first()
+        mastery = current_mastery(self.db, user_id)
+
+        personas = [
+            p.description
+            for p in self.db.query(StudentPersona).filter(StudentPersona.user_id == user_id).all()
+        ]
+        recent_events = [
+            e.summary
+            for e in (
+                self.db.query(StudentMemoryEvent)
+                .filter(StudentMemoryEvent.user_id == user_id)
+                .order_by(StudentMemoryEvent.event_at.desc())
+                .limit(10)
+                .all()
+            )
+        ]
+
         return {
             "user_id": user_id,
-            "grade": "10",
-            "profile": {
-                "last_updated": datetime.utcnow().isoformat(),
-                "subjects": {
-                    "mathematics": {
-                        "topics": [
-                            {
-                                "topic_name": "Quadratic Equations",
-                                "overall_proficiency": 65,
-                                "skills": {
-                                    "solving_by_factoring": {"score": 70, "questions": ["1", "2", "3"]},
-                                    "quadratic_formula": {"score": 60, "questions": ["4", "5"]},
-                                    "completing_the_square": {"score": 55, "questions": ["6"]}
-                                }
-                            },
-                            {
-                                "topic_name": "Linear Equations",
-                                "overall_proficiency": 85,
-                                "skills": {
-                                    "solving_one_variable": {"score": 90, "questions": ["7", "8", "9"]},
-                                    "solving_two_variables": {"score": 80, "questions": ["10", "11"]}
-                                }
-                            },
-                            {
-                                "topic_name": "Arithmetic Progressions",
-                                "overall_proficiency": 45,
-                                "skills": {
-                                    "finding_nth_term": {"score": 50, "questions": ["12"]},
-                                    "sum_of_terms": {"score": 40, "questions": []}
-                                }
-                            }
-                        ]
-                    }
-                }
-            }
+            "grade": getattr(user, "grade", None),
+            "mastery": mastery,  # [{kc_slug, kc_name, mastery(0-1, decayed), days_since_practice, ...}]
+            "personas": personas,
+            "recent_events": recent_events,
+            "note": (
+                "mastery is a 0-1 probability already decayed for time since last "
+                "practice; multiply by 100 for a 0-100 skill score if needed"
+            ),
         }
 
     def _search_questions(self, skill: str, difficulty_min: float = 0.0,

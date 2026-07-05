@@ -106,11 +106,7 @@ Set via env vars in production (Railway); local dev falls back to hardcoded loca
   section first; diagnose before rewriting.
 - **Prompts live in code.** System instructions are baked into model initialization in
   `gemini_service.py`, not passed per-request. Change them there, keep temperatures intentional.
-- **Type hints everywhere** (backend). Small, focused functions; flat over nested; early returns.
-- **LLM output is untrusted.** Always validate/parse model JSON and SVG before use (see
-  `_validate_svg_content`, JSON-parse fallbacks). Handle malformed responses gracefully.
-- **Cost/latency awareness.** Prefer `gemini-2.5-flash-preview-05-20` for high-volume paths; reserve
-  `gemini-1.5-pro` for quality-critical tutoring/SVG. Don't add a second LLM provider without asking.
+
 - **Async.** I/O paths (Gemini, Redis, DB) are `async`; keep new handlers non-blocking.
 
 ## Working on AI features here

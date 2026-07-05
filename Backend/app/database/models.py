@@ -1,4 +1,4 @@
-from sqlalchemy import Boolean, Column, Integer, String, Float, JSON, ForeignKey, DateTime, Text, Table, Enum
+from sqlalchemy import Boolean, Column, Integer, String, Float, JSON, ForeignKey, DateTime, Text, Table, Enum, UniqueConstraint
 from sqlalchemy.orm import relationship, declarative_base
 from datetime import datetime
 import enum
@@ -308,4 +308,77 @@ class UserFeedback(Base):
     student = relationship("StudentUser", back_populates="feedbacks")
 
 # Add the relationship to StudentUser
-StudentUser.feedbacks = relationship("UserFeedback", back_populates="student") 
+StudentUser.feedbacks = relationship("UserFeedback", back_populates="student")
+
+
+# ── TASA Knowledge Model ──────────────────────────────────────────────────────
+# Replaces the static StudentUser.knowledge_profile JSON with a dynamic, per-KC
+# probabilistic model (BKT + forgetting curve) plus narrative persona / event
+# memory banks. See docs/tasa-knowledge-model.md.
+
+
+class QuestionKC(Base):
+    """Maps a graded question to one or more knowledge components.
+
+    `question_id` is polymorphic across the graded-question tables (NCERT
+    examples/exercises, PYQs, …), so `practice_mode` disambiguates which table
+    the id refers to — there is no single FK target.
+    """
+    __tablename__ = "question_kc"
+
+    id = Column(Integer, primary_key=True, index=True)
+    question_id = Column(Integer, nullable=False, index=True)
+    practice_mode = Column(String, nullable=False)
+    kc_id = Column(Integer, ForeignKey("knowledge_components.id"), nullable=False)
+    weight = Column(Float, nullable=False, default=1.0)
+
+    kc = relationship("KnowledgeComponent")
+
+    __table_args__ = (
+        UniqueConstraint("question_id", "practice_mode", "kc_id", name="uq_question_kc"),
+    )
+
+
+class KCMastery(Base):
+    """L1: BKT mastery state for one (student, knowledge component)."""
+    __tablename__ = "kc_mastery"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("student_users.id"), nullable=False, index=True)
+    kc_id = Column(Integer, ForeignKey("knowledge_components.id"), nullable=False, index=True)
+    p_mastery = Column(Float, nullable=False)          # BKT posterior in [0, 1]
+    n_attempts = Column(Integer, nullable=False, default=0)
+    n_correct = Column(Integer, nullable=False, default=0)
+    last_practiced_at = Column(DateTime, nullable=True)  # drives the forgetting curve
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    kc = relationship("KnowledgeComponent")
+
+    __table_args__ = (
+        UniqueConstraint("user_id", "kc_id", name="uq_kc_mastery_user_kc"),
+    )
+
+
+class StudentPersona(Base):
+    """L2: an embedded natural-language persona line for a student."""
+    __tablename__ = "student_personas"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("student_users.id"), nullable=False, index=True)
+    description = Column(Text, nullable=False)
+    concept_keywords = Column(JSON, nullable=True)   # list of KC slugs
+    embedding = Column(JSON, nullable=True)          # text-embedding-004 vector
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class StudentMemoryEvent(Base):
+    """L3: an embedded, timestamped learning episode (usually a mistake)."""
+    __tablename__ = "student_memory_events"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("student_users.id"), nullable=False, index=True)
+    summary = Column(Text, nullable=False)
+    concept_keywords = Column(JSON, nullable=True)   # list of KC slugs
+    embedding = Column(JSON, nullable=True)
+    event_at = Column(DateTime, default=datetime.utcnow)
+    source_grading_id = Column(Integer, ForeignKey("grading_sessions.id"), nullable=True)

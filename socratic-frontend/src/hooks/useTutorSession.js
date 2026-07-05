@@ -1,22 +1,18 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import API_URL, { fetchWithAuth, streamWithAuth } from '../config/api';
 import { consumeSSEStream } from '../utils/sse';
 
 // Owns the AI tutor session lifecycle and the per-query SSE streaming pipeline.
 // The board is accessed through `getBoard()` which returns the imperative API
-// exposed by TutorBoard: { capturePng, injectSvg, clear, hasUserDrawn,
-// resetUserDrawn }. The backend request/response contract is unchanged from the
-// original AITutorPage.
+// exposed by TutorBoard: { captureBoardContext, beginAiTurn, applyDrawAction,
+// clear, hasUserDrawn, resetUserDrawn }. Request/response contract:
+// docs/specs/whiteboard-draw-protocol-v1.md.
 export function useTutorSession({ currentUser, getBoard, speakSentence, cancelSpeech }) {
   const [sessionId, setSessionId] = useState(null);
   const [isConnecting, setIsConnecting] = useState(false);
   const [error, setError] = useState(null);
   const [messages, setMessages] = useState([]);
   const [isProcessing, setIsProcessing] = useState(false);
-
-  // Snapshot of the board right after the previous AI turn — used for the
-  // backend's annotation diff (what the student drew on top of).
-  const previousBoardImageRef = useRef(null);
 
   const initializeSession = useCallback(async () => {
     if (!currentUser) return;
@@ -49,17 +45,15 @@ export function useTutorSession({ currentUser, getBoard, speakSentence, cancelSp
       if (!query || isProcessing) return;
 
       const board = getBoard();
-      const currentImage = board ? await board.capturePng() : null;
-      const userDrew = board ? board.hasUserDrawn() : false;
-      const isAnnotation = Boolean(userDrew && previousBoardImageRef.current);
+      const boardContext = board ? await board.captureBoardContext() : null;
 
       const requestPayload = {
         sessionId,
         query,
         messages,
-        canvasImage: currentImage,
-        previousCanvasImage: isAnnotation ? previousBoardImageRef.current : null,
-        hasAnnotation: isAnnotation,
+        canvasImage: boardContext?.png ?? null,
+        boardRegion: boardContext?.region ?? null,
+        boardElements: boardContext?.elements ?? null,
         mode: 'claude',
       };
 
@@ -125,8 +119,11 @@ export function useTutorSession({ currentUser, getBoard, speakSentence, cancelSp
           case 'text':
             appendDelta(data.delta);
             break;
-          case 'svg':
-            if (data.svgContent && board) board.injectSvg(data.svgContent);
+          case 'draw':
+            if (board && data.action) {
+              if (data.index === 0) board.beginAiTurn();
+              board.applyDrawAction(data.action);
+            }
             break;
           case 'done':
             flushRemainingSpeech();
@@ -151,14 +148,9 @@ export function useTutorSession({ currentUser, getBoard, speakSentence, cancelSp
         await consumeSSEStream(response, onEvent);
         flushRemainingSpeech();
 
-        // The board is now synced with the AI turn; capture it as the new
-        // "previous" snapshot and clear the user-drew flag.
-        if (board) {
-          board.resetUserDrawn();
-          setTimeout(async () => {
-            previousBoardImageRef.current = await board.capturePng();
-          }, 800);
-        }
+        // The board is now synced with the AI turn; clear the user-drew flag so
+        // the next capture distinguishes fresh student ink.
+        if (board) board.resetUserDrawn();
       } catch (err) {
         console.error('Failed to process query:', err);
         flushRemainingSpeech();

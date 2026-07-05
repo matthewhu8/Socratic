@@ -9,8 +9,17 @@ import AutoAwesomeRoundedIcon from '@mui/icons-material/AutoAwesomeRounded';
 import DeleteSweepRoundedIcon from '@mui/icons-material/DeleteSweepRounded';
 import StopCircleRoundedIcon from '@mui/icons-material/StopCircleRounded';
 import LogoutRoundedIcon from '@mui/icons-material/LogoutRounded';
+import VolumeOffRoundedIcon from '@mui/icons-material/VolumeOffRounded';
+import VolumeUpRoundedIcon from '@mui/icons-material/VolumeUpRounded';
 
-function WhiteboardAppBar({ onClear, isSpeaking, onStopSpeech, onLogout }) {
+function WhiteboardAppBar({
+  onClear,
+  isSpeaking,
+  onStopSpeech,
+  onLogout,
+  isMuted,
+  onToggleMute,
+}) {
   return (
     <AppBar position="static" elevation={0}>
       <Toolbar variant="dense" sx={{ gap: 1.5 }}>
@@ -39,6 +48,17 @@ function WhiteboardAppBar({ onClear, isSpeaking, onStopSpeech, onLogout }) {
         >
           Clear Board
         </Button>
+        <Tooltip title={isMuted ? 'Unmute tutor voice' : 'Silent learning: mute tutor voice'}>
+          <Button
+            color="inherit"
+            variant={isMuted ? 'outlined' : 'text'}
+            size="small"
+            startIcon={isMuted ? <VolumeOffRoundedIcon /> : <VolumeUpRoundedIcon />}
+            onClick={onToggleMute}
+          >
+            Silent Learning
+          </Button>
+        </Tooltip>
         <Tooltip title="Log out">
           <Button color="inherit" size="small" startIcon={<LogoutRoundedIcon />} onClick={onLogout}>
             Log out

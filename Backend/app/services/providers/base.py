@@ -8,9 +8,10 @@ request. Every turn is three steps, each a method on this interface:
                                             the answer). Cheap, structured output.
     2. stream_text(...) -> AsyncIterator[str] : stream the spoken teaching text so the
                                             frontend can start TTS immediately.
-    3. generate_svg(...)-> Optional[str]  : produce the board SVG — ONLY when
-                                            plan.should_draw is True. Returns validated
-                                            SVG markup or None.
+    3. generate_drawing(...) -> List[DrawAction] : produce this turn's drawing as typed
+                                            grid actions (docs/specs/whiteboard-draw-
+                                            protocol-v1.md) — ONLY when plan.should_draw
+                                            is True. Returns [] on any failure.
 
 The orchestrator (ai_whiteboard_orchestrator.py) calls these in order, streams the
 text to the client over SSE, conditionally draws, then updates the TutoringState from
@@ -28,6 +29,8 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from typing import Any, AsyncIterator, Dict, List, Optional
+
+from .draw_protocol import DrawAction
 
 
 # Pedagogical strategies the diagnose step may choose. The orchestrator and frontend
@@ -106,6 +109,7 @@ class TeachingPlan:
     strategy: str                                # one of STRATEGIES
     should_draw: bool                            # whether a diagram would help THIS turn
     reveal_answer: bool = False                  # whether to reveal the full answer (student asked)
+    needs_precision: bool = False                # drawing needs exact geometry (graphs, constructions)
     misconception: Optional[str] = None          # misconception detected this turn, if any
     student_observation: Optional[str] = None    # short note on what the student just did/showed
     problem: Optional[str] = None                # canonical problem statement (usually set on turn 1)
@@ -116,6 +120,7 @@ class TeachingPlan:
             "strategy": self.strategy,
             "should_draw": self.should_draw,
             "reveal_answer": self.reveal_answer,
+            "needs_precision": self.needs_precision,
             "misconception": self.misconception,
             "student_observation": self.student_observation,
             "problem": self.problem,
@@ -132,6 +137,7 @@ class TeachingPlan:
             strategy=strategy,
             should_draw=bool(data.get("should_draw", False)),
             reveal_answer=bool(data.get("reveal_answer", False)),
+            needs_precision=bool(data.get("needs_precision", False)),
             misconception=data.get("misconception"),
             student_observation=data.get("student_observation"),
             problem=data.get("problem"),
@@ -140,9 +146,9 @@ class TeachingPlan:
 
 
 class WhiteboardProvider(ABC):
-    """Provider-agnostic tutoring pipeline. Implementations: Gemini, Anthropic."""
+    """Provider-agnostic tutoring pipeline. Sole implementation: AnthropicProvider."""
 
-    #: short provider id, e.g. "gemini" or "claude" — used in logs and the SSE state event
+    #: short provider id, e.g. "claude" — used in logs and the SSE done event
     name: str = "base"
 
     @abstractmethod
@@ -190,19 +196,42 @@ class WhiteboardProvider(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    async def generate_svg(
+    async def generate_drawing(
         self,
         query: str,
         state: TutoringState,
         plan: TeachingPlan,
         teaching_text: str,
         canvas_image: Optional[str],
-    ) -> Optional[str]:
-        """Produce the board SVG for this turn (only called when plan.should_draw is True).
+        board_elements: Optional[List[Dict[str, Any]]] = None,
+    ) -> List[DrawAction]:
+        """Produce this turn's drawing as typed grid actions (only when plan.should_draw).
 
-        Returns validated SVG markup (a string beginning with '<svg' and ending with
-        '</svg>') or None if generation/validation fails. The frontend treats the SVG as
-        untrusted and validates again before drawing, but providers should still return
-        only well-formed, viewBox="0 0 600 400" SVG per the tutor visual rules.
+        ``board_elements`` is the frontend's symbolic listing of what is on the board
+        (spec §2) so the provider can place marks relative to the student's actual work.
+        Returned actions MUST already be validated via ``draw_protocol.parse_actions``.
+        MUST return [] (never raise) on any failure — a drawing failure must not break
+        the turn.
         """
         raise NotImplementedError
+
+    async def iter_drawing(
+        self,
+        query: str,
+        state: TutoringState,
+        plan: TeachingPlan,
+        teaching_text: str,
+        canvas_image: Optional[str],
+        board_elements: Optional[List[Dict[str, Any]]] = None,
+    ) -> AsyncIterator[DrawAction]:
+        """Stream this turn's drawing actions (the orchestrator's entry point).
+
+        Default implementation wraps ``generate_drawing`` (one batch). Providers with
+        an incremental path (e.g. programmatic tool calling, spec §9) override this to
+        yield actions as they are produced. MUST never raise — end the iterator instead.
+        """
+        actions = await self.generate_drawing(
+            query, state, plan, teaching_text, canvas_image, board_elements
+        )
+        for action in actions:
+            yield action

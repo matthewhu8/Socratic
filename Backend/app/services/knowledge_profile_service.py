@@ -102,6 +102,23 @@ class KnowledgeProfileService:
                 print(f"User {user_id} not found")
                 return None
             print(user.email)
+
+            # L1 (TASA): update the dynamic per-KC BKT mastery. Runs independently
+            # of the legacy JSON below (dual-write) and must never break grading.
+            try:
+                from app.services import mastery_service
+                changes = mastery_service.record_attempt(
+                    db=db,
+                    user_id=user_id,
+                    question_id=question_id,
+                    practice_mode=practice_mode,
+                    grading_result=grading_result,
+                )
+                if changes:
+                    print(f"Updated KC mastery for user {user_id}: {changes}")
+            except Exception as mastery_error:
+                print(f"KC mastery update failed (non-fatal): {mastery_error}")
+                db.rollback()
             
             # Get or initialize profile
             profile = copy.deepcopy(user.knowledge_profile) if user.knowledge_profile else None
@@ -243,7 +260,42 @@ class KnowledgeProfileService:
                 return profile
             
             return user.knowledge_profile
-            
+
         except Exception as e:
             print(f"Error getting student profile: {e}")
             return None
+
+    @staticmethod
+    def project_profile_from_mastery(db: Session, user_id: int) -> Optional[Dict]:
+        """Project the live L1 `kc_mastery` (decayed) into the legacy profile
+        shape the frontend renders: subjects.mathematics.topics[] grouped by KC
+        domain, with `overall_proficiency`/`score` on a 0-100 scale.
+
+        Returns None when the student has no mastery rows yet, so callers can
+        fall back to the legacy JSON during cutover.
+        """
+        from app.services.mastery_service import current_mastery
+
+        mastery = current_mastery(db, user_id)
+        if not mastery:
+            return None
+
+        topics: Dict[str, Dict] = {}
+        for m in mastery:
+            domain = m["domain"] or "General"
+            topic = topics.setdefault(domain, {"topic_name": domain, "skills": {}})
+            topic["skills"][m["kc_name"]] = {
+                "score": int(round(m["mastery"] * 100)),
+                "days_since_practice": m["days_since_practice"],
+                "attempts": m["n_attempts"],
+            }
+
+        for topic in topics.values():
+            scores = [s["score"] for s in topic["skills"].values()]
+            topic["overall_proficiency"] = int(round(sum(scores) / len(scores)))
+
+        return {
+            "last_updated": datetime.utcnow().isoformat(),
+            "source": "kc_mastery",
+            "subjects": {"mathematics": {"topics": list(topics.values())}},
+        }

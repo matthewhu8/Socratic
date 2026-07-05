@@ -354,6 +354,23 @@ async def submit_grading_image(
             print(f"Error updating knowledge profile: {profile_error}")
             # Don't fail the grading if profile update fails
 
+        # TASA L3/L2: record the mistake as an event-memory episode and refresh
+        # the persona bank on its cadence. Off the hot path, best-effort only.
+        try:
+            from app.services import memory_service, persona_service
+            await memory_service.generate_event(
+                db=db,
+                user_id=user_id,
+                question_id=db_session.question_id,
+                question_text=db_session.question_text,
+                practice_mode=db_session.practice_mode,
+                grading_result=grading_result,
+                source_grading_id=db_session.id,
+            )
+            await persona_service.maybe_regenerate(db, user_id)
+        except Exception as memory_error:
+            print(f"TASA memory/persona update failed (non-fatal): {memory_error}")
+
         # Clean up the uploaded image file after grading
         try:
             if os.path.exists(file_path):
