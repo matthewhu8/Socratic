@@ -132,8 +132,12 @@ IMPORTANT: When you've selected the best question, respond with JSON in this exa
             Dict with selected question and reasoning
         """
         try:
+            # TASA read path: assemble the student's dynamic state (decayed
+            # mastery + retention-adjusted persona/memory) to ground selection.
+            state_block = await self._build_state_block(user_id, context)
+
             # Build initial prompt for Gemini
-            prompt = self._build_initial_prompt(user_id, context)
+            prompt = self._build_initial_prompt(user_id, context, state_block)
 
             print(f"\n🔵 Sending initial prompt to Gemini...")
             print(f"Prompt: {prompt}\n")
@@ -226,7 +230,23 @@ IMPORTANT: When you've selected the best question, respond with JSON in this exa
                 "fallback_question_id": 101  # Fallback to first question
             }
 
-    def _build_initial_prompt(self, user_id: int, context: Dict) -> str:
+    async def _build_state_block(self, user_id: int, context: Dict) -> str:
+        """Build the TASA dynamic-state prompt block; empty string on any failure
+        so selection never breaks if the knowledge model is unavailable."""
+        try:
+            from app.services import student_state_service as sss
+            was_correct = context.get("correct", False)
+            query = (
+                "Recommend the next practice question for this student. Their last "
+                f"attempt was {'correct' if was_correct else 'incorrect'}."
+            )
+            state = await sss.build_state(self.mcp_server.db, user_id, query)
+            return sss.format_state_for_prompt(state)
+        except Exception as e:
+            print(f"TASA state block failed (non-fatal): {e}")
+            return ""
+
+    def _build_initial_prompt(self, user_id: int, context: Dict, state_block: str = "") -> str:
         """Build the initial prompt for Gemini"""
 
         # Extract context information
@@ -238,6 +258,9 @@ IMPORTANT: When you've selected the best question, respond with JSON in this exa
         prompt_parts = [
             f"Find the optimal next practice question for student ID {user_id}."
         ]
+
+        if state_block:
+            prompt_parts.append(f"\n{state_block}")
 
         if last_question_id:
             prompt_parts.append(f"\nContext:")

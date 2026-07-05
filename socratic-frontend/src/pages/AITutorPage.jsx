@@ -21,7 +21,15 @@ function AITutorPage() {
   const boardRef = useRef(null);
   const getBoard = useCallback(() => boardRef.current, []);
 
-  const { isSpeaking, isListening, speakSentence, cancelSpeech, toggleListening } = useSpeech();
+  const {
+    isSpeaking,
+    isListening,
+    isMuted,
+    speakSentence,
+    cancelSpeech,
+    toggleListening,
+    toggleMute,
+  } = useSpeech();
 
   const {
     isConnecting,
@@ -53,6 +61,8 @@ function AITutorPage() {
         isSpeaking={isSpeaking}
         onStopSpeech={handleStopSpeech}
         onLogout={handleLogout}
+        isMuted={isMuted}
+        onToggleMute={toggleMute}
       />
 
       {error && (

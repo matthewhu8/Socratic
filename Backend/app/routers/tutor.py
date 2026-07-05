@@ -30,7 +30,11 @@ class QuestionChatRequest(BaseModel):
     practice_mode: Optional[str] = None
     subject: Optional[str] = None
 
-@router.post("/api/question-chat")
+class QuestionChatResponse(BaseModel):
+    response: str
+    timestamp: str
+
+@router.post("/api/question-chat", response_model=QuestionChatResponse)
 async def question_chat(
     request: QuestionChatRequest,
     current_user = Depends(get_current_user)

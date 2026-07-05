@@ -6,8 +6,10 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 export function useSpeech() {
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [isListening, setIsListening] = useState(false);
+  const [isMuted, setIsMuted] = useState(false);
   const recognitionRef = useRef(null);
   const onResultRef = useRef(null);
+  const isMutedRef = useRef(false);
 
   // Initialize speech recognition once.
   useEffect(() => {
@@ -50,6 +52,7 @@ export function useSpeech() {
   // true until the queue drains.
   const speakSentence = useCallback((sentence) => {
     if (!('speechSynthesis' in window)) return;
+    if (isMutedRef.current) return;
     const trimmed = (sentence || '').trim();
     if (!trimmed) return;
 
@@ -92,5 +95,25 @@ export function useSpeech() {
     [isListening]
   );
 
-  return { isSpeaking, isListening, speakSentence, cancelSpeech, toggleListening };
+  const toggleMute = useCallback(() => {
+    setIsMuted((prev) => {
+      const next = !prev;
+      isMutedRef.current = next;
+      if (next && 'speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        setIsSpeaking(false);
+      }
+      return next;
+    });
+  }, []);
+
+  return {
+    isSpeaking,
+    isListening,
+    isMuted,
+    speakSentence,
+    cancelSpeech,
+    toggleListening,
+    toggleMute,
+  };
 }
