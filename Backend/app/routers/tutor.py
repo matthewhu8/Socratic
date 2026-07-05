@@ -1,3 +1,4 @@
+import asyncio
 import json
 import os
 import time
@@ -76,10 +77,12 @@ class AITutorQueryRequest(BaseModel):
     sessionId: str
     query: str
     messages: List[Dict[str, str]]
-    canvasImage: Optional[str] = None  # Base64 encoded image
-    previousCanvasImage: Optional[str] = None  # Base64 encoded previous image
-    hasAnnotation: bool = False  # Flag indicating annotation-based query
-    mode: Optional[str] = "jess"  # "sally" for single prompt, "jess" for two-stage (default)
+    canvasImage: Optional[str] = None  # Grid-stamped base64 PNG of boardRegion (spec §1)
+    boardRegion: Optional[Dict[str, float]] = None  # {x, y, width, height} capture frame
+    boardElements: Optional[List[Dict[str, Any]]] = None  # symbolic board listing (spec §2)
+    previousCanvasImage: Optional[str] = None  # DEPRECATED: accepted, ignored
+    hasAnnotation: bool = False  # DEPRECATED: accepted, ignored
+    mode: Optional[str] = "jess"  # DEPRECATED: accepted, ignored (Claude only)
 
 @router.post("/api/ai-tutor/create-session", response_model=AITutorSessionResponse)
 async def create_ai_tutor_session(
@@ -130,6 +133,9 @@ async def create_ai_tutor_session(
         raise HTTPException(status_code=500, detail=f"Failed to create session: {str(e)}")
 
 l2t = LatexNodes2Text()
+
+# Delay between draw SSE frames — the "being drawn by hand" reveal cadence (spec §5).
+DRAW_FRAME_PACING_SECONDS = 0.15
 
 def _sse_frame(event: str, data: Dict[str, Any]) -> str:
     """Build one SSE frame. ``data`` must serialize to single-line JSON (no raw newlines)."""
@@ -199,8 +205,10 @@ async def process_ai_tutor_query(
 ):
     """Process a query from the AI tutor interface as an SSE stream.
 
-    Streams ``text`` deltas, then a single ``svg`` event, then a ``state`` event, then a
-    terminal ``done`` (or ``error``) event. See CONTRACTS.md "SSE event schema".
+    Streams ``text`` deltas, then one ``draw`` event per drawing action (paced ~150ms
+    for the hand-drawn reveal), then a ``state`` event, then a terminal ``done`` (or
+    ``error``) event. See CONTRACTS.md "SSE event schema" and
+    docs/specs/whiteboard-draw-protocol-v1.md.
     """
     print(f"Received request: sessionId={request.sessionId}, query={request.query[:50]}...")
     print(f"Has canvas image: {request.canvasImage is not None}, mode={request.mode}")
@@ -226,6 +234,7 @@ async def process_ai_tutor_query(
         try:
             full_text = ""
             new_state = state
+            draw_index = 0
             async for channel, payload in orchestrator.run_turn(
                 provider=provider,
                 query=request.query,
@@ -233,11 +242,14 @@ async def process_ai_tutor_query(
                 previous_canvas_image=request.previousCanvasImage,
                 has_annotation=request.hasAnnotation,
                 state=state,
+                board_elements=request.boardElements,
             ):
                 if channel == "text":
                     yield _sse_frame("text", {"delta": payload})
-                elif channel == "svg":
-                    yield _sse_frame("svg", {"svgContent": payload})
+                elif channel == "draw":
+                    yield _sse_frame("draw", {"action": payload.to_dict(), "index": draw_index})
+                    draw_index += 1
+                    await asyncio.sleep(DRAW_FRAME_PACING_SECONDS)
                 elif channel == "state":
                     new_state = payload
                     yield _sse_frame("state", payload.to_dict())
@@ -299,9 +311,15 @@ async def get_student_knowledge_profile(
     current_user: StudentUser = Depends(get_current_student),
     db: Session = Depends(get_db)
 ):
-    """Get the current student's knowledge profile."""
+    """Get the current student's knowledge profile.
+
+    Prefers the live TASA projection built from decaying per-KC mastery; falls
+    back to the legacy stored JSON for students with no mastery rows yet.
+    """
     try:
-        profile = KnowledgeProfileService.get_student_profile(db, current_user.id)
+        profile = KnowledgeProfileService.project_profile_from_mastery(db, current_user.id)
+        if not profile:
+            profile = KnowledgeProfileService.get_student_profile(db, current_user.id)
         if not profile:
             raise HTTPException(status_code=404, detail="Profile not found")
 

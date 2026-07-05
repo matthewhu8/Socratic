@@ -1,15 +1,15 @@
 """AnthropicProvider — Claude (Sonnet 4.6) implementation of WhiteboardProvider.
 
-Mirrors the Gemini tutor behaviour for the whiteboard pipeline, but using the
-Anthropic async SDK:
-    - diagnose():     ONE strict-tool-use call returning the TeachingPlan schema.
-    - stream_text():  messages.stream() token deltas of the spoken teaching line.
-    - generate_svg(): strict-tool-use call returning {"svgContent": ...}, validated.
+Per-turn pipeline, using the Anthropic async SDK:
+    - diagnose():          ONE strict-tool-use call returning the TeachingPlan schema.
+    - stream_text():       messages.stream() token deltas of the spoken teaching line.
+    - generate_drawing():  strict-tool-use call returning {"actions": [...]} — typed
+                           grid drawing actions per docs/specs/whiteboard-draw-protocol-v1.md,
+                           validated by draw_protocol.parse_actions.
 
-The tutor system prompts (visual rules, colours, answer-hiding policy) are ported
-verbatim from gemini_service.py so both providers teach identically. Prompt ordering
-follows CONTRACTS.md: stable system + rules first (with cache_control on the last
-stable block), then the volatile suffix (state block -> canvas image -> query LAST).
+Prompt ordering follows CONTRACTS.md: stable system + rules first (with cache_control
+on the last stable block), then the volatile suffix (directive -> state block ->
+board listing -> canvas image -> query LAST).
 
 The ANTHROPIC_API_KEY may be empty during development. The client is constructed
 lazily so importing this module and constructing the provider never fails; a missing
@@ -19,18 +19,40 @@ from __future__ import annotations
 
 import json
 import os
+import time
 from typing import Any, AsyncIterator, Dict, List, Optional
 
 from dotenv import load_dotenv
 
-from anthropic import AsyncAnthropic
+from anthropic import AsyncAnthropic, BadRequestError
 
 from .base import STRATEGIES, TeachingPlan, TutoringState, WhiteboardProvider
+from .draw_protocol import (
+    DRAW_ACTIONS_TOOL,
+    MAX_ACTIONS,
+    DrawAction,
+    format_board_elements,
+    parse_actions,
+    parse_actions_with_reasons,
+    tool_without_examples,
+)
 
 # Resolve Backend/app/services/.env like the other services do.
 load_dotenv()
 
 MODEL_ID = "claude-sonnet-4-6"
+
+# Programmatic tool calling (spec §9): Claude computes coordinates in the code
+# execution container and calls draw_actions from Python.
+CODE_EXECUTION_TOOL: Dict[str, Any] = {"type": "code_execution_20260120", "name": "code_execution"}
+PTC_CALLER = "code_execution_20260120"
+PTC_MAX_ITERATIONS = 6
+PTC_WALL_CLOCK_SECONDS = 60.0
+
+
+def _ptc_enabled() -> bool:
+    """WHITEBOARD_PTC env flag; default ON (dev). Set 0/false/off to disable."""
+    return os.getenv("WHITEBOARD_PTC", "1").strip().lower() not in ("0", "false", "off", "")
 
 
 # ──────────────────────────  Ported tutor prompts  ──────────────────────────
@@ -57,6 +79,8 @@ DECISION RULES:
 - reveal_answer is true ONLY when the student explicitly asks for the full/complete answer.
 - should_draw is true only when a fresh diagram, formula skeleton, or correction mark on the \
 board would genuinely help THIS turn — not for every turn.
+- needs_precision is true only when that drawing requires exact geometry (function graphs, \
+to-scale figures, constructions, many evenly-spaced marks); quick annotations are false.
 - Set problem only when a NEW problem is being introduced (usually turn 1); otherwise null.
 - misconception: a short note on any misconception revealed this turn, else null.
 - student_observation: a short note on what the student just did/showed, else null.
@@ -79,6 +103,10 @@ STYLE & LENGTH:
 - Skip filler like "Let's break this down"; dive straight into substance.
 - This is spoken aloud: use plain text only. NO markdown, NO asterisks, NO bullet characters, \
 NO headings, NO code fences. Write numbers and math in words or simple inline notation.
+- You CANNOT draw in this reply, and you have no tools here. A SEPARATE drawing step runs \
+after you speak and will put any needed diagram on the board — you may say things like \
+"I'll sketch this on the board", but NEVER emit code, XML, JSON, function-call syntax, \
+coordinates, or drawing instructions in your words. Only natural spoken sentences.
 
 TEACHING APPROACH:
 - For a new problem:
@@ -98,39 +126,60 @@ INTERPRETING THE CANVAS:
 not over-trust a free reading of the whole board."""
 
 
-_SVG_SYSTEM = """You create educational SVG visualizations for math tutoring on a shared \
-whiteboard. You return ONE SVG drawing for the current turn.
+# Draw-protocol v1.1 (docs/specs/whiteboard-draw-protocol-v1.md). Pedagogy, coordinate
+# frame, colors, and guardrails ONLY — op mechanics are documented in the tool schema
+# (per-field descriptions + input_examples on draw_protocol.DRAW_ACTIONS_TOOL).
+_DRAW_SYSTEM = """You draw on a shared whiteboard like a human math tutor sitting next to \
+the student — a few deliberate marks at a time, placed on and around the student's actual work.
 
-TECHNICAL SPECIFICATIONS:
-- viewBox STRICTLY "0 0 600 400".
-- Colours (tutor only):
-    #2563eb  new concept / neutral text
-    #16a34a  correct confirmation
-    #dc2626  highlight an error
-  Student strokes are always black (#000000); the tutor must NEVER draw in black.
-- Font: strictly Arial 24px, text-anchor="start".
+THE COORDINATE GRID:
+- The board is a grid 60 cells wide and 40 cells tall. Origin (0,0) is the TOP-LEFT; \
+x grows rightward to 60, y grows DOWNWARD to 40.
+- The board photo you receive covers exactly this grid and has faint gridlines every \
+5 cells with coordinate labels along the edges. Use them to locate the student's work \
+precisely.
+- BOARD CONTENTS lists every element already on the board with its grid position: \
+ids starting with "s" are STUDENT ink; ids starting with "t" are YOUR earlier marks. \
+The listing's coordinates are exact — trust it over your visual estimate.
 
-OUTPUT RULES:
-- svgContent must be valid SVG markup that starts with <svg and ends with </svg>.
-- No explanations or text outside the SVG markup.
-- Keep drawings simple — use blank boxes, ellipses, or arrows to reserve space.
-- Do NOT draw rigid dashed rectangles that confine student work.
-- Never erase or overwrite student ink; add beside or below it.
+COLOURS (semantic; student ink is black — you never draw black):
+- blue  = new concept / neutral teaching marks
+- green = confirming something correct
+- red   = highlighting an error or a place needing attention
+
+HOW A TUTOR DRAWS:
+- FEW, deliberate marks: usually 3-12 actions. Never scribble filler.
+- Order like a human: structure first (shapes, axes, lines, arcs), then labels \
+(text/math), then emphasis (circles, arrows, points).
+- Use `math` (LaTeX) for any real notation — fractions, roots, exponents, integrals. \
+Use `text` only for plain words and simple labels.
+- Draw ON and AROUND the student's work: circle their error in red, put a green check \
+beside a correct step, extend their diagram, add the next label near their last line.
+- NEVER place text on top of existing ink — check BOARD CONTENTS boxes and anchor your \
+text in clear space beside or below.
+- Leave room for the student to write: reserve space with an empty box or a "?" label \
+rather than filling everything in.
+- You may erase YOUR OWN stale or wrong marks (by their t-id) and redraw them; you can \
+never erase student ink.
 
 ANSWER-HIDING POLICY:
-- Do NOT show the complete numeric/expanded answer in the SVG unless the student explicitly \
-asked for it.
+- Do NOT write the complete numeric/expanded answer unless the student explicitly asked \
+for it. Sketch structure, label givens, mark the path — leave the destination blank.
 
-INTERPRETING THE CANVAS:
-- You receive a full-image PNG of the current board each turn. Acknowledge specific student \
-marks when helpful. If uncertain what a drawing is, leave space rather than guessing.
+Call the `draw_actions` tool exactly once with this turn's ordered actions. The tool's \
+schema and examples define each action's exact shape — follow them."""
 
-SELF-CHECK BEFORE SENDING:
-- Valid XML that fits the viewBox.
-- Tutor colours only (#2563eb, #16a34a, #dc2626), NEVER black.
-- No spoilers: full answers hidden unless requested.
 
-Call the `draw_svg` tool exactly once with the complete SVG markup."""
+# Appended to _DRAW_SYSTEM on the programmatic (precision) path only.
+_PTC_ADDENDUM = """
+
+PRECISION MODE — code execution is available:
+Write Python that COMPUTES exact coordinates (loops, math.cos/sin, sampled functions, \
+computed vertices) and calls draw_actions with the computed lists. Call it in logical \
+batches — structure first, then labels, then emphasis — rather than one action at a time. \
+Each call returns JSON {"rendered": <n>, "dropped": ["<reason>", ...]}: check "dropped" \
+and correct your next batch if anything was rejected. Keep the whole drawing under 24 \
+actions; a `stroke` with computed sample points is how you draw an exact curve."""
 
 
 # Strict tool schema for diagnose() — exactly CONTRACTS.md's diagnose schema.
@@ -149,6 +198,14 @@ _DIAGNOSE_TOOL: Dict[str, Any] = {
             "should_draw": {
                 "type": "boolean",
                 "description": "Whether a diagram would genuinely help THIS turn.",
+            },
+            "needs_precision": {
+                "type": "boolean",
+                "description": (
+                    "True when the drawing needs EXACT geometry: function graphs, "
+                    "to-scale figures, constructions, or many repeated/evenly-spaced "
+                    "marks. False for quick annotations (circles, checks, labels)."
+                ),
             },
             "reveal_answer": {
                 "type": "boolean",
@@ -174,31 +231,13 @@ _DIAGNOSE_TOOL: Dict[str, Any] = {
         "required": [
             "strategy",
             "should_draw",
+            "needs_precision",
             "reveal_answer",
             "misconception",
             "student_observation",
             "problem",
             "rationale",
         ],
-        "additionalProperties": False,
-    },
-}
-
-
-# Strict tool schema for generate_svg() — returns {"svgContent": string}.
-_SVG_TOOL: Dict[str, Any] = {
-    "name": "draw_svg",
-    "description": "Return the complete SVG markup to draw on the whiteboard this turn.",
-    "strict": True,
-    "input_schema": {
-        "type": "object",
-        "properties": {
-            "svgContent": {
-                "type": "string",
-                "description": 'Complete SVG markup, starting with "<svg" and ending with "</svg>".',
-            },
-        },
-        "required": ["svgContent"],
         "additionalProperties": False,
     },
 }
@@ -355,62 +394,198 @@ class AnthropicProvider(WhiteboardProvider):
             lines.append(f"- Address this misconception gently: {plan.misconception}")
         return "\n".join(lines)
 
-    # ────────────────────────────  generate_svg  ────────────────────────────
-    async def generate_svg(
+    # ──────────────────────────  generate_drawing  ──────────────────────────
+    def _draw_user_content(
         self,
         query: str,
         state: TutoringState,
         plan: TeachingPlan,
         teaching_text: str,
         canvas_image: Optional[str],
-    ) -> Optional[str]:
-        """Strict-tool-use call returning validated SVG markup, or None."""
-        try:
-            directive = (
-                "THIS TURN:\n"
-                f"- Strategy: {plan.strategy}.\n"
-                f"- {'You MAY show the full answer.' if plan.reveal_answer else 'Do NOT show the full answer.'}\n"
-                f"- The spoken explanation the student is hearing is: {teaching_text}\n"
-                "- Draw a single SVG that supports that explanation."
-            )
-            content: List[Dict[str, Any]] = [
-                {"type": "text", "text": directive},
-                {"type": "text", "text": state.as_prompt_block()},
-            ]
-            image_block = self._image_block(canvas_image)
-            if image_block is not None:
-                content.append(image_block)
-            content.append({"type": "text", "text": f"STUDENT (latest): {query}"})
+        board_elements: Optional[List[Dict[str, Any]]],
+    ) -> List[Dict[str, Any]]:
+        """Volatile suffix for a drawing call: directive → state → board → image → query."""
+        directive = (
+            "THIS TURN:\n"
+            f"- Strategy: {plan.strategy}.\n"
+            f"- {'You MAY show the full answer.' if plan.reveal_answer else 'Do NOT show the full answer.'}\n"
+            f"- The spoken explanation the student is hearing is: {teaching_text}\n"
+            "- Draw the marks that support that explanation."
+        )
+        content: List[Dict[str, Any]] = [
+            {"type": "text", "text": directive},
+            {"type": "text", "text": state.as_prompt_block()},
+            {"type": "text", "text": format_board_elements(board_elements)},
+        ]
+        image_block = self._image_block(canvas_image)
+        if image_block is not None:
+            content.append(image_block)
+        content.append({"type": "text", "text": f"STUDENT (latest): {query}"})
+        return content
 
-            response = await self.client.messages.create(
+    async def _create_with_examples_fallback(self, **kwargs: Any) -> Any:
+        """messages.create, retrying once without input_examples if the API rejects them."""
+        try:
+            return await self.client.messages.create(**kwargs)
+        except BadRequestError as exc:
+            if "input_examples" not in str(exc):
+                raise
+            print("[AnthropicProvider] API rejected input_examples; retrying without them")
+            kwargs["tools"] = [
+                tool_without_examples(t) if isinstance(t, dict) else t
+                for t in kwargs.get("tools", [])
+            ]
+            return await self.client.messages.create(**kwargs)
+
+    async def generate_drawing(
+        self,
+        query: str,
+        state: TutoringState,
+        plan: TeachingPlan,
+        teaching_text: str,
+        canvas_image: Optional[str],
+        board_elements: Optional[List[Dict[str, Any]]] = None,
+    ) -> List[DrawAction]:
+        """One strict-tool-use call returning validated grid drawing actions (spec §3)."""
+        try:
+            content = self._draw_user_content(
+                query, state, plan, teaching_text, canvas_image, board_elements
+            )
+            response = await self._create_with_examples_fallback(
                 model=MODEL_ID,
                 max_tokens=4096,
-                system=self._stable_system(_SVG_SYSTEM),
-                tools=[_SVG_TOOL],
-                tool_choice={"type": "tool", "name": "draw_svg"},
+                system=self._stable_system(_DRAW_SYSTEM),
+                tools=[DRAW_ACTIONS_TOOL],
+                tool_choice={"type": "tool", "name": "draw_actions"},
                 messages=[{"role": "user", "content": content}],
             )
 
-            parsed = self._first_tool_input(response, "draw_svg")
+            parsed = self._first_tool_input(response, "draw_actions")
             if not parsed:
-                return None
-            return self._validate_svg_content(parsed.get("svgContent"))
+                return []
+            return parse_actions(parsed)
         except Exception as exc:  # noqa: BLE001 — a drawing failure must not break the turn.
-            print(f"[AnthropicProvider.generate_svg] error: {exc}")
-            return None
+            print(f"[AnthropicProvider.generate_drawing] error: {exc}")
+            return []
 
-    @staticmethod
-    def _validate_svg_content(svg_content: Any) -> Optional[str]:
-        """Validate SVG the same way the rest of the app does (start <svg, end </svg>)."""
-        if not svg_content:
-            return None
-        svg_content = str(svg_content).strip()
-        if svg_content.lower() in ("null", "none", ""):
-            return None
-        if not svg_content.startswith("<svg"):
-            print(f"Invalid SVG format - doesn't start with <svg: {svg_content[:50]}...")
-            return None
-        if not svg_content.endswith("</svg>"):
-            print(f"Invalid SVG format - doesn't end with </svg>: {svg_content[-50:]}")
-            return None
-        return svg_content
+    # ─────────────────────  iter_drawing (PTC routing, spec §9)  ─────────────
+    async def iter_drawing(
+        self,
+        query: str,
+        state: TutoringState,
+        plan: TeachingPlan,
+        teaching_text: str,
+        canvas_image: Optional[str],
+        board_elements: Optional[List[Dict[str, Any]]] = None,
+    ) -> AsyncIterator[DrawAction]:
+        """Stream drawing actions; precision turns run through programmatic tool calling.
+
+        If the PTC path fails BEFORE emitting anything, we fall back to the direct
+        one-shot call. If it fails after partial output, we stop with what rendered —
+        never draw the same marks twice.
+        """
+        use_ptc = plan.needs_precision and _ptc_enabled()
+        print(f"[AnthropicProvider.iter_drawing] route={'ptc' if use_ptc else 'direct'} "
+              f"(needs_precision={plan.needs_precision})")
+        if use_ptc:
+            emitted = 0
+            try:
+                async for action in self._generate_drawing_ptc(
+                    query, state, plan, teaching_text, canvas_image, board_elements
+                ):
+                    emitted += 1
+                    yield action
+                return
+            except Exception as exc:  # noqa: BLE001 — degrade, never break the turn.
+                print(f"[AnthropicProvider.iter_drawing] PTC failed after {emitted} actions: {exc}")
+                if emitted:
+                    return
+
+        for action in await self.generate_drawing(
+            query, state, plan, teaching_text, canvas_image, board_elements
+        ):
+            yield action
+
+    async def _generate_drawing_ptc(
+        self,
+        query: str,
+        state: TutoringState,
+        plan: TeachingPlan,
+        teaching_text: str,
+        canvas_image: Optional[str],
+        board_elements: Optional[List[Dict[str, Any]]],
+    ) -> AsyncIterator[DrawAction]:
+        """Programmatic tool calling loop (spec §9).
+
+        Claude writes Python in the code-execution container; each in-code
+        draw_actions call pauses the container and surfaces here as a tool_use
+        block. We validate, yield the actions immediately (SSE frames stream while
+        the program runs), and continue with a tool_result-only user message
+        carrying {"rendered": n, "dropped": [reasons]} so the code can self-correct.
+        """
+        # The API rejects strict tools with code_execution callers; drop strict on
+        # this path only — parse_actions enforces every invariant regardless.
+        ptc_draw_tool = {**DRAW_ACTIONS_TOOL, "allowed_callers": [PTC_CALLER]}
+        ptc_draw_tool.pop("strict", None)
+        tools: List[Dict[str, Any]] = [dict(CODE_EXECUTION_TOOL), ptc_draw_tool]
+        messages: List[Dict[str, Any]] = [{
+            "role": "user",
+            "content": self._draw_user_content(
+                query, state, plan, teaching_text, canvas_image, board_elements
+            ),
+        }]
+
+        total_rendered = 0
+        container_id: Optional[str] = None
+        deadline = time.monotonic() + PTC_WALL_CLOCK_SECONDS
+
+        for _ in range(PTC_MAX_ITERATIONS):
+            kwargs: Dict[str, Any] = {}
+            if container_id:
+                kwargs["container"] = container_id
+            response = await self._create_with_examples_fallback(
+                model=MODEL_ID,
+                max_tokens=4096,
+                system=self._stable_system(_DRAW_SYSTEM + _PTC_ADDENDUM),
+                tools=tools,
+                messages=messages,
+                **kwargs,
+            )
+
+            container = getattr(response, "container", None)
+            if container is not None:
+                container_id = getattr(container, "id", None) or container_id
+
+            draw_calls = [
+                block for block in response.content
+                if getattr(block, "type", None) == "tool_use" and block.name == "draw_actions"
+            ]
+            if response.stop_reason != "tool_use" or not draw_calls:
+                return  # end_turn (or nothing left to execute) — drawing complete
+
+            results: List[Dict[str, Any]] = []
+            for block in draw_calls:
+                raw = block.input if isinstance(block.input, dict) else {}
+                actions, reasons = parse_actions_with_reasons(raw)
+                rendered = 0
+                for action in actions:
+                    if total_rendered >= MAX_ACTIONS:
+                        reasons.append(f"turn action cap {MAX_ACTIONS} reached")
+                        break
+                    total_rendered += 1
+                    rendered += 1
+                    yield action
+                results.append({
+                    "type": "tool_result",
+                    "tool_use_id": block.id,
+                    "content": json.dumps({"rendered": rendered, "dropped": reasons}),
+                })
+
+            # Continuation: assistant content back verbatim, then ONLY tool_result blocks.
+            messages.append({"role": "assistant", "content": response.content})
+            messages.append({"role": "user", "content": results})
+
+            if time.monotonic() > deadline:
+                print("[AnthropicProvider._generate_drawing_ptc] wall-clock cap reached")
+                return
+        print("[AnthropicProvider._generate_drawing_ptc] iteration cap reached")

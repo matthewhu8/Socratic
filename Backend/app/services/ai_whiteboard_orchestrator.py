@@ -1,21 +1,23 @@
 """AI Whiteboard Orchestrator.
 
 Runs ONE provider-agnostic tutoring pipeline per turn (see CONTRACTS.md "Per-turn
-flow"). The provider (Gemini or Claude) is chosen per request by the caller and passed
-into ``run_turn``. The orchestrator:
+flow" and docs/specs/whiteboard-draw-protocol-v1.md for the drawing stage). The
+orchestrator:
 
     1. diagnose -> TeachingPlan
     2. stream_text -> teaching text deltas (forwarded to the client over SSE)
-    3. generate_svg (only when plan.should_draw)
+    3. generate_drawing (only when plan.should_draw) -> typed grid DrawActions
     4. apply_state_update -> the new rolling TutoringState (plain Python, no LLM call)
 
 It yields ``(channel, payload)`` tuples so the route layer can translate them into SSE
-frames and persist the result.
+frames and persist the result. No pacing here — the route owns draw-frame pacing so
+these generators stay fast and deterministic under test.
 """
 
-from typing import Any, AsyncIterator, Optional, Tuple
+from typing import Any, AsyncIterator, Dict, List, Optional, Tuple
 
 from .providers.base import TeachingPlan, TutoringState, WhiteboardProvider
+from .providers.draw_protocol import DrawAction, summarize_actions
 
 
 class AIWhiteboardOrchestrator:
@@ -32,15 +34,16 @@ class AIWhiteboardOrchestrator:
         previous_canvas_image: Optional[str],
         has_annotation: bool,
         state: TutoringState,
+        board_elements: Optional[List[Dict[str, Any]]] = None,
     ) -> AsyncIterator[Tuple[str, Any]]:
         """Run a single tutoring turn, yielding (channel, payload) events.
 
         Channels, in order:
-            ("text", delta)      — repeated, one per streamed teaching-text chunk
-            ("svg", svg|None)    — once, after the text stream completes
-            ("state", new_state) — once, the updated TutoringState
-            ("full_text", str)   — once, the assembled teaching text
-            ("plan", plan)       — once, the TeachingPlan (for logging/debug)
+            ("text", delta)       — repeated, one per streamed teaching-text chunk
+            ("draw", DrawAction)  — repeated, one per validated drawing action
+            ("state", new_state)  — once, the updated TutoringState
+            ("full_text", str)    — once, the assembled teaching text
+            ("plan", plan)        — once, the TeachingPlan (for logging/debug)
         """
         plan = await provider.diagnose(query, canvas_image, state)
 
@@ -50,15 +53,19 @@ class AIWhiteboardOrchestrator:
             yield ("text", delta)
         teaching_text = "".join(chunks)
 
-        svg: Optional[str] = None
+        actions: List[DrawAction] = []
         if plan.should_draw:
-            svg = await provider.generate_svg(
-                query, state, plan, teaching_text, canvas_image
-            )
-        yield ("svg", svg)
+            # iter_drawing streams actions as the provider produces them (one batch
+            # on the direct path; incrementally on the PTC precision path, spec §9).
+            async for action in provider.iter_drawing(
+                query, state, plan, teaching_text, canvas_image, board_elements
+            ):
+                actions.append(action)
+                yield ("draw", action)
 
+        draw_summary = summarize_actions(actions, plan.rationale) if actions else None
         new_state = self.apply_state_update(
-            state, plan, teaching_text, drew=svg is not None
+            state, plan, teaching_text, drew=bool(actions), draw_summary=draw_summary
         )
         yield ("state", new_state)
         yield ("full_text", teaching_text)
@@ -70,6 +77,7 @@ class AIWhiteboardOrchestrator:
         plan: TeachingPlan,
         full_text: str,
         drew: bool,
+        draw_summary: Optional[str] = None,
     ) -> TutoringState:
         """Fold the TeachingPlan into a new TutoringState (CONTRACTS.md update rules).
 
@@ -90,7 +98,7 @@ class AIWhiteboardOrchestrator:
         new_state.last_strategy = plan.strategy
 
         if drew:
-            summary = plan.rationale or f"diagram for: {plan.strategy}"
+            summary = draw_summary or plan.rationale or f"diagram for: {plan.strategy}"
             new_state.already_drawn.append(summary)
 
         new_state.student_attempts = self._cap(new_state.student_attempts)
